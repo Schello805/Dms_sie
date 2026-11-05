@@ -1,0 +1,43 @@
+name: Linux installer
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/install_linux.py'
+      - 'scripts/linux_manage.py'
+      - 'scripts/linux_backup.py'
+      - 'dms/management/commands/bootstrap_admin.py'
+      - 'requirements.lock.txt'
+      - 'db/**'
+      - '.github/workflows/linux-install.yml'
+permissions:
+  contents: read
+jobs:
+  ubuntu-install-update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installer unit tests
+        run: python3 -m unittest discover -s tests -p 'test_linux_installer.py' -v
+      - name: Fresh local-source installation
+        env:
+          INSTALL_REPO: https://github.com/${{ github.repository }}
+        run: sudo python3 scripts/install_linux.py --source-dir "$GITHUB_WORKSPACE" --repo "$INSTALL_REPO" --host localhost --port 8080
+      - name: Health and bootstrap checks
+        run: |
+          curl --fail http://localhost:8080/ > /tmp/ims-home.html
+          grep -q Dokumentenübersicht /tmp/ims-home.html
+          sudo systemctl is-active ims-dms ims-dms-index ims-dms-notifications
+          sudo ims-dms-manage check
+          sudo systemctl start ims-dms-backup.service
+      - name: Update with mandatory backup
+        run: sudo python3 scripts/install_linux.py --update --source-dir "$GITHUB_WORKSPACE"
+      - name: Health after update
+        run: |
+          curl --fail http://localhost:8080/ > /dev/null
+          sudo test -f /etc/ims-dms/initial-admin-password
+          sudo systemctl is-active ims-dms-backup.timer
+      - name: Service diagnostics on failure
+        if: failure()
+        run: sudo journalctl -u ims-dms -u ims-dms-index -u ims-dms-notifications --no-pager -n 80

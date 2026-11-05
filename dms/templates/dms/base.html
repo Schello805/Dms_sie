@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ app_name }}</title>
+  <link rel="stylesheet" href="{% url 'ui_asset' 'app.css' %}">
+  {% include 'dms/branding_head.html' %}
+</head>
+<body>
+  <header>{% include 'dms/navigation.html' %}</header>
+  {% include 'dms/toasts.html' %}
+  <main>{% block content %}{% endblock %}</main>
+  {% include 'dms/footer.html' %}
+  <script src="{% url 'ui_asset' 'app.js' %}" defer></script>
+</body>
+</html>

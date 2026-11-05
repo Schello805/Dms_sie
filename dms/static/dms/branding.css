@@ -1,0 +1,18 @@
+.site-brand{display:inline-flex;align-items:center;gap:.7rem;text-decoration:none;flex-shrink:0;max-width:100%}
+.site-logo{display:block;width:88px;height:88px;object-fit:contain;border-radius:8px;background:#fff}
+.site-brand-name{font-weight:700;letter-spacing:.01em;white-space:normal;max-width:min(270px,calc(100vw - 130px));line-height:1.35;overflow-wrap:anywhere}
+.site-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1rem 5%;margin-top:auto;background:#fff;border-top:1px solid #dce5e8;color:#526875;font-size:.85rem}
+.site-footer .site-logo{width:48px;height:48px}
+.site-footer .site-brand{color:#172d3c}
+.site-footer .site-brand span{max-width:min(350px,calc(100vw - 110px));overflow-wrap:anywhere}
+.site-footer .release{white-space:nowrap}
+.site-footer small{display:block}
+.login-brand{display:block;width:min(280px,80vw);height:auto;margin:0 auto 1.5rem}
+.login-panel{max-width:440px;margin:1rem auto 3rem}
+.login-panel h1{text-align:center}
+.viewer-brand .site-logo{width:42px;height:42px;border-radius:4px}
+@media(max-width:650px){.site-logo{width:64px;height:64px}
+.site-footer{padding:1rem}
+.site-brand-name{font-size:.9rem}
+}
+

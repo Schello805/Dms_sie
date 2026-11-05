@@ -1,0 +1,12 @@
+{% extends 'dms/base.html' %}
+{% block content %}
+<p><a href="{% url 'detail' v.id %}">← Zur Dokumentversion</a></p>
+<h1>{{ v.number }} · Versionshistorie</h1>
+<p>Freigegebene Fassungen bleiben nachvollziehbar. Der Wirksamkeitszeitpunkt bestimmt, welche Fassung Leser erhalten.</p>
+<div class="table-wrap"><table><thead><tr><th>Version</th><th>Titel / Änderung</th><th>Status</th><th>Erstellt von</th><th>Wirksam ab</th></tr></thead><tbody>{% for version in versions %}<tr><td><a href="{% url 'detail' version.id %}">{{ version.major }}.{{ version.minor }}</a>{% if version.current_release %}<p class="badge">Wirksame Freigabe*</p>{% endif %}</td><td>{{ version.title }}<p>{{ version.change_summary }}</p></td><td>{{ version.status }}</td><td>{{ version.author_name }}<br>{{ version.created_at }}</td><td>{{ version.effective_from|default:'Nicht festgelegt' }}</td></tr>{% endfor %}</tbody></table></div>
+<p class="muted">* Zusätzlich sind etwaige Gültigkeitsgrenzen zu beachten.</p>
+{% if withdrawals %}<h2>Dokumentweite Rückzüge</h2>{% for withdrawal in withdrawals %}<div class="card"><p>{{ withdrawal.withdrawn_at }} · {{ withdrawal.actor_name }}</p><p>{{ withdrawal.reason }}</p><p class="muted">Vor diesem Zeitpunkt erteilte Freigaben werden für Leser nicht wieder aktiviert.</p></div>{% endfor %}{% endif %}
+<h2>Prüf- und Freigabeentscheidungen</h2>
+<p class="muted">Jede Entscheidung gehört zu einem Prüfzyklus und dessen Inhaltsfingerabdruck. Auch Rückgaben bleiben erhalten.</p>
+{% for decision in decisions %}<div class="card"><strong>Zyklus {{ decision.workflow_id }} · {{ decision.stage }} · {{ decision.decision }}</strong><p>{{ decision.actor_name }} · {{ decision.decided_at }}</p><p>{{ decision.comment }}</p><details><summary>Nachweis des geprüften Inhalts</summary><code style="overflow-wrap:anywhere">SHA-256: {{ decision.content_fingerprint }}</code><p>Prüfzyklus begonnen: {{ decision.started_at }}</p><p>Abgeschlossen: {{ decision.closed_at|default:'Noch offen' }}</p></details></div>{% empty %}<p>Noch keine Entscheidungen vorhanden.</p>{% endfor %}
+{% endblock %}

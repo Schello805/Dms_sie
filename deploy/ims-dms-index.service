@@ -1,0 +1,23 @@
+[Unit]
+Description=IMS-DMS local full-text worker
+After=postgresql.service
+
+[Service]
+User=ims-dms
+Group=ims-dms
+WorkingDirectory=/opt/ims-dms
+EnvironmentFile=/etc/ims-dms-index.env
+ExecStart=/opt/ims-dms/.venv/bin/python manage.py process_index
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+MemoryMax=1G
+TasksMax=32
+Environment=PYTHONDONTWRITEBYTECODE=1
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+{% extends 'dms/base.html' %}
+{% block content %}
+<p><a href="{% url 'detail' v.id %}">← Zur Dokumentversion</a></p>
+<h1>{{ v.number }} · Dokumentzugriff</h1>
+<p>Diese Berechtigungseinstellungen gelten sofort für alle Versionen des Dokuments. Änderungen werden mit Begründung protokolliert.</p>
+<div class="card"><p>Eine ausdrückliche Freigabe ersetzt keine Leser-, Autoren-, Prüf- oder Freigaberolle. Beide Bedingungen müssen erfüllt sein.</p><p>Vertrauliche und streng vertrauliche Fassungen verlangen immer eine ausdrückliche Freigabe, auch beim Zugriffsbereich „Abteilungs- und Dokumentrollen“.</p><p>Gruppenmitgliedschaften und Rollen werden bei jedem Zugriff neu ausgewertet. Eine entfernte Zuordnung wirkt auch bei bestehenden Anmeldungen.</p></div>
+<form method="post" class="card">{% csrf_token %}{{ form.as_p }}<button>Zugriff speichern</button></form>
+{% endblock %}

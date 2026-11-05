@@ -1,0 +1,9 @@
+Django>=5.2,<5.3
+psycopg[binary]>=3.2,<4
+gunicorn>=23,<24
+pypdf>=6,<7
+defusedxml>=0.7,<1
+cryptography>=46,<50
+qrcode>=8,<9
+reportlab>=4,<5
+Pillow>=12,<14

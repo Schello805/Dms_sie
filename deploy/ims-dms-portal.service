@@ -1,0 +1,21 @@
+[Unit]
+Description=IMS distribution and acknowledgement assignments
+After=network.target postgresql.service
+
+[Service]
+User=ims-dms
+Group=ims-dms
+WorkingDirectory=/opt/ims-dms
+EnvironmentFile=/etc/ims-dms.env
+ExecStart=/opt/ims-dms/.venv/bin/python manage.py process_portal
+Restart=on-failure
+RestartSec=10
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+Environment=PYTHONDONTWRITEBYTECODE=1
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,18 @@
+[Unit]
+Description=Consistent IMS-DMS backup
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=ims-dms
+Group=ims-dms
+WorkingDirectory=/opt/ims-dms
+EnvironmentFile=/etc/ims-dms-backup.env
+ExecStart=/opt/ims-dms/.venv/bin/python manage.py backup_dms --destination /var/backups/ims-dms
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/backups/ims-dms
+Environment=PYTHONDONTWRITEBYTECODE=1

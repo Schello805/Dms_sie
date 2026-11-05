@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily IMS-DMS backup example
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 Europe/Berlin
+Persistent=true
+Unit=ims-dms-backup.service
+
+[Install]
+WantedBy=timers.target

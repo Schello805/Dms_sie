@@ -1,0 +1,16 @@
+{% extends 'dms/base.html' %}
+{% block content %}
+<p><a href="{% url 'index' %}">← Dokumentenübersicht</a></p>
+<h1>{% if is_edit %}Entwurf bearbeiten{% else %}Dokument hochladen{% endif %}</h1>
+<p>{% if is_edit %}Änderungen werden als Entwurf gespeichert. Anschließend kannst du die Freigabe beim QMB anfordern.{% else %}Uploaddatum und erstmalige Gültigkeit werden vorbelegt. Die Gültigkeitsdauer beginnt erst mit der QMB-Freigabe und richtet sich nach der Kategorie.{% endif %}</p>
+<form method="post" enctype="multipart/form-data" class="card document-form">
+  {% csrf_token %}
+  {% if form.errors %}<div class="messages" role="alert">Bitte prüfe die markierten Felder. Deine Texteingaben bleiben erhalten. Eine Datei muss gegebenenfalls erneut ausgewählt werden.</div>{% endif %}
+  {{ form.non_field_errors }}
+  <div class="form-fields">
+  {% for field in form %}{% if field.name != 'intent' %}<div class="form-field {% if field.name == 'change_summary' or field.name == 'applicable_departments' or field.name == 'standard_references' or field.name == 'file' %}field-wide{% endif %}">{{ field.as_field_group }}</div>{% endif %}{% endfor %}
+  </div>
+  {% if form.intent.errors %}{{ form.intent.errors }}{% endif %}
+  <div class="form-actions"><a class="button secondary" href="{% url 'index' %}">Zur Übersicht</a>{% if is_edit %}<button>Entwurf speichern</button>{% else %}<button class="secondary" name="intent" value="draft">Als Entwurf hochladen</button><button name="intent" value="submit">Hochladen und an QMB senden</button>{% endif %}</div>
+</form>
+{% endblock %}
