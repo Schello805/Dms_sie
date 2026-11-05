@@ -1,7 +1,12 @@
 from dms import auth_views as auth
 from django.urls import path
-from dms import views,portal_views,branding,admin_views,catalog_views,ui_assets
+from dms import views,portal_views,branding,admin_views,catalog_views,ui_assets,account_views,comparison
 urlpatterns = [
+    path('versions/<int:version_id>/compare/',comparison.compare,name='compare'),
+    path('settings/users/new/',account_views.create,name='account_create'),
+    path('settings/users/status/',account_views.status,name='account_status'),
+    path('settings/users/<int:user_id>/password/',account_views.password,name='account_reset_password'),
+    path('account/password/',account_views.password,name='account_password'),
     path('assets/ui/<str:asset>',ui_assets.asset,name='ui_asset'),
     path('settings/users/',admin_views.user_roles,name='user_roles'),
     path('settings/system/',admin_views.system_diagnostics,name='system_diagnostics'),

@@ -82,8 +82,8 @@ def environment(state, role):
     return {
         'DMS_SECRET_KEY': state['secret'], 'DMS_DEBUG': '0',
         'DMS_INTERNAL_HTTP': '1', 'DMS_ALLOWED_HOSTS': ','.join(state['hosts'] + ['localhost', '127.0.0.1']),
-        'DMS_TRUST_PROXY': '1', 'DMS_MEDIA_ROOT': str(DATA / 'files'),
-        'DMS_ERROR_LOG_DIR': str(DATA / 'logs'), 'PYTHONDONTWRITEBYTECODE': '1',
+        'DMS_TRUST_PROXY': '1', 'DMS_DYNAMIC_HOSTS': '1', 'DMS_MEDIA_ROOT': str(DATA / 'files'),
+        'DMS_HEALTH_DIR': str(DATA / 'health'), 'DMS_ERROR_LOG_DIR': str(DATA / 'logs'), 'PYTHONDONTWRITEBYTECODE': '1',
         'PGDATABASE': 'ims_dms', 'PGUSER': 'ims_dms_' + role,
         'PGPASSWORD': state['passwords'][role], 'PGHOST': '127.0.0.1', 'PGPORT': '5432',
     }
@@ -180,8 +180,8 @@ def nginx_config(state):
     return f'''{MARKER}
 limit_req_zone $binary_remote_addr zone=ims_dms_login:10m rate=120r/m;
 server {{
-    listen {state['port']};
-    server_name {' '.join(state['hosts'])};
+    listen {state['port']} default_server;
+    server_name {' '.join(state['hosts']) or '_'};
     client_max_body_size 30m;
     location = /login/ {{
         limit_req zone=ims_dms_login burst=100 nodelay;
@@ -233,13 +233,21 @@ Persistent=true
 [Install]
 WantedBy=timers.target
 ''')
+    # A dedicated server's packaged welcome page would otherwise win for DHCP IPs.
+    default = Path('/etc/nginx/sites-enabled/default')
+    if state['port']==80 and default.exists():
+        target = default.resolve()
+        content = target.read_text()
+        if not default.is_symlink() or target != Path('/etc/nginx/sites-available/default') or 'Default server configuration' not in content or 'server_name _;' not in content:
+            raise RuntimeError('Vorhandenen benutzerdefinierten Nginx-Defaultserver zuerst prüfen; nicht überschrieben.')
+        default.rename(CONFIG / 'nginx-packaged-default.saved')
     managed_file('/etc/nginx/conf.d/ims-dms.conf', nginx_config(state))
     run(['nginx', '-t'])
     run(['systemctl', 'daemon-reload'])
 
 
 def health_check(state):
-    request = urllib.request.Request(f'http://127.0.0.1:{state["port"]}/', headers={'Host': state['hosts'][0]})
+    request = urllib.request.Request(f'http://127.0.0.1:{state["port"]}/', headers={'Host': 'localhost'})
     for _ in range(30):
         try:
             with urllib.request.urlopen(request, timeout=2) as response:
@@ -278,8 +286,8 @@ def _install_locked(args):
         for path in (BASE, CONFIG, DATA):
             if path.exists() and any(path.iterdir()):
                 raise RuntimeError(f'{path} ist bereits belegt; vorhandene Installation nicht überschrieben.')
-    if not exists and (not args.repo or not args.host):
-        raise ValueError('Neuinstallation benötigt --repo und mindestens einen --host.')
+    if not exists and not args.repo:
+        raise ValueError('Neuinstallation benötigt --repo; --host ist optional.')
     print('1/7 Systempakete installieren', flush=True)
     run(['apt-get', *APT_OPTIONS, 'update'])
     run(['apt-get', *APT_OPTIONS, 'install', '-y', 'python3', 'python3-venv', 'python3-dev', 'build-essential', 'libffi-dev', 'libssl-dev', 'git', 'curl', 'ca-certificates', 'postgresql', 'postgresql-client', 'nginx', 'fonts-dejavu-core'], env=dict(os.environ, DEBIAN_FRONTEND='noninteractive'))
@@ -291,7 +299,7 @@ def _install_locked(args):
         occupied = psql("SELECT rolname FROM pg_roles WHERE rolname ~ '^ims_dms_' UNION ALL SELECT datname FROM pg_database WHERE datname='ims_dms';", capture=True).stdout.strip()
         if occupied:
             raise RuntimeError('Vorhandene IMS-Datenbank/Rollen ohne Installationsstatus gefunden. Manuell prüfen; keine Übernahme.')
-        state = {'repo': args.repo, 'ref': args.ref or 'main', 'hosts': args.host, 'port': args.port or 80,
+        state = {'repo': args.repo, 'ref': args.ref or 'main', 'hosts': args.host or [], 'port': args.port or 80,
                  'admin_user': args.admin_user or 'admin', 'secret': secrets.token_urlsafe(64),
                  'passwords': {role: secrets.token_urlsafe(36) for role in ROLES}, 'complete': False}
         save_state(state)
@@ -306,7 +314,7 @@ def _install_locked(args):
     if subprocess.run(['id', 'ims-dms'], capture_output=True).returncode != 0:
         run(['useradd', '--system', '--home-dir', str(DATA), '--shell', '/usr/sbin/nologin', '--user-group', 'ims-dms'])
 
-    for directory in (DATA, DATA / 'files', DATA / 'logs', BACKUPS):
+    for directory in (DATA, DATA / 'files', DATA / 'logs', DATA / 'health', BACKUPS):
         run(['install', '-d', '-o', 'ims-dms', '-g', 'ims-dms', '-m', '0700', directory])
     print('2/7 Quellstand und virtuelle Umgebung vorbereiten', flush=True)
     release = prepare_release(args, state)
@@ -361,14 +369,15 @@ def _install_locked(args):
             print('Installation/Update angehalten. Keine Daten gelöscht. Migrationen NICHT automatisch zurückrollen; Sicherung und systemd-Protokolle prüfen.', file=sys.stderr)
         raise
     port = '' if state['port'] == 80 else ':' + str(state['port'])
-    print(f'Bereit: http://{state["hosts"][0]}{port}/\nAdmin: {state["admin_user"]}\nInitiales Passwort (nur root): {CONFIG}/initial-admin-password\nVerwaltung: sudo ims-dms-manage <Django-Kommando>')
+    address = state['hosts'][0] if state['hosts'] else 'SERVER-HOSTNAME-ODER-AKTUELLE-IP'
+    print(f'Bereit: http://{address}{port}/\nAdmin: {state["admin_user"]}\nInitiales Passwort (nur root): {CONFIG}/initial-admin-password\nVerwaltung: sudo ims-dms-manage <Django-Kommando>')
 
 
 def parser():
     result = argparse.ArgumentParser(description=__doc__)
     result.add_argument('--repo', type=validate_repo)
     result.add_argument('--ref', type=validate_ref, help='Branch, Tag oder Commit (Standard: main bzw. bisheriger Ref)')
-    result.add_argument('--host', action='append', type=validate_host, help='DNS-Name/IPv4, mehrfach möglich')
+    result.add_argument('--host', action='append', type=validate_host, help='Optionaler zusätzlicher DNS-Name; IP/DHCP wird nicht festgelegt')
     result.add_argument('--port', type=validate_port, metavar='1..65535')
     result.add_argument('--admin-user', help='Initialer IT-Administrator (Standard: admin)')
     result.add_argument('--update', action='store_true')

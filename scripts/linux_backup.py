@@ -15,8 +15,21 @@ def main():
     if not backup.is_relative_to(BACKUPS.resolve()) or not (backup / 'manifest.json').is_file():
         raise RuntimeError('Ungültiges Sicherungsziel.')
     write_private(backup / 'install.json', STATE.read_text())
+    from dms.health import heartbeat
+    heartbeat('backup')
     print(backup)
 
 
 if __name__ == '__main__':
-    main()
+    # Initialize settings only; the backup subprocess uses its SELECT-only role.
+    import os
+    sys.path.insert(0,str((BASE / 'current').resolve()))
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE','config.settings')
+    import django
+    django.setup()
+    try:
+        main()
+    except Exception:
+        from dms.health import heartbeat
+        heartbeat('backup','error')
+        raise

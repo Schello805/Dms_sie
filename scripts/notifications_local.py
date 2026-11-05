@@ -26,6 +26,6 @@ with psycopg.connect(dbname='ims_dms_dev',**parameters) as connection:
     if not connection.execute("SELECT 1 FROM pg_roles WHERE rolname='ims_dms_dev_notify'").fetchone():
         connection.execute(sql.SQL('CREATE ROLE ims_dms_dev_notify LOGIN PASSWORD {}').format(sql.Literal(values['notification_password'])))
     connection.execute((root/'db/notification_grants.sql').read_text().replace(':"notification_role"','ims_dms_dev_notify').replace(':"database_name"','ims_dms_dev'))
-environment = dict(os.environ,PGHOST='127.0.0.1',PGPORT=parameters['port'],PGUSER='ims_dms_dev_notify',PGPASSWORD=values['notification_password'],PGDATABASE='ims_dms_dev',DMS_SECRET_KEY=values['secret_key'],DMS_DEBUG='0')
+environment = dict(os.environ,PGHOST='127.0.0.1',PGPORT=parameters['port'],PGUSER='ims_dms_dev_notify',PGPASSWORD=values['notification_password'],PGDATABASE='ims_dms_dev',DMS_SECRET_KEY=values['secret_key'],DMS_DEBUG='0',DMS_MEDIA_ROOT=str(state/'files'),DMS_HEALTH_DIR=str(state/'health'))
 print('Lokaler Erinnerungsdienst gestartet; Versand nur bei aktivierter SMTP-Konfiguration.',flush=True)
 sys.exit(subprocess.call([sys.executable,str(root/'manage.py'),'process_notifications',*sys.argv[1:]],cwd=root,env=environment))

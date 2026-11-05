@@ -7,11 +7,12 @@
   <link rel="stylesheet" href="{% url 'ui_asset' 'app.css' %}">
   {% include 'dms/branding_head.html' %}
 </head>
-<body>
+<body data-account="{{ user.pk|default:'guest' }}">
   <header>{% include 'dms/navigation.html' %}</header>
   {% include 'dms/toasts.html' %}
-  <main>{% block content %}{% endblock %}</main>
+  <main>{% if system_health.count %}<div class="card attention" role="status"><strong>{{ system_health.count }} Betriebshinweise</strong> · <a href="{% url 'system_diagnostics' %}">Systemzustand prüfen</a></div>{% endif %}{% block content %}{% endblock %}</main>
   {% include 'dms/footer.html' %}
+  <script src="{% url 'ui_asset' 'catalog-state.js' %}" defer></script>
   <script src="{% url 'ui_asset' 'app.js' %}" defer></script>
 </body>
 </html>

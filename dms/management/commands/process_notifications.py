@@ -15,15 +15,21 @@ class Command(BaseCommand):
         total = 0
         try:
             while True:
+                from dms.health import heartbeat
                 close_old_connections()
                 queue_due()
                 for _ in range(options['limit']):
                     if not dispatch_one():
                         break
                     total += 1
+                heartbeat('notifications')
                 if options['once']:
                     break
                 time.sleep(options['poll_seconds'])
+        except Exception:
+            from dms.health import heartbeat
+            heartbeat('notifications','error')
+            raise
         except KeyboardInterrupt:
             pass
         self.stdout.write(f'{total} Versandvorgänge bearbeitet.')

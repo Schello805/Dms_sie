@@ -25,7 +25,7 @@ class ReaderSurfaceMiddleware(MiddlewareMixin):
         if not request.reader_only:
             return None
         match = request.resolver_match
-        if match and match.view_name in {'home','index','detail','read_current','pdf_viewer','preview_pdf','download','document_qr','login','logout'}:
+        if match and match.view_name in {'home','index','detail','read_current','pdf_viewer','preview_pdf','download','document_qr','login','logout','account_password'}:
             return None
         from django.core.exceptions import PermissionDenied
         from django.shortcuts import redirect
@@ -36,3 +36,28 @@ class ReaderSurfaceMiddleware(MiddlewareMixin):
         if request.method in ('GET','HEAD') and match and match.view_name in {'tasks','records','record_detail','new_record'}:
             return redirect('index')
         raise PermissionDenied('Leser können freigegebene Dokumente ansehen und herunterladen.')
+
+
+class DynamicHostMiddleware:
+    """DHCP-compatible literal IP hosts, without allowing arbitrary DNS hosts."""
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        from django.conf import settings
+        if settings.DYNAMIC_HOSTS:
+            import ipaddress
+            import socket
+            from django.http.request import split_domain_port
+            from django.core.exceptions import DisallowedHost
+            host, _ = split_domain_port(request.get_host())
+            configured = {name.lower() for name in settings.EXPLICIT_HOSTS if name and name != '*'}
+            configured.update({'localhost', socket.gethostname().lower()})
+            try:
+                ipaddress.ip_address(host.strip('[]'))
+                valid = True
+            except ValueError:
+                valid = host in configured
+            if not valid:
+                raise DisallowedHost('Nicht zugelassener Hostname.')
+        return self.get_response(request)

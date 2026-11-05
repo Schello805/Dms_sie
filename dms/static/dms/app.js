@@ -76,6 +76,18 @@
     });
   });
 
+  let dirty = false;
+  document.querySelectorAll('form[method="post"]').forEach(form => {
+    form.addEventListener('input', event => { if (event.target.type !== 'hidden') dirty = true; });
+    form.addEventListener('submit', event => {
+      if (!event.defaultPrevented) dirty = false;
+    });
+  });
+  window.addEventListener('beforeunload', event => {
+    if (dirty) { event.preventDefault(); event.returnValue = ''; }
+  });
+  window.addEventListener('pageshow', () => { dirty = false; });
+
   document.querySelectorAll('[data-toast]').forEach(initializeToast);
   const menu = document.querySelector('.account-menu');
   if (menu) initializeAccountMenu(menu);

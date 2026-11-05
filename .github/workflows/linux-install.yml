@@ -39,19 +39,21 @@ jobs:
       - name: Fresh local-source installation
         env:
           INSTALL_REPO: https://github.com/${{ github.repository }}
-        run: sudo python3 scripts/install_linux.py --source-dir "$GITHUB_WORKSPACE" --repo "$INSTALL_REPO" --host localhost --port 8080
+        run: sudo python3 scripts/install_linux.py --source-dir "$GITHUB_WORKSPACE" --repo "$INSTALL_REPO"
       - name: Health and bootstrap checks
         run: |
-          curl --fail http://localhost:8080/ > /tmp/ims-home.html
+          curl --fail http://localhost/ > /tmp/ims-home.html
           grep -q Dokumentenübersicht /tmp/ims-home.html
           sudo systemctl is-active ims-dms ims-dms-index ims-dms-notifications
           sudo ims-dms-manage check
+          curl --fail -H "Host: 192.168.99.12" http://localhost/ > /dev/null
+          curl --fail -H "Host: 192.168.99.99" http://localhost/ > /dev/null
           sudo systemctl start ims-dms-backup.service
       - name: Update with mandatory backup
         run: sudo python3 scripts/install_linux.py --update --source-dir "$GITHUB_WORKSPACE"
       - name: Health after update
         run: |
-          curl --fail http://localhost:8080/ > /dev/null
+          curl --fail http://localhost/ > /dev/null
           sudo test -f /etc/ims-dms/initial-admin-password
           sudo systemctl is-active ims-dms-backup.timer
       - name: Service diagnostics on failure

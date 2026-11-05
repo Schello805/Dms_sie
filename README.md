@@ -18,13 +18,13 @@ Unterstützt werden Ubuntu 24.04 LTS und Debian 13 mit systemd, auch im Proxmox-
 Den Installer **im Linux-Server/LXC**, nicht auf dem Proxmox-Host, ausführen.
 Der gewählte Betrieb verwendet intern **HTTP**. PostgreSQL und Gunicorn bleiben auf Loopback.
 
-Als root; die Beispiel-IP durch die Adresse des Zielservers ersetzen:
+Als root ausführen. Es wird keine feste IP benötigt oder vergeben; DHCP bleibt unverändert:
 
 ```bash
 apt-get update
 apt-get install -y curl python3 ca-certificates
 curl -fsSL https://raw.githubusercontent.com/Schello805/Dms_sie/main/scripts/install_linux.py -o install-dms.py
-python3 install-dms.py --repo https://github.com/Schello805/Dms_sie.git --host 192.168.1.50
+python3 install-dms.py --repo https://github.com/Schello805/Dms_sie.git
 ```
 
 Erste Anmeldung: Benutzer `admin`; das zufällig erzeugte Passwort steht nur auf dem Server:
@@ -96,6 +96,15 @@ Zielgruppen, Kenntnisnahmen und ein Nachweisregister sind zusätzlich im Code vo
 Das Nachweisregister enthält unter anderem unveränderliche Nachweise, Aufbewahrungsverlängerungen,
 Löschsperren und Aussonderungsanträge. Diese Funktionen sind **nicht Teil der vereinfachten Leseroberfläche**;
 der frühere Portal-/Kenntnisnahme-Worker wird vom Installer nicht gestartet.
+
+## Neu: Benutzerverwaltung, QMB-Arbeitsliste und Betriebsüberwachung
+
+- IT-Admins können lokale Benutzer direkt anlegen, Konten aktivieren/deaktivieren und Passwörter zurücksetzen. Benutzer können ihr eigenes Passwort ändern. Bestehende Sitzungen werden bei Deaktivierung oder Passwortwechsel beendet; Änderungen werden ohne Passwortdaten auditiert.
+- Die QMB-Arbeitsliste und Glocke berücksichtigen Freigabeanfragen sowie bevorstehende/überfällige Reviews gemäß dem konfigurierten Vorlauf. Eigene Dokumente bleiben von unabhängigen Prüfaufgaben ausgeschlossen.
+- Die IT sieht Lebenszeichen der Worker, den Nachweis der letzten Sicherung und Hinweise bei knappem Speicher. Lokale Hinweise ersetzen keine externe Alarmierung.
+- Versionsvergleich für Metadaten, Norm-/Abteilungszuordnungen und Dateiprüfsummen; kein visueller PDF-Inhaltsvergleich.
+- Rückkehr zur Tabelle behält Filter, Sortierung und Scrollposition pro Tab. Ungespeicherte Formulare warnen beim Verlassen. Tabellenkopf und Dokumentnummer bleiben beim Scrollen sichtbar.
+- Der Installer legt keine Netzwerkkonfiguration an. Wechselnde IP-Adressen funktionieren; zusätzliche DNS-Namen sind optional über `--host` angebbar.
 
 ## Noch offen: technische Erweiterungen
 

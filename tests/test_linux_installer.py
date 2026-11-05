@@ -62,7 +62,7 @@ class InstallerTests(unittest.TestCase):
         self.assertIn('User=ims-dms', container)
         self.assertIn('NoNewPrivileges=true', container)
         nginx = installer.nginx_config(self.state())
-        self.assertIn('listen 8080;', nginx)
+        self.assertIn('listen 8080 default_server;', nginx)
         self.assertIn('proxy_pass http://127.0.0.1:8000;', nginx)
         self.assertNotIn('alias ', nginx)
 
@@ -81,6 +81,14 @@ class InstallerTests(unittest.TestCase):
         with patch('sys.argv', ['install_linux.py','--dry-run','--repo','https://github.com/example/dms','--host','localhost']), patch.object(installer,'install') as install, patch('builtins.print'):
             installer.main()
             install.assert_not_called()
+
+    def test_installation_does_not_require_or_configure_a_fixed_ip(self):
+        args=installer.parser().parse_args(['--repo','https://github.com/example/dms'])
+        self.assertIsNone(args.host)
+        state=self.state();state['hosts']=[]
+        self.assertEqual(installer.environment(state,'app')['DMS_DYNAMIC_HOSTS'],'1')
+        self.assertIn('server_name _;',installer.nginx_config(state))
+        self.assertEqual(installer.environment(state,'app')['DMS_ALLOWED_HOSTS'],'localhost,127.0.0.1')
 
     def test_database_grants_are_applied_to_all_dedicated_roles(self):
         with patch.object(installer,'psql') as psql:

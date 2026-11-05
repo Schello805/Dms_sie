@@ -5,9 +5,11 @@ DEBUG = os.environ.get('DMS_DEBUG') == '1'
 SECRET_KEY = os.environ.get('DMS_SECRET_KEY', '')
 if not SECRET_KEY:
     raise RuntimeError('DMS_SECRET_KEY muss gesetzt sein.')
-ALLOWED_HOSTS = os.environ.get('DMS_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+EXPLICIT_HOSTS = os.environ.get('DMS_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+DYNAMIC_HOSTS = os.environ.get('DMS_DYNAMIC_HOSTS') == '1'
+ALLOWED_HOSTS = ['*'] if DYNAMIC_HOSTS else EXPLICIT_HOSTS
 INSTALLED_APPS = ['django.contrib.auth', 'django.contrib.contenttypes', 'django.contrib.sessions', 'django.contrib.messages', 'django.contrib.staticfiles', 'dms']
-MIDDLEWARE = ['dms.system_logs.RequestIdMiddleware','django.middleware.security.SecurityMiddleware', 'django.contrib.sessions.middleware.SessionMiddleware', 'django.middleware.common.CommonMiddleware', 'django.middleware.csrf.CsrfViewMiddleware', 'django.contrib.auth.middleware.AuthenticationMiddleware', 'django.contrib.messages.middleware.MessageMiddleware', 'django.middleware.clickjacking.XFrameOptionsMiddleware', 'dms.middleware.PrivateContentMiddleware','dms.middleware.ReaderSurfaceMiddleware']
+MIDDLEWARE = ['dms.system_logs.RequestIdMiddleware','dms.middleware.DynamicHostMiddleware','django.middleware.security.SecurityMiddleware', 'django.contrib.sessions.middleware.SessionMiddleware', 'django.middleware.common.CommonMiddleware', 'django.middleware.csrf.CsrfViewMiddleware', 'django.contrib.auth.middleware.AuthenticationMiddleware', 'django.contrib.messages.middleware.MessageMiddleware', 'django.middleware.clickjacking.XFrameOptionsMiddleware', 'dms.middleware.PrivateContentMiddleware','dms.middleware.ReaderSurfaceMiddleware']
 ROOT_URLCONF = 'config.urls'
 TEMPLATES = [{'BACKEND': 'django.template.backends.django.DjangoTemplates', 'DIRS': [], 'APP_DIRS': True, 'OPTIONS': {'context_processors': ['django.template.context_processors.request', 'django.contrib.auth.context_processors.auth', 'django.contrib.messages.context_processors.messages','dms.context.navigation']}}]
 WSGI_APPLICATION = 'config.wsgi.application'
@@ -49,3 +51,5 @@ LOGGING = {
         'dms':{'handlers':['dms_errors'],'level':'WARNING','propagate':False},
     },
 }
+
+HEALTH_DIR = Path(os.environ.get('DMS_HEALTH_DIR', str(MEDIA_ROOT.parent / 'health')))

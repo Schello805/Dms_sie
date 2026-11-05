@@ -1,0 +1,4 @@
+{% extends 'dms/base.html' %}{% block content %}
+<p><a href="{% if can_admin_settings %}{% url 'user_roles' %}{% else %}{% url 'index' %}{% endif %}">← Zurück</a></p>
+<h1>{{ title }}</h1><form method="post" class="card document-form">{% csrf_token %}{{ form.as_p }}<div class="form-actions"><button>{{ button }}</button></div></form>
+{% endblock %}

@@ -15,8 +15,11 @@ class Command(BaseCommand):
         processed = 0
         try:
             while True:
+                from dms.health import heartbeat
                 close_old_connections()
-                if process_one():
+                worked = process_one()
+                heartbeat('index')
+                if worked:
                     processed += 1
                     if options['once'] and processed>=options['limit']:
                         break
@@ -24,6 +27,10 @@ class Command(BaseCommand):
                     break
                 else:
                     time.sleep(options['poll_seconds'])
+        except Exception:
+            from dms.health import heartbeat
+            heartbeat('index','error')
+            raise
         except KeyboardInterrupt:
             pass
         self.stdout.write(f'{processed} Indexaufträge verarbeitet.')

@@ -8,7 +8,7 @@ Ubuntu 24.04 liefert PostgreSQL 16, Debian 13 PostgreSQL 17. Der Installer setzt
 
 Das Repository muss die Projektdateien inklusive `scripts/`, `dms/`, `config/`, `db/`, `deploy/` und `requirements.lock.txt` enthalten. `.local/`, `.venv/`, Dokumentenspeicher und echte Zugangsdaten gehören nicht hinein und werden bereits über `.gitignore` ausgeschlossen.
 
-Das Projekt liegt unter [Schello805/Dms_sie](https://github.com/Schello805/Dms_sie). In den folgenden Befehlen die Beispiel-IP durch die Adresse deines Servers ersetzen. Für reproduzierbare Installationen einen geprüften Tag oder Commit statt `main` verwenden und beim Download sowie bei `--ref` denselben Stand angeben. Für eigene Forks die Repository- und Download-Adresse entsprechend ersetzen.
+Das Projekt liegt unter [Schello805/Dms_sie](https://github.com/Schello805/Dms_sie). Die Installation benötigt keine feste IP und verändert weder DHCP noch Netzwerkschnittstellen. Für reproduzierbare Installationen einen geprüften Tag oder Commit statt `main` verwenden und beim Download sowie bei `--ref` denselben Stand angeben. Für eigene Forks die Repository- und Download-Adresse entsprechend ersetzen.
 
 ## 2. Online installieren
 
@@ -24,21 +24,21 @@ curl --fail --show-error --location \
 # Ablauf unverbindlich ansehen; verändert nichts:
 python3 /tmp/install-ims-dms.py --dry-run \
   --repo https://github.com/Schello805/Dms_sie.git \
-  --ref main --host 192.168.1.50
+  --ref main
 
 # Installieren:
 python3 /tmp/install-ims-dms.py \
   --repo https://github.com/Schello805/Dms_sie.git \
-  --ref main --host 192.168.1.50
+  --ref main
 ```
 
-Mehrere Adressen sind möglich: `--host dms.firma.intern --host 192.168.1.50`. Standardport ist **80**; optional `--port 8080`. DNS muss auf den Server zeigen. Netzwerk-/Proxmox-Firewallregeln und Paketquellen werden nicht verändert. APT-Zugriffe haben begrenzte Netzwerk-Wartezeiten und brechen bei nicht erreichbaren Quellen ab; dann Paketspiegel/Proxy prüfen und erneut starten.
+Zusätzliche DNS-Namen sind optional: `--host dms.firma.intern`. Ohne diesen Parameter funktionieren die aktuelle IP (auch nach DHCP-Wechsel), localhost und der Serverhostname. Standardport ist **80**; optional `--port 8080`. DNS muss auf den Server zeigen. Netzwerk-/Proxmox-Firewallregeln und Paketquellen werden nicht verändert. APT-Zugriffe haben begrenzte Netzwerk-Wartezeiten und brechen bei nicht erreichbaren Quellen ab; dann Paketspiegel/Proxy prüfen und erneut starten.
 
-Für private Repositories: Code mit deinem bereits eingerichteten GitHub-Zugang klonen und `sudo python3 scripts/install_linux.py --repo git@github.com:Schello805/Dms_sie.git --source-dir "$PWD" --host 192.168.1.50` verwenden. Spätere Online-Updates benötigen einen passenden SSH-Zugang für root oder erneut `--source-dir`. Keine Tokens in Repository-URLs eintragen. Der Installer richtet keine GitHub-Zugangsdaten ein.
+Für private Repositories: Code mit deinem bereits eingerichteten GitHub-Zugang klonen und `sudo python3 scripts/install_linux.py --repo git@github.com:Schello805/Dms_sie.git --source-dir "$PWD"` verwenden. Spätere Online-Updates benötigen einen passenden SSH-Zugang für root oder erneut `--source-dir`. Keine Tokens in Repository-URLs eintragen. Der Installer richtet keine GitHub-Zugangsdaten ein.
 
 ## 3. Erste Anmeldung
 
-- URL: `http://192.168.1.50/`
+- URL: `http://SERVER-HOSTNAME/` oder `http://AKTUELLE-SERVER-IP/`
 - Benutzer: `admin` (änderbar bei Installation mit `--admin-user`)
 - Zufällig erzeugtes Passwort auf dem Server lesen:
 
@@ -66,7 +66,7 @@ sudo ims-dms-manage provision_dms autor --role AUTHOR --department IT --departme
 
 Der zweite Befehl legt die beispielhafte Abteilung IT an. Das Abteilungskürzel und den Namen durch eure echten Stammdaten ersetzen; eine leere Neuinstallation enthält bewusst keine erfundenen Abteilungen. Weitere Normreferenzen lassen sich mit `ims-dms-manage add_standard_reference` ergänzen. Der Installer legt nur die drei im Projekt verwendeten Normausgaben mit der Referenz 7.5 an, keine Normvolltexte.
 
-Weitere Rollenzuordnungen erfolgen unter **Admin-Einstellungen → Benutzer und Rollen**. Fachliche Kategorien und Review-Fristen verwaltet ein QMB. SMTP muss im Adminbereich eingerichtet werden; die fachlichen Erinnerungsregeln liegen beim QMB. AD/LDAP-Produktivanmeldung wird durch den Installer nicht aktiviert.
+Benutzer können direkt unter **Admin-Einstellungen → Benutzer und Rollen** angelegt, aktiviert/deaktiviert und mit Rollen versehen werden. Dort sind auch Passwortzurücksetzungen möglich; das eigene Passwort lässt sich im Profilmenü ändern. Die untenstehenden CLI-Befehle bleiben für administrative Einrichtung verfügbar. Fachliche Kategorien und Review-Fristen verwaltet ein QMB. SMTP muss im Adminbereich eingerichtet werden; die fachlichen Erinnerungsregeln liegen beim QMB. AD/LDAP-Produktivanmeldung wird durch den Installer nicht aktiviert.
 
 ## 4. Was installiert wird
 
@@ -123,3 +123,15 @@ Die täglichen Sicherungen verwenden die bestehende konsistente Datenbank-/Datei
 - `.github/workflows/linux-install.yml` führt auf GitHub Ubuntu-24.04-Neuinstallation, HTTP-/Dienstprüfung und ein Update mit Sicherung aus; zusätzlich manuell über **Actions → Linux installer → Run workflow** startbar.
 
 Der vollständige Ubuntu-24.04-Lauf wurde am 05.11.2026 erfolgreich auf GitHub ausgeführt: Neuinstallation, Dienst-/HTTP-Prüfung, tägliche Sicherung und Update mit vorheriger Sicherung. [Erfolgreicher CI-Lauf](https://github.com/Schello805/Dms_sie/actions/runs/42077086586). Ein echter Proxmox-LXC und Debian 13 wurden noch nicht vollständig durchinstalliert. Die Wiederherstellungsabnahme und ein vollständiger Rollen-/Freigabetest auf dem Zielserver bleiben Teil der Inbetriebnahme.
+
+## DHCP, Host-Prüfung und vorhandene Nginx-Startseite
+
+Der Installer setzt `DMS_DYNAMIC_HOSTS=1`. Die Anwendung akzeptiert dann gültige IP-Adressen als Host sowie localhost, den Serverhostname und ausdrücklich konfigurierte DNS-Namen; beliebige fremde DNS-Hostheader bleiben gesperrt. Der HTTP-Proxy ist der Defaultserver am gewählten Port. Bei Port 80 wird nur die erkennbare unveränderte Paket-Startseite von Nginx deaktiviert und ihr Verweis unter `/etc/ims-dms/nginx-packaged-default.saved` aufgehoben. Benutzerdefinierte Default-Konfigurationen werden nicht überschrieben.
+
+Für bereits installierte Systeme übernimmt ein Update diese Einstellungen. Bestehende `--host`-Angaben bleiben als zusätzliche Namen erhalten, beschränken den Zugriff aber nicht mehr auf eine alte IP. Der Installer vergibt zu keinem Zeitpunkt eine statische Netzwerkadresse.
+
+## Betriebsüberwachung
+
+Index- und Erinnerungsworker schreiben lokale Lebenszeichen unter `/var/lib/ims-dms/health/`; der tägliche Sicherungsdienst meldet Erfolg oder Fehler. Im IT-Bereich erscheinen Warnungen bei fehlenden/veralteten Rückmeldungen, fehlgeschlagener Sicherung oder knappem Dateispeicher. Ein abgeschalteter Erinnerungsversand erzeugt keine unnötige Workerwarnung. Die Überwachung erfolgt in der Anwendung, ohne externe Alarmnachricht. Betrieblich zusätzlich eine externe Erreichbarkeitsüberwachung und getrennte Sicherung vorsehen.
+
+Für gedruckte QR-Codes und dauerhaft gültige E-Mail-Links einen stabilen DNS-Namen verwenden. Ein QR-Code mit einer früheren IP kann durch einen DHCP-Wechsel nicht automatisch auf die neue IP umgebogen werden.

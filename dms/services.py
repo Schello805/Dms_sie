@@ -381,7 +381,7 @@ def workflow_tasks(user):
         WHERE (is_qmb(%s) OR can_lead_approve(%s,v.id)) AND can_read_version(%s,v.id)
           AND v.created_by<>%s AND w.submitted_by<>%s
           AND v.status IN ('IN_REVIEW','PENDING_APPROVAL')
-        ORDER BY w.started_at,v.id LIMIT 200""",[uid,uid,uid,uid,uid])
+        ORDER BY w.started_at,v.id LIMIT 5000""",[uid,uid,uid,uid,uid])
 
 
 

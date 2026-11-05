@@ -10,9 +10,9 @@ def navigation(request):
     qmb = is_qmb(request.user)
     can_tasks = can_create or qmb
     if can_tasks:
-        from .services import workflow_tasks
-        from .simple_workflow import returned_tasks
-        task_count = len(workflow_tasks(request.user))+len(returned_tasks(request.user))
+        from .worklist import tasks_for
+        request.worklist = getattr(request,'worklist',None) or tasks_for(request.user)
+        task_count = request.worklist['work_count']
     profile = None
     admin = is_settings_admin(request.user)
     if request.user.is_authenticated:
@@ -21,4 +21,6 @@ def navigation(request):
         profile = {'name':name,'email':rows[0]['email'] if rows else '',
                    'initials':''.join(word[0] for word in name.split()[:2]).upper(),
                    'roles':['Leser']+(['Autor'] if can_create else [])+(['QMB'] if qmb else [])+(['Admin'] if admin else [])}
-    return {'account_info':profile,**branding_context(),'can_tasks':can_tasks,'task_count':task_count,'can_admin_settings':admin,'can_create_documents':can_create,'can_qmb_management':qmb,'can_find_management':qmb or admin}
+    from .health import status
+    health = status() if admin else None
+    return {'system_health':health,'account_info':profile,**branding_context(),'can_tasks':can_tasks,'task_count':task_count,'can_admin_settings':admin,'can_create_documents':can_create,'can_qmb_management':qmb,'can_find_management':qmb or admin}

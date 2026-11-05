@@ -10,6 +10,9 @@
 
   let nextUrl = nextLink.href;
   let busy = false;
+  const scrollArea = rows.closest('.table-wrap');
+  const restore = window.imsCatalogRestore;
+  let restoring = Boolean(restore && restore.rows > rows.children.length);
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'secondary';
@@ -24,6 +27,7 @@
     rows.setAttribute('aria-busy', 'true');
     status.textContent = 'Weitere Dokumente werden geladen …';
 
+    let succeeded = false;
     try {
       const url = new URL(nextUrl, location.href);
       url.searchParams.set('fragment', '1');
@@ -44,12 +48,19 @@
         '<table><tbody>' + data.html + '</tbody></table>', 'text/html');
       rows.append(...parsed.querySelector('tbody').children);
       nextUrl = data.next_url;
+      succeeded = true;
       status.textContent = nextUrl ? 'Weitere Dokumente geladen.' : 'Alle Dokumente geladen.';
+      if (restoring && (rows.children.length >= restore.rows || !nextUrl)) {
+        restoring = false;
+        scrollArea.scrollTop = restore.scroll;
+        window.scrollTo(0, restore.pageScroll);
+      }
       if (!nextUrl) {
         observer.disconnect();
         navigation.remove();
       }
     } catch (error) {
+      restoring = false;
       observer.disconnect();
       status.textContent = 'Nachladen nicht möglich. Bitte erneut versuchen oder die Seite neu laden.';
     } finally {
@@ -57,12 +68,18 @@
       button.disabled = false;
       button.textContent = 'Weitere Dokumente laden';
       rows.removeAttribute('aria-busy');
+      if (nextUrl && succeeded) {
+        observer.disconnect();
+        observer.observe(rows.lastElementChild);
+        if (restoring) loadNextPage();
+      }
     }
   }
 
   const observer = new IntersectionObserver(entries => {
     if (entries.some(entry => entry.isIntersecting)) loadNextPage();
-  }, { rootMargin: '250px' });
+  }, { root: scrollArea, rootMargin: '250px' });
   button.addEventListener('click', loadNextPage);
-  observer.observe(navigation);
+  observer.observe(rows.lastElementChild);
+  if (restoring) loadNextPage();
 })();

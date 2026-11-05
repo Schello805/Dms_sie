@@ -12,6 +12,7 @@ ASSET_TYPES = {
     'branding.css': 'text/css',
     'app.js': 'text/javascript',
     'catalog.js': 'text/javascript',
+    'catalog-state.js': 'text/javascript',
 }
 
 

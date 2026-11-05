@@ -225,8 +225,9 @@ def tasks(request):
     from .simple_workflow import returned_tasks
     if not is_qmb(request.user) and not services.query("SELECT 1 FROM users u WHERE u.auth_user_id=%s AND EXISTS(SELECT 1 FROM effective_role_assignments r WHERE r.user_id=u.id AND r.role='AUTHOR')",[request.user.pk]):
         return redirect('index')
-    qmb = is_qmb(request.user)
-    return render(request,'dms/tasks.html',{'returned':returned_tasks(request.user),'tasks':services.workflow_tasks(request.user) if qmb else [],'due':services.visible_versions(request.user,due_only=True) if qmb else []})
+    from .worklist import tasks_for
+    request.worklist = tasks_for(request.user)
+    return render(request,'dms/tasks.html',request.worklist)
 
 
 @login_required
