@@ -36,7 +36,8 @@ cat /etc/ims-dms/initial-admin-password
 Update als root:
 
 ```bash
-python3 /opt/ims-dms/current/scripts/install_linux.py --update
+curl -fsSL https://raw.githubusercontent.com/Schello805/Dms_sie/main/scripts/install_linux.py -o /tmp/install-ims-dms.py
+python3 /tmp/install-ims-dms.py --update
 ```
 
 [Ausführliche Installationsanleitung](docs/github-installation.md): Voraussetzungen,
@@ -98,6 +99,8 @@ Löschsperren und Aussonderungsanträge. Diese Funktionen sind **nicht Teil der 
 der frühere Portal-/Kenntnisnahme-Worker wird vom Installer nicht gestartet.
 
 ## Neu: Benutzerverwaltung, QMB-Arbeitsliste und Betriebsüberwachung
+
+[Ausbaustufe 0.3.0-dev und Prüfstand](docs/priority-release-0.3.0.md).
 
 - IT-Admins können lokale Benutzer direkt anlegen, Konten aktivieren/deaktivieren und Passwörter zurücksetzen. Benutzer können ihr eigenes Passwort ändern. Bestehende Sitzungen werden bei Deaktivierung oder Passwortwechsel beendet; Änderungen werden ohne Passwortdaten auditiert.
 - Die QMB-Arbeitsliste und Glocke berücksichtigen Freigabeanfragen sowie bevorstehende/überfällige Reviews gemäß dem konfigurierten Vorlauf. Eigene Dokumente bleiben von unabhängigen Prüfaufgaben ausgeschlossen.

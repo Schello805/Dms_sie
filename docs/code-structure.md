@@ -15,3 +15,12 @@ Die Asset-URLs liegen unter `/assets/ui/`. Die bestehende Cache-Middleware verhi
 ## Prüfung
 
 Die PostgreSQL-Tests prüfen auch Filter, Sortierung, Seitengrenzen, Sichtbarkeit von Entwürfen und die Asset-Allowlist. Nach Änderungen zusätzlich im Browser prüfen: Anmeldung, Benutzermenü, Toast-Schließen und die Dokumententabelle. Lazy Loading hat einen manuellen Ladebutton; ohne JavaScript bleibt der normale Seitenlink erhalten.
+
+## Konten und Betrieb ab 0.3.0-dev
+
+- `accounts.py` / `account_views.py` / `account_forms.py`: lokale Konten und Passwortwechsel; Datenbankmutationen über die begrenzten Funktionen aus Migration 0015, keine direkten Auth-Tabellenrechte für den Webdienst.
+- `worklist.py`: gemeinsame QMB-Aufgaben und Glockenzähler, inklusive Review-Vorlauf.
+- `health.py`: lokale Worker-/Sicherungsindikatoren und Hinweise bei knappem Speicher. Keine externe Alarmierung.
+- `comparison.py`: berechtigungsgeprüfter Vergleich von Metadaten, Zuordnungen und Dateiprüfsummen.
+- `catalog-state.js`: Filter-/Scroll-Rückkehr pro Tab, ohne Dokumentinhalte oder Formularwerte zu speichern.
+- `DynamicHostMiddleware`: geprüfte IP-Literale/Servernamen im DHCP-Betrieb; keine beliebigen fremden DNS-Hosts.

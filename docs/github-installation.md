@@ -92,10 +92,11 @@ Der frühere Kenntnisnahme-/Portal-Worker wird nicht gestartet. Leser verwenden 
 
 ## 5. Updates
 
-Installer aus dem gewünschten GitHub-Stand herunterladen oder den installierten verwenden:
+Den Installer zuerst aus dem gewünschten GitHub-Stand neu herunterladen. Damit werden auch Änderungen am Installer selbst (etwa der DHCP-Zugriff) übernommen:
 
 ```bash
-sudo python3 /opt/ims-dms/current/scripts/install_linux.py --update --ref main
+curl -fsSL https://raw.githubusercontent.com/Schello805/Dms_sie/main/scripts/install_linux.py -o /tmp/install-ims-dms.py
+python3 /tmp/install-ims-dms.py --update --ref main
 ```
 
 Das Update bereitet einen neuen Quellstand und eine neue virtuelle Umgebung vor. Danach werden Web-/Worker-/Backup-Dienste angehalten, eine konsistente Sicherung erstellt, Migrationen und Grants angewendet und erst anschließend auf den neuen Stand umgeschaltet. Nginx bleibt erreichbar, während die Anwendung im Wartungsfenster vorübergehend nicht verfügbar ist. Nach erfolgreicher HTTP-Prüfung starten die Dienste normal weiter. Geheimnisse und Dokumentenspeicher bleiben erhalten.
