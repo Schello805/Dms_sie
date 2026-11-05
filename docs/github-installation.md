@@ -32,7 +32,7 @@ python3 /tmp/install-ims-dms.py \
   --ref main --host 192.168.1.50
 ```
 
-Mehrere Adressen sind möglich: `--host dms.firma.intern --host 192.168.1.50`. Standardport ist **80**; optional `--port 8080`. DNS muss auf den Server zeigen. Netzwerk-/Proxmox-Firewallregeln werden nicht verändert.
+Mehrere Adressen sind möglich: `--host dms.firma.intern --host 192.168.1.50`. Standardport ist **80**; optional `--port 8080`. DNS muss auf den Server zeigen. Netzwerk-/Proxmox-Firewallregeln und Paketquellen werden nicht verändert. APT-Zugriffe haben begrenzte Netzwerk-Wartezeiten und brechen bei nicht erreichbaren Quellen ab; dann Paketspiegel/Proxy prüfen und erneut starten.
 
 Für private Repositories: Code mit deinem bereits eingerichteten GitHub-Zugang klonen und `sudo python3 scripts/install_linux.py --repo git@github.com:Schello805/Dms_sie.git --source-dir "$PWD" --host 192.168.1.50` verwenden. Spätere Online-Updates benötigen einen passenden SSH-Zugang für root oder erneut `--source-dir`. Keine Tokens in Repository-URLs eintragen. Der Installer richtet keine GitHub-Zugangsdaten ein.
 

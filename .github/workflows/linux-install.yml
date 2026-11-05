@@ -20,6 +20,22 @@ jobs:
       - uses: actions/checkout@v4
       - name: Installer unit tests
         run: python3 -m unittest discover -s tests -p 'test_linux_installer.py' -v
+      - name: Use official HTTPS Ubuntu package mirrors on the CI runner
+        run: |
+          cat > /tmp/ims-ubuntu.sources <<'EOF'
+          Types: deb
+          URIs: https://archive.ubuntu.com/ubuntu
+          Suites: noble noble-updates noble-backports
+          Components: main restricted universe multiverse
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+          Types: deb
+          URIs: https://security.ubuntu.com/ubuntu
+          Suites: noble-security
+          Components: main restricted universe multiverse
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          EOF
+          sudo install -m 0644 /tmp/ims-ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources
       - name: Fresh local-source installation
         env:
           INSTALL_REPO: https://github.com/${{ github.repository }}

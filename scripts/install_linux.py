@@ -27,6 +27,8 @@ BACKUPS = Path('/var/backups/ims-dms')
 SERVICES = ('ims-dms', 'ims-dms-index', 'ims-dms-notifications')
 ROLES = ('owner', 'app', 'index', 'notify', 'backup')
 MARKER = '# Managed by IMS-DMS install_linux.py'
+APT_OPTIONS = ['-o', 'Acquire::Retries=2', '-o', 'Acquire::http::Timeout=20',
+               '-o', 'Acquire::https::Timeout=20', '-o', 'APT::Update::Error-Mode=any']
 
 
 def run(args, *, env=None, text=None, capture=False, cwd=None):
@@ -279,8 +281,8 @@ def _install_locked(args):
     if not exists and (not args.repo or not args.host):
         raise ValueError('Neuinstallation benötigt --repo und mindestens einen --host.')
     print('1/7 Systempakete installieren', flush=True)
-    run(['apt-get', 'update'])
-    run(['apt-get', 'install', '-y', 'python3', 'python3-venv', 'python3-dev', 'build-essential', 'libffi-dev', 'libssl-dev', 'git', 'curl', 'ca-certificates', 'postgresql', 'postgresql-client', 'nginx', 'fonts-dejavu-core'], env=dict(os.environ, DEBIAN_FRONTEND='noninteractive'))
+    run(['apt-get', *APT_OPTIONS, 'update'])
+    run(['apt-get', *APT_OPTIONS, 'install', '-y', 'python3', 'python3-venv', 'python3-dev', 'build-essential', 'libffi-dev', 'libssl-dev', 'git', 'curl', 'ca-certificates', 'postgresql', 'postgresql-client', 'nginx', 'fonts-dejavu-core'], env=dict(os.environ, DEBIAN_FRONTEND='noninteractive'))
     run(['systemctl', 'enable', '--now', 'postgresql'])
     version = int(psql('SHOW server_version_num;', capture=True).stdout.strip())
     if version < 160000:
