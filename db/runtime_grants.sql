@@ -41,3 +41,4 @@ GRANT INSERT ON document_upload_origins,release_validity TO :"runtime_role";
 GRANT UPDATE(approval_based_validity) ON document_versions TO :"runtime_role";
 GRANT EXECUTE ON FUNCTION set_operational_roles(bigint,bigint,boolean,boolean,boolean,text) TO :"runtime_role";
 GRANT EXECUTE ON FUNCTION create_local_account(bigint,text,text,text,text,text),set_account_active(bigint,bigint,boolean,text),set_local_password(bigint,bigint,text,text) TO :"runtime_role";
+GRANT EXECUTE ON FUNCTION save_ims_master(bigint,text,bigint,jsonb,text),set_ims_group_grant(bigint,bigint,text,bigint,bigint,boolean,text),update_ims_profile(bigint,bigint,text,text,text) TO :"runtime_role";

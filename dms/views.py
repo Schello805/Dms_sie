@@ -365,20 +365,20 @@ def it_settings(request):
 def storage_locations(request):
     from .policies import require_qmb
     from .forms import StorageLocationForm
-    uid = require_qmb(request.user)
-    form = StorageLocationForm(request.POST or None)
-    if request.method=='POST' and form.is_valid():
-        try:
-            from django.db import transaction
-            import json
-            with transaction.atomic():
-                location = services.query('INSERT INTO storage_locations(name,description) VALUES (%s,%s) RETURNING id',[form.cleaned_data['name'],form.cleaned_data['description']])[0]['id']
-                services.query("INSERT INTO audit_events(actor_id,action,object_type,object_id,reason,details) VALUES (%s,'CREATE_STORAGE_LOCATION','storage_location',%s,%s,%s::jsonb)",[uid,str(location),form.cleaned_data['reason'],json.dumps({'name':form.cleaned_data['name']})])
-        except IntegrityError:
-            form.add_error('name','Dieser Aufbewahrungsort existiert bereits.')
-        else:
-            return redirect('storage_locations')
-    return render(request,'dms/storage_locations.html',{'form':form,'locations':services.query('SELECT * FROM storage_locations ORDER BY name')})
+    from . import masterdata
+    require_qmb(request.user)
+    if request.method=='POST':
+        form=StorageLocationForm(request.POST)
+        if form.is_valid():
+            try:
+                masterdata.save(request.user,'locations',None,dict(form.cleaned_data,active=True))
+            except ValidationError as error:
+                form.add_error(None,error)
+            else:
+                messages.success(request,'Aufbewahrungsort angelegt.')
+                return redirect('master_list',kind='locations')
+        return render(request,'dms/simple_form.html',{'title':'Aufbewahrungsort anlegen','form':form})
+    return redirect('master_list',kind='locations')
 
 
 @login_required

@@ -46,8 +46,8 @@ class EvidenceForm(forms.Form):
         super().__init__(*args,**kwargs)
         uid = actor(user)
         self.fields['source_version_id'].choices = [('', 'Kein Dokumentbezug')]+[(v['id'],f"{v['number']} · Version {v['major']}.{v['minor']} · {v['title']}") for v in query('SELECT v.id,d.number,v.major,v.minor,v.title FROM document_versions v JOIN documents d ON d.id=v.document_id WHERE can_read_version(%s,v.id) ORDER BY d.number,v.major DESC,v.minor DESC LIMIT 2000',[uid])]
-        self.fields['category_id'].choices = [(c['id'],c['name']) for c in query('SELECT id,name FROM document_categories ORDER BY name')]
-        self.fields['department_id'].choices = [(d['id'],d['name']) for d in query("SELECT id,name FROM departments d WHERE has_role(%s,'AUTHOR',d.id,NULL) ORDER BY name",[uid])]
+        self.fields['category_id'].choices = [(c['id'],c['name']) for c in query('SELECT id,coalesce(display_name,name) AS name FROM document_categories WHERE active ORDER BY name')]
+        self.fields['department_id'].choices = [(d['id'],d['name']) for d in query("SELECT id,name FROM departments d WHERE d.active AND has_role(%s,'AUTHOR',d.id,NULL) ORDER BY name",[uid])]
 
 class RetentionForm(forms.Form):
     retain_until = forms.DateField(label='Aufbewahren bis einschließlich',widget=forms.DateInput(attrs={'type':'date'},format='%Y-%m-%d'))

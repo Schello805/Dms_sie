@@ -34,7 +34,7 @@ class Command(BaseCommand):
                     if files!=manifest['files']:
                         raise CommandError('Wiederhergestellte Dateireferenzen weichen vom Manifest ab.')
                     for table,count in manifest['row_counts'].items():
-                        if table not in ('documents','document_versions','approval_decisions','audit_events','document_withdrawals','audience_groups','audience_memberships','user_workplaces','version_distribution','version_audiences','document_bookmarks','acknowledgement_assignments','acknowledgement_receipts','evidence_records','evidence_retention_events','evidence_disposal_requests','branding_revisions','branding_settings','directory_settings','document_upload_origins','release_validity'):
+                        if table not in ('documents','document_versions','approval_decisions','audit_events','document_withdrawals','audience_groups','audience_memberships','user_workplaces','version_distribution','version_audiences','document_bookmarks','acknowledgement_assignments','acknowledgement_receipts','evidence_records','evidence_retention_events','evidence_disposal_requests','branding_revisions','branding_settings','directory_settings','document_upload_origins','release_validity','standard_reference_usage'):
                             raise CommandError('Unbekannte Tabellenangabe im Manifest.')
                         actual = restored.execute(sql.SQL('SELECT count(*) AS n FROM {}').format(sql.Identifier(table))).fetchone()['n']
                         if actual!=count:

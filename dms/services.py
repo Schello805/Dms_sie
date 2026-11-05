@@ -52,7 +52,7 @@ def visible_versions(user, search='', status='', department='', standard='', due
         (SELECT uploaded_at FROM document_upload_origins WHERE document_id=v.document_id) AS uploaded_at,
         (SELECT coalesce(rv.approved_at,(SELECT max(a.decided_at) FROM approval_decisions a WHERE a.version_id=v.id AND a.stage='APPROVAL' AND a.decision='ACCEPT')) FROM document_versions ignored LEFT JOIN release_validity rv ON rv.version_id=ignored.id WHERE ignored.id=v.id) AS approved_at,
         (v.id=current_release(v.document_id)) AS is_current,
-        c.name AS category_name,
+        coalesce(c.display_name,c.name) AS category_name,
         preferred.file_id AS reading_file_id,preferred.original_name AS reading_file_name,
         review.review_result,matched.snippet,matched.original_name AS matched_file,
         (SELECT max(a.decided_at) FROM approval_decisions a WHERE a.version_id=v.id AND a.stage='APPROVAL' AND a.decision='ACCEPT') AS released_at,
@@ -103,7 +103,7 @@ def visible_versions(user, search='', status='', department='', standard='', due
 
 def get_version(user, version_id, lock=False):
     uid = actor(user)
-    rows = query('''SELECT v.*,d.number,d.document_type,d.owner_id,(SELECT display_name FROM users WHERE id=d.owner_id) AS owner_name,d.responsible_department_id,c.review_interval_months,review.review_due_on,review.last_review_on,(SELECT uploaded_at FROM document_upload_origins WHERE document_id=v.document_id) AS uploaded_at,(SELECT max(a.decided_at) FROM approval_decisions a WHERE a.version_id=v.id AND a.stage='APPROVAL' AND a.decision='ACCEPT') AS approved_at FROM document_versions v
+    rows = query('''SELECT v.*,d.number,d.document_type,d.owner_id,(SELECT display_name FROM users WHERE id=d.owner_id) AS owner_name,d.responsible_department_id,c.review_interval_months,coalesce(c.display_name,c.name) AS category_label,review.review_due_on,review.last_review_on,(SELECT uploaded_at FROM document_upload_origins WHERE document_id=v.document_id) AS uploaded_at,(SELECT max(a.decided_at) FROM approval_decisions a WHERE a.version_id=v.id AND a.stage='APPROVAL' AND a.decision='ACCEPT') AS approved_at FROM document_versions v
                     JOIN documents d ON d.id=v.document_id
                     JOIN document_categories c ON c.name=d.document_type
                     JOIN version_review_status review ON review.version_id=v.id WHERE v.id=%s''' + (' FOR UPDATE OF v' if lock else ''), [version_id])
@@ -130,9 +130,14 @@ def fingerprint(v):
 
 @transaction.atomic
 def create_document(user, data):
+    query("SELECT pg_advisory_xact_lock(hashtext('ims-master-data'))")
     uid = actor(user)
     department = data['department']
     require(uid, department, 'AUTHOR')
+    if not query('SELECT 1 FROM departments WHERE id=%s AND active',[department]):
+        raise ValidationError('Für neue Dokumente eine aktive Abteilung auswählen.')
+    if not query('SELECT 1 FROM document_categories WHERE name=%s AND active',[data['document_type']]):
+        raise ValidationError('Für neue Dokumente eine aktive Kategorie auswählen.')
     from .policies import default_due
     review_due = data.get('next_review_on') or default_due(data['document_type'],data.get('effective_from'))
     doc = query('''INSERT INTO documents(number,document_type,owner_id,responsible_department_id)
@@ -150,6 +155,8 @@ def create_document(user, data):
 
 @transaction.atomic
 def transition(user, version_id, action, comment):
+    if action=='submit':
+        query("SELECT pg_advisory_xact_lock(hashtext('ims-master-data'))")
     uid, v = get_version(user, version_id, lock=True)
     department = v['responsible_department_id']
     query('SELECT pg_advisory_xact_lock(%s)',[v['document_id']])
@@ -275,9 +282,17 @@ def save_mappings(version_id, department, data):
         values = set(data[key])
         if key=='applicable_departments':
             values.add(department)
-        query(f'DELETE FROM {table} WHERE version_id=%s',[version_id])
-        for value in sorted(values):
+        existing = {row[column] for row in query(f'SELECT {column} FROM {table} WHERE version_id=%s',[version_id])}
+        additions = values-existing
+        if key=='standard_references' and additions and len(query('SELECT r.id FROM standard_references r JOIN standards s ON s.id=r.standard_id WHERE r.id=ANY(%s::bigint[]) AND r.active AND s.active',[list(additions)])) != len(additions):
+            raise ValidationError('Nur aktive Normreferenzen dürfen neu zugeordnet werden.')
+        if key=='applicable_departments' and additions and len(query('SELECT id FROM departments WHERE id=ANY(%s::bigint[]) AND active',[list(additions)])) != len(additions):
+            raise ValidationError('Nur aktive Abteilungen dürfen neu zugeordnet werden.')
+        if existing-values:
+            query(f'DELETE FROM {table} WHERE version_id=%s AND {column}=ANY(%s::bigint[])',[version_id,list(existing-values)])
+        for value in sorted(additions):
             query(f'INSERT INTO {table}(version_id,{column}) VALUES (%s,%s)',[version_id,value])
+
 
 
 @transaction.atomic

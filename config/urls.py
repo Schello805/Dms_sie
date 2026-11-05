@@ -1,7 +1,11 @@
 from dms import auth_views as auth
 from django.urls import path
-from dms import views,portal_views,branding,admin_views,catalog_views,ui_assets,account_views,comparison
+from dms import views,portal_views,branding,admin_views,catalog_views,ui_assets,account_views,comparison,master_views
 urlpatterns = [
+    path('management/master/<slug:kind>/',master_views.listing,name='master_list'),
+    path('management/master/<slug:kind>/new/',master_views.edit,name='master_new'),
+    path('management/master/<slug:kind>/<int:target>/',master_views.edit,name='master_edit'),
+    path('settings/users/<int:user_id>/profile/',master_views.profile,name='account_profile'),
     path('versions/<int:version_id>/compare/',comparison.compare,name='compare'),
     path('settings/users/new/',account_views.create,name='account_create'),
     path('settings/users/status/',account_views.status,name='account_status'),

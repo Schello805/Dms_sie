@@ -1,0 +1,1 @@
+<nav class="task-summary" aria-label="Stammdatenbereiche">{% for item in master_nav %}<a class="button secondary" href="{% url 'master_list' item.kind %}" {% if item.kind == kind %}aria-current="page"{% endif %}>{{ item.title }}</a>{% endfor %}</nav>

@@ -3,10 +3,10 @@ from .services import actor, query
 
 class MappingFieldsMixin:
     def load_mapping_choices(self):
-        rows = query('SELECT id,name FROM departments ORDER BY name')
+        rows = query('SELECT id,name FROM departments WHERE active OR id=ANY(%s::bigint[]) ORDER BY name',[self.initial.get('applicable_departments',[])])
         self.fields['applicable_departments'].choices = [(r['id'],r['name']) for r in rows]
         rows = query('''SELECT r.id,s.name,s.edition,r.reference,r.label FROM standard_references r
-            JOIN standards s ON s.id=r.standard_id ORDER BY s.name,s.edition,r.reference''')
+            JOIN standards s ON s.id=r.standard_id WHERE (r.active AND s.active) OR r.id=ANY(%s::bigint[]) ORDER BY s.name,s.edition,r.reference''',[self.initial.get('standard_references',[])])
         self.fields['standard_references'].choices = [(r['id'],f"{r['name']} · {r['edition']} · {r['reference']} — {r['label']}") for r in rows]
 
 class DocumentForm(MappingFieldsMixin, forms.Form):
@@ -24,8 +24,8 @@ class DocumentForm(MappingFieldsMixin, forms.Form):
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
         uid = actor(user)
-        rows = query("SELECT d.id,d.name FROM departments d WHERE EXISTS (SELECT 1 FROM effective_role_assignments r WHERE r.user_id=%s AND r.role='AUTHOR' AND r.document_id IS NULL AND (r.department_id IS NULL OR r.department_id=d.id)) ORDER BY d.name", [uid])
-        self.fields['document_type'].choices = [('', 'Bitte Kategorie auswählen')]+[(r['name'],r['name']) for r in query('SELECT name FROM document_categories ORDER BY name')]
+        rows = query("SELECT d.id,d.name FROM departments d WHERE d.active AND EXISTS (SELECT 1 FROM effective_role_assignments r WHERE r.user_id=%s AND r.role='AUTHOR' AND r.document_id IS NULL AND (r.department_id IS NULL OR r.department_id=d.id)) ORDER BY d.name", [uid])
+        self.fields['document_type'].choices = [('', 'Bitte Kategorie auswählen')]+[(r['name'],r['label']) for r in query('SELECT name,coalesce(display_name,name) AS label FROM document_categories WHERE active ORDER BY label')]
         self.fields['department'].choices = [('', 'Bitte Abteilung auswählen')]+[(r['id'],r['name']) for r in rows]
         self.load_mapping_choices()
 
@@ -79,7 +79,7 @@ class CategorySettingsForm(forms.Form):
     reason = forms.CharField(label='Grund der Änderung',max_length=4000,widget=forms.Textarea)
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
-        self.categories = query('SELECT id,name,review_interval_months,retention_months,storage_location_id FROM document_categories ORDER BY name')
+        self.categories = query('SELECT id,coalesce(display_name,name) AS name,review_interval_months,retention_months,storage_location_id FROM document_categories WHERE active ORDER BY name')
         places = [(r['id'],r['name']) for r in query('SELECT id,name FROM storage_locations WHERE active ORDER BY name')]
         for category in self.categories:
             self.fields[f"category_{category['id']}"] = forms.IntegerField(label=category['name'],min_value=1,max_value=1200,initial=category['review_interval_months'],widget=forms.NumberInput(attrs={'min':1,'max':1200}))
@@ -118,7 +118,7 @@ class SMTPTestForm(forms.Form):
 
 class ContactEmailForm(forms.Form):
     user_id = forms.IntegerField(min_value=1)
-    email = forms.EmailField(required=False)
+    email = forms.EmailField(required=False,max_length=254)
     reason = forms.CharField(max_length=4000)
 
 

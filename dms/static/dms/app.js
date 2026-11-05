@@ -78,7 +78,7 @@
 
   let dirty = false;
   document.querySelectorAll('form[method="post"]').forEach(form => {
-    form.addEventListener('input', event => { if (event.target.type !== 'hidden') dirty = true; });
+    form.addEventListener('input', event => { if (event.target.type !== 'hidden' && event.target.name) dirty = true; });
     form.addEventListener('submit', event => {
       if (!event.defaultPrevented) dirty = false;
     });
@@ -87,6 +87,15 @@
     if (dirty) { event.preventDefault(); event.returnValue = ''; }
   });
   window.addEventListener('pageshow', () => { dirty = false; });
+
+  document.querySelectorAll('select[data-filter-options]').forEach(select => {
+    const search=document.createElement('input');search.type='search';search.placeholder='Mitglieder filtern …';search.setAttribute('aria-label','Mitglieder filtern');
+    select.before(search);
+    search.addEventListener('input',()=>{
+      const term=search.value.toLocaleLowerCase('de');
+      for(const option of select.options)option.hidden=!option.text.toLocaleLowerCase('de').includes(term);
+    });
+  });
 
   document.querySelectorAll('[data-toast]').forEach(initializeToast);
   const menu = document.querySelector('.account-menu');

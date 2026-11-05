@@ -12,7 +12,7 @@ from .policies import require_qmb,add_months
 
 def records(user,search=''):
     uid = s.actor(user)
-    return s.query('''SELECT r.*,c.name AS category,d.name AS department,u.display_name AS owner,
+    return s.query('''SELECT r.*,coalesce(c.display_name,c.name) AS category,d.name AS department,u.display_name AS owner,
         COALESCE(last.retain_until,r.retain_until) AS retention_due,COALESCE(last.legal_hold,false) AS legal_hold,
         EXISTS(SELECT 1 FROM evidence_disposal_requests x WHERE x.record_id=r.id) AS disposal_requested
         FROM evidence_records r JOIN document_categories c ON c.id=r.category_id
@@ -25,7 +25,7 @@ def records(user,search=''):
 def get_record(user,record_id,lock=False):
     uid = s.actor(user)
     rows = s.query('''SELECT r.*,f.original_name,COALESCE(last.retain_until,r.retain_until) AS retention_due,
-        COALESCE(last.legal_hold,false) AS legal_hold,c.name AS category,d.name AS department,u.display_name AS owner_name
+        COALESCE(last.legal_hold,false) AS legal_hold,coalesce(c.display_name,c.name) AS category,d.name AS department,u.display_name AS owner_name
         FROM evidence_records r JOIN file_objects f ON f.id=r.file_id
         JOIN document_categories c ON c.id=r.category_id JOIN departments d ON d.id=r.department_id JOIN users u ON u.id=r.owner_id
         LEFT JOIN LATERAL (SELECT retain_until,legal_hold FROM evidence_retention_events WHERE record_id=r.id ORDER BY id DESC LIMIT 1) last ON true
@@ -39,7 +39,9 @@ def get_record(user,record_id,lock=False):
 def create_record(user,data,uploaded):
     uid = s.actor(user)
     s.require(uid,data['department_id'],'AUTHOR')
-    category = s.query('SELECT retention_months FROM document_categories WHERE id=%s',[data['category_id']])
+    if not s.query('SELECT 1 FROM departments WHERE id=%s AND active',[data['department_id']]):
+        raise ValidationError('Für neue Nachweise eine aktive Abteilung auswählen.')
+    category = s.query('SELECT retention_months FROM document_categories WHERE id=%s AND active',[data['category_id']])
     if not category:
         raise ValidationError('Kategorie nicht vorhanden.')
     due = data.get('retain_until')

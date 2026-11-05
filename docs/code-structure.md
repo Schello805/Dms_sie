@@ -24,3 +24,10 @@ Die PostgreSQL-Tests prüfen auch Filter, Sortierung, Seitengrenzen, Sichtbarkei
 - `comparison.py`: berechtigungsgeprüfter Vergleich von Metadaten, Zuordnungen und Dateiprüfsummen.
 - `catalog-state.js`: Filter-/Scroll-Rückkehr pro Tab, ohne Dokumentinhalte oder Formularwerte zu speichern.
 - `DynamicHostMiddleware`: geprüfte IP-Literale/Servernamen im DHCP-Betrieb; keine beliebigen fremden DNS-Hosts.
+
+## Stammdaten ab 0.4.0-dev
+
+- `masterdata.py`: erlaubte Entitäten, Rollenprüfung und begrenzte Datenbankoperationen.
+- `master_forms.py` / `master_views.py`: Formulare, Listen, Statusfilter und Rollenoberflächen.
+- `db/016_masterdata.sql`: Aktivstatus, Kategorieanzeigenamen, dauerhafter Normnutzungsnachweis und auditierte Schreibfunktionen.
+- `test_masterdata.py`: fachliche Grenzen, Datenbankrechte und UI-Endpunkte.

@@ -59,7 +59,7 @@ def create_backup(destination,pg_bin=None):
         snapshot = connection.execute('SELECT pg_export_snapshot() AS token').fetchone()['token']
         files = connection.execute('SELECT id,storage_key,size_bytes,sha256 FROM file_objects ORDER BY id').fetchall()
         tables = ['documents','document_versions','approval_decisions','audit_events','document_withdrawals']
-        tables += [name for name in ['audience_groups','audience_memberships','user_workplaces','version_distribution','version_audiences','document_bookmarks','acknowledgement_assignments','acknowledgement_receipts','evidence_records','evidence_retention_events','evidence_disposal_requests','branding_revisions','branding_settings','directory_settings','document_upload_origins','release_validity'] if connection.execute('SELECT to_regclass(%s) AS name',[name]).fetchone()['name']]
+        tables += [name for name in ['audience_groups','audience_memberships','user_workplaces','version_distribution','version_audiences','document_bookmarks','acknowledgement_assignments','acknowledgement_receipts','evidence_records','evidence_retention_events','evidence_disposal_requests','branding_revisions','branding_settings','directory_settings','document_upload_origins','release_validity','standard_reference_usage'] if connection.execute('SELECT to_regclass(%s) AS name',[name]).fetchone()['name']]
         manifest['row_counts'] = {table:connection.execute(f'SELECT count(*) AS n FROM {table}').fetchone()['n'] for table in tables}
         manifest['migrations'] = connection.execute('SELECT app,name FROM django_migrations ORDER BY app,name').fetchall()
         try:

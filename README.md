@@ -109,12 +109,28 @@ der frühere Portal-/Kenntnisnahme-Worker wird vom Installer nicht gestartet.
 - Rückkehr zur Tabelle behält Filter, Sortierung und Scrollposition pro Tab. Ungespeicherte Formulare warnen beim Verlassen. Tabellenkopf und Dokumentnummer bleiben beim Scrollen sichtbar.
 - Der Installer legt keine Netzwerkkonfiguration an. Wechselnde IP-Adressen funktionieren; zusätzliche DNS-Namen sind optional über `--host` angebbar.
 
+## Neu: Stammdatenverwaltung (0.4.0-dev)
+
+Unter **Verwaltung → Stammdaten** verwaltet der QMB Kategorien einschließlich Reviewfristen,
+Abteilungen, Aufbewahrungsorte, Normausgaben und Kapitelreferenzen. Einträge lassen sich anlegen,
+suchen, bearbeiten, deaktivieren und wieder aktivieren. Bestehende Dokumentzuordnungen bleiben erhalten.
+
+Unter **Admin → Gruppen** verwaltet die IT Gruppen, Mitglieder und Leser-/Autorenrechte.
+Benutzerprofile können in der Benutzerverwaltung bearbeitet werden; QMB- und Adminrechte werden
+weiterhin gezielt einzelnen Konten zugewiesen. Geschützte Altgruppen mit erweiterten Rollen
+bleiben bezüglich Mitgliedschaften und Aktivstatus der administrativen CLI vorbehalten.
+
+Bereits im Freigabeverfahren verwendete Normdefinitionen bleiben unveränderlich; neue Ausgaben
+werden als neue Einträge angelegt. Physisches Löschen referenzierter Stammdaten ist bewusst
+nicht vorgesehen. Änderungen einschließlich Begründung werden auditiert.
+
+Details und Prüfstand: [Stammdatenverwaltung](docs/masterdata.md).
+
 ## Noch offen: technische Erweiterungen
 
 Diese Punkte sind tatsächliche fehlende oder unvollständige Funktionen, keine Aussage darüber, ob die Installation läuft:
 
 - [ ] **AD-/LDAP-Anmeldung, SSO und Benutzer-/Gruppensynchronisation.** Die Einstellungsfelder sind vorhanden, aktivieren aber noch keine Verzeichnisverbindung oder Anmeldung.
-- [ ] **Grafische Verwaltung aller Gruppen, Mitglieder und fachlichen Stammdaten.** Gruppenverwaltung und Ergänzung von Abteilungen/Normreferenzen sind teilweise nur über administrative CLI-Kommandos möglich.
 - [ ] **OCR und Malwareprüfung.** Scans ohne Textebene sind derzeit nicht per Volltext durchsuchbar; Dateiendungen und Integritätsprüfung ersetzen keinen Virenscanner.
 - [ ] **Zusätzliche Betriebssystem-Isolation der Dokumentparser.** Ressourcenlimits bestehen bereits; eine weitergehende Parser-Sandbox ist nicht vollständig umgesetzt.
 - [ ] **Automatische Verarbeitung von Bounces und Zustellbestätigungen.** SMTP-Annahme/Fehler werden protokolliert; eine SMTP-Annahme beweist keine Zustellung im Postfach.

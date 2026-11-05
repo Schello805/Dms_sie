@@ -45,9 +45,10 @@ def require_settings_admin(user):
 @transaction.atomic
 def save_intervals(user,intervals,reason):
     uid = require_qmb(user)
+    query("SELECT pg_advisory_xact_lock(hashtext('ims-master-data'))")
     if not reason.strip():
         raise ValidationError('Eine Begründung ist erforderlich.')
-    categories = query('SELECT * FROM document_categories ORDER BY id FOR UPDATE')
+    categories = query('SELECT * FROM document_categories WHERE active ORDER BY id FOR UPDATE')
     if set(intervals)!={c['id'] for c in categories}:
         raise ValidationError('Kategorien haben sich geändert. Bitte die Einstellungen neu laden.')
     if any(not isinstance(value,int) or isinstance(value,bool) or not 1<=value<=1200 for value in intervals.values()):
@@ -58,7 +59,7 @@ def save_intervals(user,intervals,reason):
             continue
         query('UPDATE document_categories SET review_interval_months=%s,updated_at=clock_timestamp() WHERE id=%s',[months,category['id']])
         import json
-        query("INSERT INTO audit_events(actor_id,action,object_type,object_id,reason,details) VALUES (%s,'CHANGE_REVIEW_POLICY','category',%s,%s,%s::jsonb)",[uid,str(category['id']),reason,json.dumps({'category':category['name'],'before_months':category['review_interval_months'],'after_months':months})])
+        query("INSERT INTO audit_events(actor_id,action,object_type,object_id,reason,details) VALUES (%s,'CHANGE_REVIEW_POLICY','category',%s,%s,%s::jsonb)",[uid,str(category['id']),reason,json.dumps({'category':category.get('display_name') or category['name'],'before_months':category['review_interval_months'],'after_months':months})])
 
 
 
@@ -98,6 +99,7 @@ def save_qmb_team(user,primary_id,deputy_id,reason,lead_id=None):
 @transaction.atomic
 def save_category_management(user,intervals,retention,locations,reason):
     require_qmb(user)
+    query("SELECT pg_advisory_xact_lock(hashtext('ims-master-data'))")
     save_intervals(user,intervals,reason)
     for category_id in intervals:
         before = query('SELECT retention_months,storage_location_id FROM document_categories WHERE id=%s',[category_id])[0]
