@@ -8,7 +8,7 @@ Ubuntu 24.04 liefert PostgreSQL 16, Debian 13 PostgreSQL 17. Der Installer setzt
 
 Das Repository muss die Projektdateien inklusive `scripts/`, `dms/`, `config/`, `db/`, `deploy/` und `requirements.lock.txt` enthalten. `.local/`, `.venv/`, Dokumentenspeicher und echte Zugangsdaten gehören nicht hinein und werden bereits über `.gitignore` ausgeschlossen.
 
-In den folgenden Befehlen **OWNER/REPO**, **main** und die Beispiel-IP ersetzen. Für reproduzierbare Installationen einen geprüften Tag oder Commit statt `main` verwenden und beim Download sowie bei `--ref` denselben Stand angeben. Eine Veröffentlichung bei GitHub ist durch das Anlegen dieser Dateien noch nicht erfolgt.
+Das Projekt liegt unter [Schello805/Dms_sie](https://github.com/Schello805/Dms_sie). In den folgenden Befehlen die Beispiel-IP durch die Adresse deines Servers ersetzen. Für reproduzierbare Installationen einen geprüften Tag oder Commit statt `main` verwenden und beim Download sowie bei `--ref` denselben Stand angeben. Für eigene Forks die Repository- und Download-Adresse entsprechend ersetzen.
 
 ## 2. Online installieren
 
@@ -18,23 +18,23 @@ Als root im Zielserver/LXC:
 apt-get update
 apt-get install -y curl python3 ca-certificates
 curl --fail --show-error --location \
-  https://raw.githubusercontent.com/OWNER/REPO/main/scripts/install_linux.py \
+  https://raw.githubusercontent.com/Schello805/Dms_sie/main/scripts/install_linux.py \
   --output /tmp/install-ims-dms.py
 
 # Ablauf unverbindlich ansehen; verändert nichts:
 python3 /tmp/install-ims-dms.py --dry-run \
-  --repo https://github.com/OWNER/REPO.git \
+  --repo https://github.com/Schello805/Dms_sie.git \
   --ref main --host 192.168.1.50
 
 # Installieren:
 python3 /tmp/install-ims-dms.py \
-  --repo https://github.com/OWNER/REPO.git \
+  --repo https://github.com/Schello805/Dms_sie.git \
   --ref main --host 192.168.1.50
 ```
 
 Mehrere Adressen sind möglich: `--host dms.firma.intern --host 192.168.1.50`. Standardport ist **80**; optional `--port 8080`. DNS muss auf den Server zeigen. Netzwerk-/Proxmox-Firewallregeln werden nicht verändert.
 
-Für private Repositories: Code mit deinem bereits eingerichteten GitHub-Zugang klonen und `sudo python3 scripts/install_linux.py --repo git@github.com:OWNER/REPO.git --source-dir "$PWD" --host 192.168.1.50` verwenden. Spätere Online-Updates benötigen einen passenden SSH-Zugang für root oder erneut `--source-dir`. Keine Tokens in Repository-URLs eintragen. Der Installer richtet keine GitHub-Zugangsdaten ein.
+Für private Repositories: Code mit deinem bereits eingerichteten GitHub-Zugang klonen und `sudo python3 scripts/install_linux.py --repo git@github.com:Schello805/Dms_sie.git --source-dir "$PWD" --host 192.168.1.50` verwenden. Spätere Online-Updates benötigen einen passenden SSH-Zugang für root oder erneut `--source-dir`. Keine Tokens in Repository-URLs eintragen. Der Installer richtet keine GitHub-Zugangsdaten ein.
 
 ## 3. Erste Anmeldung
 
