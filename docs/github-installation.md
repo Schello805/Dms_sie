@@ -160,3 +160,17 @@ ergänzen. Kein pauschales Vertrauen in beliebige Host-/Forwarded-Header einrich
 Bei bestehenden Installationen das aktuelle Installationsskript erneut herunterladen und
 `python3 /tmp/install-ims-dms.py --update --host dms.firma.de` ausführen. Danach die Login-Seite
 neu öffnen, damit Cookie und Formular frisch geladen werden.
+
+## Schnellere App-Updates
+
+Bei einer abgeschlossenen Installation prüft `--update` die benötigten Systempakete lokal
+über dpkg. Sind alle vorhanden, entfallen APT-Indexdownload und Paketinstallation. Fehlende
+Pakete werden automatisch nachinstalliert. Mit `--update --system-packages` lässt sich APT
+gezielt erneut ausführen. Sicherheitsupdates des Betriebssystems bleiben eine separate
+Administrationsaufgabe. Neue Quellen werden nur mit der benötigten Git-Referenz und einer
+History-Tiefe von eins geladen. Python-Abhängigkeiten werden weiterhin in einer eigenen
+Umgebung je Release installiert; vorhandene pip-Caches können wiederverwendet werden.
+
+Die geprüfte vollständige Sicherung vor der Migration, Migrationen, Rechteprüfung und
+Funktionskontrolle bleiben erhalten. Die tatsächliche Dauer hängt besonders von Dokumentenmenge,
+Datenträger und Netzwerk ab; eine feste Beschleunigung wird nicht zugesichert.

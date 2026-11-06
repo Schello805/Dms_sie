@@ -27,6 +27,7 @@ BACKUPS = Path('/var/backups/ims-dms')
 SERVICES = ('ims-dms', 'ims-dms-index', 'ims-dms-notifications')
 ROLES = ('owner', 'app', 'index', 'notify', 'backup')
 MARKER = '# Managed by IMS-DMS install_linux.py'
+SYSTEM_PACKAGES = ['python3', 'python3-venv', 'python3-dev', 'build-essential', 'libffi-dev', 'libssl-dev', 'git', 'curl', 'ca-certificates', 'postgresql', 'postgresql-client', 'nginx', 'fonts-dejavu-core']
 APT_OPTIONS = ['-o', 'Acquire::Retries=2', '-o', 'Acquire::http::Timeout=20',
                '-o', 'Acquire::https::Timeout=20', '-o', 'APT::Update::Error-Mode=any']
 
@@ -141,7 +142,8 @@ def prepare_release(args, state):
             raise ValueError('Quellverzeichnis darf /opt/ims-dms nicht enthalten.')
         shutil.copytree(source, directory, ignore=shutil.ignore_patterns('.git', '.local', '.venv', '__pycache__', '*.pyc', '.env', 'media', 'staticfiles'))
     else:
-        run(['git', 'clone', '--no-checkout', '--', state['repo'], directory])
+        run(['git', 'init', directory])
+        run(['git', '-C', directory, 'remote', 'add', 'origin', state['repo']])
         run(['git', '-C', directory, 'fetch', '--depth', '1', 'origin', state['ref']])
         run(['git', '-C', directory, 'checkout', '--detach', 'FETCH_HEAD'])
     for required in ('manage.py', 'requirements.lock.txt', 'db/runtime_grants.sql'):
@@ -273,6 +275,19 @@ def install(args):
         _install_locked(args)
 
 
+def ensure_system_packages(args, state):
+    # Ordinary app updates do not need a fresh APT index or package installation.
+    if args.update and state and state.get('complete') and not args.system_packages:
+        installed = subprocess.run(['dpkg-query', '-W', '-f=${db:Status-Status}\n', *SYSTEM_PACKAGES], capture_output=True, text=True)
+        statuses = installed.stdout.splitlines()
+        if installed.returncode == 0 and len(statuses) == len(SYSTEM_PACKAGES) and all(status == 'installed' for status in statuses):
+            print('1/7 Systempakete vorhanden; APT bei diesem App-Update übersprungen.', flush=True)
+            return
+    print('1/7 Systempakete prüfen/installieren', flush=True)
+    run(['apt-get', *APT_OPTIONS, 'update'])
+    run(['apt-get', *APT_OPTIONS, 'install', '-y', *SYSTEM_PACKAGES], env=dict(os.environ, DEBIAN_FRONTEND='noninteractive'))
+
+
 def configure_hosts(args, state):
     """Ask before making changes; unattended installs must opt out explicitly."""
     if state is not None or args.host or args.non_interactive:
@@ -317,9 +332,7 @@ def _install_locked(args):
     configure_hosts(args, state)
     hosts = args.host if args.host is not None else (state['hosts'] if state else [])
     print('Zugelassene Domainnamen: ' + (', '.join(hosts) if hosts else 'keine zusätzlichen; lokale IP / Serverhostname'))
-    print('1/7 Systempakete installieren', flush=True)
-    run(['apt-get', *APT_OPTIONS, 'update'])
-    run(['apt-get', *APT_OPTIONS, 'install', '-y', 'python3', 'python3-venv', 'python3-dev', 'build-essential', 'libffi-dev', 'libssl-dev', 'git', 'curl', 'ca-certificates', 'postgresql', 'postgresql-client', 'nginx', 'fonts-dejavu-core'], env=dict(os.environ, DEBIAN_FRONTEND='noninteractive'))
+    ensure_system_packages(args, state)
     run(['systemctl', 'enable', '--now', 'postgresql'])
     version = int(psql('SHOW server_version_num;', capture=True).stdout.strip())
     if version < 160000:
@@ -411,6 +424,7 @@ def parser():
     result.add_argument('--port', type=validate_port, metavar='1..65535')
     result.add_argument('--admin-user', help='Initialer IT-Administrator (Standard: admin)')
     result.add_argument('--update', action='store_true')
+    result.add_argument('--system-packages', action='store_true', help='APT auch bei einem App-Update ausführen; sonst nur bei fehlenden Paketen')
     result.add_argument('--source-dir', type=Path, help='Lokale vertrauenswürdige Quellen statt Git-Download (für CI/Offline-Kopie)')
     result.add_argument('--dry-run', action='store_true', help='Nur Ablauf anzeigen, keine Zugriffe/Änderungen')
     return result

@@ -164,6 +164,48 @@ class InstallerTests(unittest.TestCase):
                 self.assertEqual((base/'current').resolve(),old.resolve())
                 self.assertTrue(json.loads(state_file.read_text())['complete'])
 
+    def test_complete_update_skips_apt_only_when_all_packages_are_installed(self):
+        from types import SimpleNamespace
+        args=installer.parser().parse_args(['--update'])
+        state=self.state() | {'complete':True}
+        installed=SimpleNamespace(returncode=0,stdout='installed\n'*len(installer.SYSTEM_PACKAGES))
+        with patch.object(installer.subprocess,'run',return_value=installed), patch.object(installer,'run') as run, patch('builtins.print'):
+            installer.ensure_system_packages(args,state)
+            run.assert_not_called()
+        for arguments, previous, result in [(['--update','--system-packages'],state,installed), ([],None,installed), (['--update'],state,SimpleNamespace(returncode=1,stdout='')), (['--update'],state,SimpleNamespace(returncode=0,stdout='config-files\n'))]:
+            with patch.object(installer.subprocess,'run',return_value=result), patch.object(installer,'run') as run, patch('builtins.print'):
+                installer.ensure_system_packages(installer.parser().parse_args(arguments),previous)
+                self.assertEqual(run.call_count,2)
+                self.assertEqual(run.call_args_list[0].args[0][-1],'update')
+
+    def test_shallow_release_fetch_supports_branch_tag_and_exact_commit(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);repo=root/'source';repo.mkdir()
+            def git(*args):
+                return subprocess.check_output(['git','-C',str(repo),*args],stderr=subprocess.PIPE,text=True).strip()
+            git('init')
+            (repo/'db').mkdir()
+            for name in ('manage.py','requirements.lock.txt','db/runtime_grants.sql'):
+                (repo/name).write_text('first')
+            git('add','.')
+            git('-c','user.name=Test','-c','user.email=test@example.test','commit','-m','first')
+            first=git('rev-parse','HEAD')
+            git('tag','release-test')
+            git('checkout','-b','feature/update')
+            (repo/'manage.py').write_text('second');git('add','.')
+            git('-c','user.name=Test','-c','user.email=test@example.test','commit','-m','second')
+            def command(arguments,**kwargs):
+                if arguments[0]=='git':
+                    return subprocess.run([str(value) for value in arguments],check=True,capture_output=True,text=True)
+            args=installer.parser().parse_args([])
+            with patch.object(installer,'BASE',root/'install'),patch.object(installer,'run',side_effect=command):
+                for ref, expected in [('feature/update','second'),('release-test','first'),(first,'first')]:
+                    release=installer.prepare_release(args,{'repo':str(repo),'ref':ref})
+                    self.assertEqual((release/'manage.py').read_text(),expected)
+                    count=subprocess.check_output(['git','-C',str(release),'rev-list','--count','HEAD'],text=True).strip()
+                    self.assertEqual(count,'1')
+
     def test_git_and_pip_commands_use_argument_arrays_without_shell(self):
         with patch.object(installer.subprocess,'run') as run:
             installer.run(['git','fetch','origin','feature/linux'], text='not printed')
