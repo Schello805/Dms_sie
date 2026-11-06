@@ -1,22 +1,22 @@
 html{height:100%}
-body{min-height:100vh;display:flex;flex-direction:column;font:16px system-ui,sans-serif;margin:0;background:#f3f6f8;color:#172d3c}
-header{background:#163c47;color:white;padding:1rem 5%;display:flex;align-items:center;gap:2rem}
+body{min-height:100vh;display:flex;flex-direction:column;font:15px system-ui,sans-serif;margin:0;background:#f3f6f8;color:#172d3c}
+header{background:#163c47;color:white;padding:.65rem 2.5%;display:flex;align-items:center;gap:2rem}
 header a{color:white}
-main{width:95%;box-sizing:border-box;max-width:none;margin:2rem auto;padding:0}
+main{width:95%;box-sizing:border-box;max-width:none;margin:1rem auto;padding:0}
 a{color:#086975}
 table{border-collapse:collapse;width:100%;background:white}
-td,th{text-align:left;padding:1rem;border-bottom:1px solid #dce5e8}
+td,th{text-align:left;padding:.6rem .8rem;border-bottom:1px solid #dce5e8}
 input,select,textarea,button{font:inherit;padding:.65rem;max-width:100%;box-sizing:border-box}
 textarea{display:block;width:100%;height:6rem}
 button{background:#116c76;color:white;border:0;border-radius:4px;cursor:pointer}
-form p{margin:1rem 0}
+form p{margin:.65rem 0}
 label{display:block;margin-bottom:.3rem}
-.card{background:white;padding:1.5rem;border-radius:8px;margin:1rem 0}
+.card{background:white;padding:1rem;border-radius:8px;margin:.75rem 0}
 .messages,.errorlist{color:#9c2525}
 header form{margin-left:auto}
 .muted{color:#526875}
 
-.filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
 .filters input:not([type=checkbox]),.filters select{width:100%}
 .check{display:flex;align-items:center;gap:.5rem}
 .badge{display:inline-block;background:#e3f0f1;color:#155360;padding:.2rem .5rem;border-radius:4px;white-space:nowrap}
@@ -30,7 +30,7 @@ header form{margin-left:0}
 td,th{padding:.7rem}
 }
 
-.mail-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.mail-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
 .mail-settings-grid .wide{grid-column:1/-1}
 .mail-settings-grid input:not([type=checkbox]),.mail-settings-grid select{width:100%}
 @media(max-width:650px){.mail-settings-grid{grid-template-columns:1fr}
@@ -39,21 +39,21 @@ td,th{padding:.7rem}
 header{flex-wrap:wrap;gap:1rem}
 header a{text-decoration:none}
 header strong{letter-spacing:.04em}
-h1{font-size:2rem;line-height:1.2;margin:.4rem 0 1rem}
-h2{font-size:1.25rem}
+h1{font-size:1.65rem;line-height:1.2;margin:.35rem 0 .65rem}
+h2{font-size:1.15rem;margin:1rem 0 .6rem}
 .page-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem}
 .eyebrow{font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;color:#526875}
 .tile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}
 .tile-grid .card{margin:.5rem 0}
 .tile{display:flex;flex-direction:column;gap:.5rem;text-decoration:none}
-.button{display:inline-block;background:#116c76;color:white;text-decoration:none;padding:.65rem 1rem;border-radius:4px}
+.button{display:inline-block;background:#116c76;color:white;text-decoration:none;padding:.45rem .75rem;border-radius:4px}
 .secondary{background:#e3f0f1;color:#155360}
 .attention{border-left:4px solid #ba7714}
 .compact{padding:1rem}
 .task-line{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid #dce5e8;padding:1rem 0}
 .task-line p{margin:.4rem 0}
 .wide{grid-column:1/-1}
-.pagination{display:flex;justify-content:center;gap:2rem;padding:1.5rem}
+.pagination{display:flex;justify-content:center;gap:1.25rem;padding:.85rem}
 .qr-row{display:flex;align-items:center;gap:1rem}
 .pdf-frame{width:100%;height:70vh;border:1px solid #dce5e8}
 .filters input:not([type=checkbox]){width:100%}
@@ -67,16 +67,16 @@ h1{font-size:1.6rem}
 
 
 /* Shared control geometry and navigation alignment. */
-button,.button{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:44px;padding:.65rem 1rem;box-sizing:border-box;border:1px solid transparent;border-radius:6px;font:inherit;line-height:1.25;text-decoration:none;vertical-align:middle;white-space:normal}
+button,.button{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:40px;padding:.45rem .75rem;box-sizing:border-box;border:1px solid transparent;border-radius:6px;font:inherit;line-height:1.25;text-decoration:none;vertical-align:middle;white-space:normal}
 
-input:not([type=checkbox]):not([type=radio]),select{min-height:44px;border:1px solid #bccbd2;border-radius:6px;background:#fff;color:inherit;line-height:1.25;padding:.65rem .8rem}
+input:not([type=checkbox]):not([type=radio]),select{min-height:40px;border:1px solid #bccbd2;border-radius:6px;background:#fff;color:inherit;line-height:1.25;padding:.45rem .65rem}
 
 button:hover,.button:hover{filter:brightness(.94)}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #58b7c4;outline-offset:3px}
 
-header{gap:1.5rem}
+header{gap:1rem}
 header .main-nav{display:flex;align-items:center;flex:1;flex-wrap:wrap;gap:.5rem}
-header .main-nav>a{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:44px;padding:.5rem .75rem;box-sizing:border-box;border-radius:6px}
+header .main-nav>a{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:40px;padding:.5rem .75rem;box-sizing:border-box;border-radius:6px}
 header .main-nav>a:hover{background:#24525d}
 header .account-action{margin:0 0 0 auto;flex-shrink:0}
 header form button{margin:0}
@@ -84,11 +84,11 @@ header form button{margin:0}
 
 .filters{align-items:end}
 .filters label{line-height:1.4}
-.filters .check{min-height:44px;margin:0;align-self:end}
+.filters .check{min-height:40px;margin:0;align-self:end}
 .filter-actions{display:flex;align-items:center;justify-content:flex-end;gap:.75rem;flex-wrap:wrap;grid-column:1/-1;padding-top:.25rem}
 .filter-actions .secondary{border-color:#bccbd2;background:#fff;color:#155360}
 
-@media(max-width:850px){header{padding:1rem;gap:1rem}
+@media(max-width:850px){header{padding:.65rem 2.5%;gap:.65rem}
 header .site-brand{flex:1}
 header .main-nav{order:3;flex-basis:100%;gap:.25rem}
 header .main-nav>a{padding:.5rem .6rem}
@@ -97,7 +97,7 @@ header .account-action{margin-left:auto}
 
 @media(max-width:650px){.filter-actions{justify-content:stretch}
 .filter-actions>*{flex:1}
-.filters .check{min-height:44px}
+.filters .check{min-height:40px}
 header .site-brand-name{max-width:190px}
 header .account-action{max-width:100%}
 }
@@ -121,12 +121,12 @@ select[multiple]{border:1px solid #bccbd2;border-radius:6px;background:#fff}
 
 
 .account-menu{position:relative}
-.account-menu summary{display:flex;align-items:center;gap:.65rem;min-height:44px;cursor:pointer;list-style:none;border-radius:6px;padding:.25rem .5rem}
+.account-menu summary{display:flex;align-items:center;gap:.65rem;min-height:40px;cursor:pointer;list-style:none;border-radius:6px;padding:.25rem .5rem}
 .account-menu summary::-webkit-details-marker{display:none}
 .account-menu summary:hover,.account-menu[open] summary{background:#24525d}
 .account-menu summary:focus-visible{outline:3px solid #58b7c4;outline-offset:3px}
 .avatar{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#d9eff0;color:#155360;font-weight:700;flex-shrink:0}
-.account-panel{position:absolute;right:0;top:calc(100% + .75rem);width:290px;max-width:calc(100vw - 32px);padding:1.25rem;box-sizing:border-box;background:#fff;color:#172d3c;border:1px solid #dce5e8;border-radius:10px;box-shadow:0 12px 35px #102e3b26;z-index:60;overflow-wrap:anywhere}
+.account-panel{position:absolute;right:0;top:calc(100% + .75rem);width:290px;max-width:calc(100vw - 32px);padding:1rem;box-sizing:border-box;background:#fff;color:#172d3c;border:1px solid #dce5e8;border-radius:10px;box-shadow:0 12px 35px #102e3b26;z-index:60;overflow-wrap:anywhere}
 .account-panel p{margin:.5rem 0;font-size:.9rem}
 .account-panel .account-roles{display:flex;gap:.4rem;flex-wrap:wrap;margin:.8rem 0}
 .account-panel form{margin:1rem 0 0}
@@ -152,22 +152,28 @@ select[multiple]{border:1px solid #bccbd2;border-radius:6px;background:#fff}
 .account-menu summary>span:nth-child(2){max-width:135px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
 
-.table-sort{display:flex;align-items:center;justify-content:space-between;gap:.5rem;min-height:44px;color:inherit;text-decoration:none;border-radius:4px}
+.table-sort{display:flex;align-items:center;justify-content:space-between;gap:.5rem;min-height:32px;color:inherit;text-decoration:none;border-radius:4px}
 .table-sort:hover{color:#086975;background:#edf6f7}
 .table-sort span{color:#6c9098;flex-shrink:0}
 th[aria-sort=ascending] .table-sort,th[aria-sort=descending] .table-sort{color:#086975}
 th[aria-sort=ascending] span,th[aria-sort=descending] span{color:#086975}
 
 
-.form-actions{display:flex;justify-content:flex-end;align-items:center;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem}
+.form-actions{display:flex;justify-content:flex-end;align-items:center;gap:.65rem;flex-wrap:wrap;margin-top:.85rem}
 .document-form{max-width:980px;margin-left:auto;margin-right:auto}.document-form input:not([type=checkbox]):not([type=radio]),.document-form select,.document-form textarea{width:100%}.document-form .helptext{display:block;margin-top:.35rem;color:#526875;font-size:.9rem;line-height:1.45}.document-form .errorlist{padding:.5rem .75rem;border-left:3px solid #b93c3c;background:#fff0f0}
 .workflow-decision textarea{margin-top:.4rem;min-height:110px}.danger.secondary{color:#9c2525;border:1px solid #d6b7b7;background:#fff8f8}form[aria-busy=true] .form-actions{opacity:.65;cursor:progress}.table-wrap tbody tr:hover{background:#f8fcfc}
 @media(max-width:650px){.form-actions>*{flex:1 1 100%}.document-form{padding:1rem}}
 
-.form-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem 1.5rem}.form-fields .field-wide{grid-column:1/-1}.form-field{min-width:0}.form-field fieldset{border:1px solid #dce5e8;border-radius:6px;padding:1rem}.form-field legend{padding:0 .3rem;font-weight:600}
+.form-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem 1rem}.form-fields .field-wide{grid-column:1/-1}.form-field{min-width:0}.form-field fieldset{border:1px solid #dce5e8;border-radius:6px;padding:1rem}.form-field legend{padding:0 .3rem;font-weight:600}
 @media(max-width:650px){.form-fields{grid-template-columns:1fr}}
 
 .form-field{display:flex;flex-direction:column}.form-field>label{order:0}.form-field>input,.form-field>select,.form-field>textarea{order:1}.form-field>.helptext{order:2}.form-field>.errorlist{order:3}
 
 .table-wrap{max-height:72vh;overflow:auto;overscroll-behavior:contain}.table-wrap thead th{position:sticky;top:0;background:#fff;z-index:3}.table-wrap tr>:first-child{position:sticky;left:0;background:#fff;z-index:1;min-width:8rem}.table-wrap thead tr>:first-child{z-index:4}.table-wrap tbody tr:hover>:first-child{background:#f8fcfc}.task-summary,.account-roles{display:flex;gap:.75rem;flex-wrap:wrap;margin:1rem 0}.diff-value{font:inherit;white-space:pre-wrap;overflow-wrap:anywhere;max-width:45vw}
 select[multiple]{width:100%;min-height:14rem;padding:.5rem;border:1px solid #bccbd2;border-radius:6px}select[multiple] option{padding:.4rem}.master-help{color:#526875;font-size:.9rem}
+
+/* Compact account identity; role is visible without opening the menu. */
+.account-label{display:grid;gap:.1rem;line-height:1.2;text-align:left;min-width:0}
+.account-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+.account-role{font-size:.75rem;color:#c4dce0;font-weight:500;white-space:normal}
+@media(pointer:coarse){button,.button,input:not([type=checkbox]):not([type=radio]),select,header .main-nav>a,.account-menu summary,.table-sort,.filters .check{min-height:44px}input,select,textarea{font-size:16px}}

@@ -11,9 +11,10 @@ from .forms import ActionForm, DocumentForm, ReviewForm, RevisionForm, AccessFor
 @login_required
 def create(request):
     uid = services.actor(request.user)
-    if not services.query("SELECT 1 FROM effective_role_assignments WHERE user_id=%s AND role='AUTHOR' AND document_id IS NULL",[uid]):
+    from .policies import is_qmb
+    if not is_qmb(request.user) and not services.query("SELECT 1 FROM effective_role_assignments WHERE user_id=%s AND role='AUTHOR' AND document_id IS NULL",[uid]):
         from django.core.exceptions import PermissionDenied
-        raise PermissionDenied('Dokumente hochladen erfordert die Autorenrolle.')
+        raise PermissionDenied('Dokumente hochladen erfordert die Autoren- oder QMB-Rolle.')
     from .forms import DocumentUploadForm
     from .simple_workflow import upload_document
     form = DocumentUploadForm(request.POST or None,request.FILES or None,user=request.user)

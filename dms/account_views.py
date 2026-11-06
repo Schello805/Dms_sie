@@ -42,7 +42,7 @@ def status(request):
         else:
             messages.success(request,'Kontostatus geändert. Bestehende Anmeldungen wurden beendet.')
     else:
-        messages.error(request,'Benutzer, Status und Begründung prüfen.')
+        messages.error(request,'Benutzer und Status prüfen.')
     return redirect('user_roles')
 
 
@@ -62,7 +62,6 @@ def password(request,user_id=None):
         form.fields['old_password'].required=True
     else:
         form.fields.pop('old_password')
-        form.fields['reason'].initial='IT-Passwortzurücksetzung'
     if request.method=='POST' and form.is_valid():
         try:
             accounts.change_password(request.user,target,**form.cleaned_data)

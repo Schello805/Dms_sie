@@ -109,6 +109,27 @@ der frühere Portal-/Kenntnisnahme-Worker wird vom Installer nicht gestartet.
 - Rückkehr zur Tabelle behält Filter, Sortierung und Scrollposition pro Tab. Ungespeicherte Formulare warnen beim Verlassen. Tabellenkopf und Dokumentnummer bleiben beim Scrollen sichtbar.
 - Der Installer fragt bei interaktiver Neuinstallation nach dem Domainnamen; leer bedeutet lokalen IP-Zugriff. Automatisiert sind `--host` oder `--non-interactive` erforderlich. Er legt keine Netzwerkkonfiguration an. Wechselnde IP-Adressen funktionieren; zusätzliche DNS-Namen sind optional über `--host` angebbar.
 
+## Kompaktere Oberfläche und eindeutige Rollenanzeige (0.4.3-dev)
+
+Kopfzeile, Logo, Formulare und Tabellen benötigen weniger Platz. Auf Touch-Geräten bleiben
+Bedienelemente mindestens 44 Pixel hoch. Die tatsächlichen Zusatzrollen stehen direkt unter
+dem Benutzernamen; „Leser“ wird nur angezeigt, wenn keine Zusatzrolle besteht. Gespeicherte
+Rollenänderungen wirken auch bei einer bestehenden Anmeldung beim nächsten Seitenaufruf.
+
+## Upload für Autoren und QMB (0.4.3-dev)
+
+Autoren und aktive QMBs sehen oben **Dokument hochladen** (`/new/`). QMBs benötigen dafür
+keine zusätzliche Autorenrolle. Sie können ihre Dokumente als Entwurf speichern, bearbeiten und
+zur Freigabe senden. Eigene Dokumente müssen durch einen anderen QMB freigegeben werden.
+Die QMB-Rolle allein erlaubt keine Bearbeitung fremder Autorenentwürfe.
+
+## Benutzerverwaltung: optionale Begründung (0.4.3-dev)
+
+Bei Benutzeranlage, Profil-/Kontaktänderungen, Rollenänderungen, Aktivierung/Deaktivierung und
+Passwortänderungen ist die Begründung optional. Die Aktion, der ausführende Benutzer und der
+Zeitpunkt werden weiterhin auditiert. Ohne Freitext wird „Keine zusätzliche Begründung angegeben.“
+protokolliert. Pflichtangaben für Dokumentfreigaben und andere fachliche Vorgänge bleiben erhalten.
+
 ## Fehlerkorrekturen aus der erneuten Prüfung (0.4.2-dev)
 
 - Der letzte aktive QMB kann über die Benutzerrollenverwaltung nicht mehr entfernt werden; die Datenbankfunktion schützt ebenfalls davor.

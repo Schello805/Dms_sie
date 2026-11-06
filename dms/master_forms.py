@@ -68,4 +68,4 @@ class GroupGrantForm(forms.Form):
 class ProfileForm(forms.Form):
     display_name=forms.CharField(label='Anzeigename',max_length=300)
     email=forms.EmailField(label='E-Mail',required=False,max_length=254)
-    reason=forms.CharField(label='Begründung',max_length=4000,widget=forms.Textarea)
+    reason=forms.CharField(label='Begründung (optional)',required=False,max_length=4000,widget=forms.Textarea)

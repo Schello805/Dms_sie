@@ -6,8 +6,6 @@ from .policies import require_settings_admin
 @transaction.atomic
 def save_roles(user,user_id,author,qmb,admin,reason):
     uid = require_settings_admin(user)
-    if not reason.strip():
-        raise ValidationError('Eine Begründung ist erforderlich.')
     s.query("SELECT pg_advisory_xact_lock(hashtext('ims-user-roles'))")
     rows = s.query('SELECT u.* FROM users u JOIN auth_user a ON a.id=u.auth_user_id AND a.is_active WHERE u.id=%s FOR UPDATE OF u',[user_id])
     if not rows or not rows[0]['active']:

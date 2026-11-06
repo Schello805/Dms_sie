@@ -24,8 +24,6 @@ def create_account(user, username, display_name, email, password1, password2, re
     validate_password(password1, candidate)
     if get_user_model().objects.filter(username=username).exists():
         raise ValidationError('Dieser Benutzername ist bereits vergeben.')
-    if not reason.strip():
-        raise ValidationError('Eine Begründung ist erforderlich.')
     return s.query('SELECT create_local_account(%s,%s,%s,%s,%s,%s) AS id',
         [uid,username,make_password(password1),display_name,email,reason])[0]['id']
 
@@ -37,8 +35,8 @@ def set_active(user, user_id, enabled, reason):
         raise ValidationError('Das eigene Konto kann hier nicht deaktiviert werden.')
     s.query("SELECT pg_advisory_xact_lock(hashtext('ims-user-roles'))")
     rows = s.query('SELECT auth_user_id,is_qmb(id) AS qmb FROM users WHERE id=%s FOR UPDATE',[user_id])
-    if not rows or not reason.strip():
-        raise ValidationError('Benutzer und Begründung prüfen.')
+    if not rows:
+        raise ValidationError('Benutzer prüfen.')
     if not enabled and rows[0]['qmb'] and not s.query('SELECT 1 FROM users WHERE id<>%s AND is_qmb(id)',[user_id]):
         raise ValidationError('Vorher einen weiteren aktiven QMB zuordnen.')
     s.query('SELECT set_account_active(%s,%s,%s,%s)',[uid,user_id,enabled,reason])
@@ -53,8 +51,8 @@ def change_password(user, user_id, password1, password2, reason, old_password=No
     elif old_password is None or not check_password(old_password,user.password):
         raise ValidationError('Das aktuelle Passwort ist nicht korrekt.')
     rows = s.query('SELECT auth_user_id FROM users WHERE id=%s',[user_id])
-    if not rows or not reason.strip():
-        raise ValidationError('Benutzer und Begründung prüfen.')
+    if not rows:
+        raise ValidationError('Benutzer prüfen.')
     if s.query('SELECT 1 FROM external_identities WHERE user_id=%s',[user_id]):
         raise ValidationError('Das Passwort dieses Verzeichniskontos wird extern verwaltet.')
     target = get_user_model().objects.get(pk=rows[0]['auth_user_id'])

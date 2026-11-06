@@ -240,8 +240,7 @@ def set_contact_email(user,user_id,email,reason):
     uid = require_settings_admin(user)
     if email:
         validate_email(email)
-    if not reason.strip():
-        raise ValidationError('Eine Begründung ist erforderlich.')
+    reason = (reason or '').strip() or 'Keine zusätzliche Begründung angegeben.'
     people = s.query('SELECT * FROM users WHERE id=%s FOR UPDATE',[user_id])
     if not people:
         raise ValidationError('Benutzer ist nicht vorhanden.')

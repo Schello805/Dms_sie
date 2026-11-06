@@ -238,3 +238,30 @@ class SimpleIMSWorkflowTests(TestCase):
         for user in [self.author,self.reader,admin]:
             with self.assertRaises(PermissionDenied):
                 decide(user,vid,True,'Unberechtigt')
+
+    def test_qmb_uploads_without_extra_author_role_but_cannot_approve_own_document(self):
+        self.enable_runtime_role();self.client.force_login(self.reviewer)
+        self.assertContains(self.client.get('/'),'Dokument hochladen')
+        self.assertContains(self.client.get('/new/'),'IT')
+        response=self.client.post('/new/',{'number':'QMB-UPLOAD','title':'QMB-Dokument','document_type':'Arbeitsanweisung','department':self.dep,'classification':'INTERNAL','intent':'draft','file':SimpleUploadedFile('qmb.txt',b'QMB upload fixture')})
+        vid=s.query("SELECT v.id FROM document_versions v JOIN documents d ON d.id=v.document_id WHERE d.number='QMB-UPLOAD'")[0]['id']
+        self.assertRedirects(response,f'/versions/{vid}/')
+        self.assertContains(self.client.get('/'),'QMB-UPLOAD')
+        self.assertContains(self.client.get(f'/versions/{vid}/'),'An QMB senden')
+        self.client.post(f'/versions/{vid}/action/',{'action':'submit'})
+        self.assertEqual(s.get_version(self.reviewer,vid)[1]['status'],'IN_REVIEW')
+        self.assertEqual(self.client.post(f'/versions/{vid}/action/',{'action':'approve'}).status_code,403)
+        self.assertEqual(s.get_version(self.reviewer,vid)[1]['status'],'IN_REVIEW')
+        s.query("UPDATE users SET qmb_role='DEPUTY' WHERE auth_user_id=%s",[self.approver.pk])
+        decide(self.approver,vid,False,'QMB-Upload bitte ergänzen')
+        self.assertContains(self.client.get('/tasks/'),'QMB-Upload bitte ergänzen')
+        self.client.post(f'/versions/{vid}/action/',{'action':'submit'})
+        decide(self.approver,vid,True,'Unabhängig freigegeben')
+        self.assertEqual(s.get_version(self.reviewer,vid)[1]['status'],'APPROVED')
+
+    def test_qmb_upload_right_does_not_enable_editing_other_authors_drafts(self):
+        self.client.force_login(self.reviewer)
+        self.assertEqual(self.client.get(f'/versions/{self.vid}/edit/').status_code,403)
+        s.query("UPDATE users SET qmb_role='NONE' WHERE auth_user_id=%s",[self.reviewer.pk])
+        self.assertNotContains(self.client.get('/'),'Dokument hochladen')
+        self.assertEqual(self.client.get('/new/').status_code,403)
