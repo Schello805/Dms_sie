@@ -146,3 +146,17 @@ Für bereits installierte Systeme übernimmt ein Update diese Einstellungen. Bes
 Index- und Erinnerungsworker schreiben lokale Lebenszeichen unter `/var/lib/ims-dms/health/`; der tägliche Sicherungsdienst meldet Erfolg oder Fehler. Im IT-Bereich erscheinen Warnungen bei fehlenden/veralteten Rückmeldungen, fehlgeschlagener Sicherung oder knappem Dateispeicher. Ein abgeschalteter Erinnerungsversand erzeugt keine unnötige Workerwarnung. Die Überwachung erfolgt in der Anwendung, ohne externe Alarmnachricht. Betrieblich zusätzlich eine externe Erreichbarkeitsüberwachung und getrennte Sicherung vorsehen.
 
 Für gedruckte QR-Codes und dauerhaft gültige E-Mail-Links einen stabilen DNS-Namen verwenden. Ein QR-Code mit einer früheren IP kann durch einen DHCP-Wechsel nicht automatisch auf die neue IP umgebogen werden.
+
+## HTTPS am Reverse Proxy und internes HTTP
+
+Ab 0.4.1-dev werden die mit `--host` konfigurierten Namen automatisch als HTTPS-Ursprünge
+für die CSRF-Prüfung zugelassen. Damit funktioniert die Anmeldung auch dann, wenn der äußere
+Proxy HTTPS beendet und der lokale nginx intern HTTP weiterleitet. Der äußere Proxy muss den
+ursprünglichen Hostnamen weiterreichen. CSRF-Token und Cookie bleiben erforderlich; fremde
+Ursprünge werden weiterhin abgewiesen. Bei einem zusätzlichen externen HTTPS-Port können
+Administratoren `DMS_CSRF_TRUSTED_ORIGINS=https://dms.firma.de:8443` in der Webdienst-Umgebung
+ergänzen. Kein pauschales Vertrauen in beliebige Host-/Forwarded-Header einrichten.
+
+Bei bestehenden Installationen das aktuelle Installationsskript erneut herunterladen und
+`python3 /tmp/install-ims-dms.py --update --host dms.firma.de` ausführen. Danach die Login-Seite
+neu öffnen, damit Cookie und Formular frisch geladen werden.

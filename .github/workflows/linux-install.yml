@@ -9,6 +9,9 @@ on:
       - 'dms/management/commands/bootstrap_admin.py'
       - 'requirements.lock.txt'
       - 'db/**'
+      - 'config/settings.py'
+      - 'dms/test_proxy_login.py'
+      - 'tests/proxy_login_smoke.py'
       - '.github/workflows/linux-install.yml'
 permissions:
   contents: read
@@ -39,7 +42,7 @@ jobs:
       - name: Fresh local-source installation
         env:
           INSTALL_REPO: https://github.com/${{ github.repository }}
-        run: sudo python3 scripts/install_linux.py --non-interactive --source-dir "$GITHUB_WORKSPACE" --repo "$INSTALL_REPO"
+        run: sudo python3 scripts/install_linux.py --non-interactive --host dms.proxy.test --source-dir "$GITHUB_WORKSPACE" --repo "$INSTALL_REPO"
       - name: Health and bootstrap checks
         run: |
           curl --fail http://localhost/ > /tmp/ims-home.html
@@ -49,6 +52,8 @@ jobs:
           curl --fail -H "Host: 192.168.99.12" http://localhost/ > /dev/null
           curl --fail -H "Host: 192.168.99.99" http://localhost/ > /dev/null
           sudo systemctl start ims-dms-backup.service
+      - name: HTTPS-origin login through internal HTTP
+        run: sudo python3 tests/proxy_login_smoke.py
       - name: Update with mandatory backup
         run: sudo python3 scripts/install_linux.py --update --source-dir "$GITHUB_WORKSPACE"
       - name: Health after update
@@ -56,6 +61,8 @@ jobs:
           curl --fail http://localhost/ > /dev/null
           sudo test -f /etc/ims-dms/initial-admin-password
           sudo systemctl is-active ims-dms-backup.timer
+      - name: HTTPS-origin login after update
+        run: sudo python3 tests/proxy_login_smoke.py
       - name: Service diagnostics on failure
         if: failure()
         run: sudo journalctl -u ims-dms -u ims-dms-index -u ims-dms-notifications --no-pager -n 80

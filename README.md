@@ -109,6 +109,13 @@ der frühere Portal-/Kenntnisnahme-Worker wird vom Installer nicht gestartet.
 - Rückkehr zur Tabelle behält Filter, Sortierung und Scrollposition pro Tab. Ungespeicherte Formulare warnen beim Verlassen. Tabellenkopf und Dokumentnummer bleiben beim Scrollen sichtbar.
 - Der Installer fragt bei interaktiver Neuinstallation nach dem Domainnamen; leer bedeutet lokalen IP-Zugriff. Automatisiert sind `--host` oder `--non-interactive` erforderlich. Er legt keine Netzwerkkonfiguration an. Wechselnde IP-Adressen funktionieren; zusätzliche DNS-Namen sind optional über `--host` angebbar.
 
+## Proxy-Login-Korrektur (0.4.1-dev)
+
+Hinterlegte Domainnamen werden automatisch als erlaubte HTTPS-Ursprünge für die CSRF-Prüfung
+verwendet. Damit funktioniert HTTPS am Reverse Proxy bei internem HTTP, ohne den CSRF-Schutz
+abzuschalten. Bestehende Systeme mit dem aktuellen Installer aktualisieren; siehe
+[Reverse-Proxy-Hinweise](docs/github-installation.md#https-am-reverse-proxy-und-internes-http).
+
 ## Neu: Stammdatenverwaltung (0.4.0-dev)
 
 Unter **Verwaltung → Stammdaten** verwaltet der QMB Kategorien einschließlich Reviewfristen,

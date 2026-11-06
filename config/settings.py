@@ -5,7 +5,11 @@ DEBUG = os.environ.get('DMS_DEBUG') == '1'
 SECRET_KEY = os.environ.get('DMS_SECRET_KEY', '')
 if not SECRET_KEY:
     raise RuntimeError('DMS_SECRET_KEY muss gesetzt sein.')
-EXPLICIT_HOSTS = os.environ.get('DMS_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+EXPLICIT_HOSTS = [host.strip().lower() for host in os.environ.get('DMS_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
+# TLS may terminate at an outer proxy while the local nginx uses HTTP.
+# Trust only explicitly configured hosts; CSRF cookies/tokens remain required.
+CSRF_TRUSTED_ORIGINS = ['https://' + host for host in EXPLICIT_HOSTS if host != '*' and not host.startswith('.')]
+CSRF_TRUSTED_ORIGINS += [origin.strip() for origin in os.environ.get('DMS_CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
 DYNAMIC_HOSTS = os.environ.get('DMS_DYNAMIC_HOSTS') == '1'
 ALLOWED_HOSTS = ['*'] if DYNAMIC_HOSTS else EXPLICIT_HOSTS
 INSTALLED_APPS = ['django.contrib.auth', 'django.contrib.contenttypes', 'django.contrib.sessions', 'django.contrib.messages', 'django.contrib.staticfiles', 'dms']
