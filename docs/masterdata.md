@@ -10,7 +10,7 @@
 | Benutzerprofile | IT-Admin | Anzeigename und E-Mail; Kontenstatus, Passwort und Rollen über bestehende Aktionen |
 
 Listen bieten Suche, Statusfilter und Seitennavigation. Deaktivierung und Reaktivierung erfordern
-Speichern mit Begründung; ein GET-Link verändert keine Daten. Inaktive Einträge werden bei neuen
+Speichern; die Begründung ist optional. Ein GET-Link verändert keine Daten. Inaktive Einträge werden bei neuen
 Zuordnungen ausgeblendet. Bestehende Zuordnungen und freigegebene Dokumente bleiben erhalten.
 Ein Aufbewahrungsort kann nicht deaktiviert werden, solange aktive Kategorien darauf verweisen.
 Abteilungshierarchien dürfen keine Zyklen enthalten.

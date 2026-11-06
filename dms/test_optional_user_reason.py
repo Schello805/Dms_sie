@@ -12,11 +12,11 @@ class OptionalUserReasonTests(TestCase):
     admin = improvements.ImprovementTests.admin
     enable_runtime_role = fixtures.WorkflowTests.enable_runtime_role
 
-    def test_user_forms_are_optional_but_master_data_still_requires_reason(self):
+    def test_user_and_master_data_forms_allow_optional_reason(self):
         for form in (CreateAccountForm(), PasswordForm(), AccountStatusForm(), UserRolesForm(), ContactEmailForm(), ProfileForm()):
             self.assertFalse(form.fields['reason'].required)
             self.assertIn('optional',form.fields['reason'].label)
-        self.assertTrue(MasterForm(kind='departments').fields['reason'].required)
+        self.assertFalse(MasterForm(kind='departments').fields['reason'].required)
 
     def test_full_user_lifecycle_without_explanation_remains_audited(self):
         admin=self.admin();self.enable_runtime_role();self.client.force_login(admin)

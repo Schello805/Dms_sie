@@ -1,3 +1,4 @@
+from .audit_text import OptionalReasonField
 from django import forms
 from .services import query,actor
 
@@ -8,7 +9,7 @@ class DistributionForm(forms.Form):
     keywords = forms.CharField(label='Schlagwörter und alternative Suchbegriffe',required=False,max_length=2000)
     audiences = forms.TypedMultipleChoiceField(label='Zielgruppen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple,
         help_text='Ohne Zielgruppe gilt der Abteilungsgeltungsbereich. Zielgruppen vergeben keine Zugriffsrechte.')
-    reason = forms.CharField(label='Begründung',max_length=4000,widget=forms.Textarea)
+    reason = OptionalReasonField(label='Begründung',max_length=4000,widget=forms.Textarea)
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.fields['audiences'].choices = [(g['id'],g['name']) for g in query('SELECT id,name FROM audience_groups WHERE active ORDER BY name')]
@@ -16,7 +17,7 @@ class DistributionForm(forms.Form):
 class AudienceForm(forms.Form):
     name = forms.CharField(label='Zielgruppe',max_length=200)
     description = forms.CharField(label='Beschreibung',required=False,max_length=2000,widget=forms.Textarea)
-    reason = forms.CharField(label='Begründung',max_length=4000)
+    reason = OptionalReasonField(label='Begründung',max_length=4000)
 
 class WorkplaceForm(forms.Form):
     user_id = forms.TypedChoiceField(label='Mitarbeiter',coerce=int)
@@ -24,7 +25,7 @@ class WorkplaceForm(forms.Form):
     site = forms.CharField(label='Standort',max_length=200,required=False)
     activity = forms.CharField(label='Tätigkeit / Arbeitsplatz',max_length=200,required=False)
     audiences = forms.TypedMultipleChoiceField(label='Zielgruppen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple)
-    reason = forms.CharField(label='Begründung',max_length=4000)
+    reason = OptionalReasonField(label='Begründung',max_length=4000)
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.fields['user_id'].choices = [(u['id'],u['display_name']) for u in query('SELECT id,display_name FROM users WHERE active ORDER BY display_name')]
@@ -40,7 +41,7 @@ class EvidenceForm(forms.Form):
     retain_until = forms.DateField(label='Aufbewahren bis einschließlich',required=False,widget=forms.DateInput(attrs={'type':'date'},format='%Y-%m-%d'),help_text='Leer: Kategoriefrist ab Nachweisdatum; ist keine festgelegt, ist ein Datum erforderlich.')
     classification = forms.ChoiceField(label='Vertraulichkeit',choices=[('INTERNAL','Intern, berechtigte Leser'),('CONFIDENTIAL','Vertraulich, Ersteller und QMB'),('RESTRICTED','Streng vertraulich, Ersteller und QMB')])
     source_version_id = forms.TypedChoiceField(label='Bezug zur Dokumentfassung',coerce=int,empty_value=None,required=False)
-    reason = forms.CharField(label='Beschreibung / Anlass',max_length=4000,widget=forms.Textarea)
+    reason = OptionalReasonField(label='Beschreibung / Anlass',max_length=4000,widget=forms.Textarea)
     file = forms.FileField(label='Unveränderliche Nachweisdatei (max. 25 MiB)')
     def __init__(self,*args,user,**kwargs):
         super().__init__(*args,**kwargs)
@@ -52,7 +53,7 @@ class EvidenceForm(forms.Form):
 class RetentionForm(forms.Form):
     retain_until = forms.DateField(label='Aufbewahren bis einschließlich',widget=forms.DateInput(attrs={'type':'date'},format='%Y-%m-%d'))
     legal_hold = forms.BooleanField(label='Aussonderungssperre aktiv',required=False)
-    reason = forms.CharField(label='Begründung der Aufbewahrungsentscheidung',max_length=4000,widget=forms.Textarea)
+    reason = OptionalReasonField(label='Begründung der Aufbewahrungsentscheidung',max_length=4000,widget=forms.Textarea)
 
 class AuditFilterForm(forms.Form):
     document_number = forms.CharField(label='Dokumentnummer (optional)',required=False,max_length=100)

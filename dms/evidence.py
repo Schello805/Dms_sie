@@ -1,4 +1,5 @@
 """Immutable evidence content and append-only retention decisions."""
+from .audit_text import optional_reason
 import hashlib
 from pathlib import Path
 import uuid
@@ -37,6 +38,7 @@ def get_record(user,record_id,lock=False):
 
 @transaction.atomic
 def create_record(user,data,uploaded):
+    data = dict(data,reason=optional_reason(data.get('reason')))
     uid = s.actor(user)
     s.require(uid,data['department_id'],'AUTHOR')
     if not s.query('SELECT 1 FROM departments WHERE id=%s AND active',[data['department_id']]):
@@ -49,8 +51,8 @@ def create_record(user,data,uploaded):
         if not category[0]['retention_months']:
             raise ValidationError('Aufbewahrungsfrist für diese Kategorie oder ein konkretes Aufbewahrungsdatum festlegen.')
         due = add_months(data['occurred_on'],category[0]['retention_months'])
-    if due<data['occurred_on'] or not data['reason'].strip():
-        raise ValidationError('Ungültiges Aufbewahrungsdatum oder fehlende Begründung.')
+    if due<data['occurred_on']:
+        raise ValidationError('Ungültiges Aufbewahrungsdatum.')
     if data.get('source_version_id'):
         s.get_version(user,data['source_version_id'])
     if not uploaded:
@@ -89,20 +91,22 @@ def create_record(user,data,uploaded):
 
 @transaction.atomic
 def change_retention(user,record_id,retain_until,legal_hold,reason):
+    reason = optional_reason(reason)
     uid = require_qmb(user)
     _,record = get_record(user,record_id,lock=True)
-    if retain_until<record['retention_due'] or not reason.strip():
-        raise ValidationError('Aufbewahrung darf nur verlängert werden; Begründung erforderlich.')
+    if retain_until<record['retention_due']:
+        raise ValidationError('Aufbewahrung darf nur verlängert werden.')
     s.query('INSERT INTO evidence_retention_events(record_id,actor_id,retain_until,legal_hold,reason) VALUES (%s,%s,%s,%s,%s)',[record_id,uid,retain_until,legal_hold,reason])
     s.query("INSERT INTO audit_events(actor_id,action,object_type,object_id,reason) VALUES (%s,'CHANGE_EVIDENCE_RETENTION','evidence',%s,%s)",[uid,str(record_id),reason])
 
 
 @transaction.atomic
 def request_disposal(user,record_id,reason):
+    reason = optional_reason(reason)
     uid = require_qmb(user)
     _,record = get_record(user,record_id,lock=True)
-    if record['legal_hold'] or record['retention_due']>=timezone.localdate() or not reason.strip():
-        raise ValidationError('Aussonderung erst nach Ablauf der Frist, ohne Sperre und mit Begründung vormerken.')
+    if record['legal_hold'] or record['retention_due']>=timezone.localdate():
+        raise ValidationError('Aussonderung erst nach Ablauf der Frist und ohne Sperre vormerken.')
     if not s.query('SELECT id FROM evidence_disposal_requests WHERE record_id=%s',[record_id]):
         s.query('INSERT INTO evidence_disposal_requests(record_id,actor_id,reason) VALUES (%s,%s,%s)',[record_id,uid,reason])
         s.query("INSERT INTO audit_events(actor_id,action,object_type,object_id,reason) VALUES (%s,'REQUEST_EVIDENCE_DISPOSAL','evidence',%s,%s)",[uid,str(record_id),reason])

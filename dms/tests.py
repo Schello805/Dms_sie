@@ -298,7 +298,7 @@ class WorkflowTests(TestCase):
         self.publish()
         self.client.force_login(self.author)
         self.assertEqual(self.client.get(f'/versions/{self.vid}/revision/').status_code,405)
-        self.client.post(f'/versions/{self.vid}/revision/',{'kind':'minor','reason':''})
+        self.client.post(f'/versions/{self.vid}/revision/',{'kind':'invalid','reason':''})
         self.assertEqual(len(s.query('SELECT * FROM document_versions')),1)
         self.client.post(f'/versions/{self.vid}/revision/',{'kind':'minor','reason':'Redaktionelle Präzisierung'})
         self.assertEqual(len(s.query('SELECT * FROM document_versions')),2)

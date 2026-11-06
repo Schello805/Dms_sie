@@ -1,3 +1,4 @@
+from .audit_text import OptionalReasonField
 from django import forms
 
 class DirectorySettingsForm(forms.Form):
@@ -21,4 +22,4 @@ class DirectorySettingsForm(forms.Form):
     group_base_dn = forms.CharField(label='Gruppen-Suchbasis',max_length=2000,required=False)
     group_filter = forms.CharField(label='Gruppen-Suchfilter',max_length=2000)
     membership_attribute = forms.CharField(label='Gruppenzugehörigkeits-Attribut',max_length=200,help_text='AD typischerweise memberOf.')
-    reason = forms.CharField(label='Begründung der Konfigurationsänderung',max_length=4000,widget=forms.Textarea)
+    reason = OptionalReasonField(label='Begründung der Konfigurationsänderung',max_length=4000,widget=forms.Textarea)

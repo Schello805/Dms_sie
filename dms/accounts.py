@@ -1,4 +1,5 @@
 """Audited local account operations; no direct runtime auth-table writes."""
+from .audit_text import optional_reason
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password,check_password
 from django.contrib.auth.password_validation import validate_password
@@ -17,6 +18,7 @@ def revoke_sessions(auth_id):
 
 @transaction.atomic
 def create_account(user, username, display_name, email, password1, password2, reason):
+    reason = optional_reason(reason)
     uid = require_settings_admin(user)
     if password1 != password2:
         raise ValidationError('Die Passwörter stimmen nicht überein.')
@@ -30,6 +32,7 @@ def create_account(user, username, display_name, email, password1, password2, re
 
 @transaction.atomic
 def set_active(user, user_id, enabled, reason):
+    reason = optional_reason(reason)
     uid = require_settings_admin(user)
     if uid == user_id:
         raise ValidationError('Das eigene Konto kann hier nicht deaktiviert werden.')
@@ -45,6 +48,7 @@ def set_active(user, user_id, enabled, reason):
 
 @transaction.atomic
 def change_password(user, user_id, password1, password2, reason, old_password=None):
+    reason = optional_reason(reason)
     uid = s.actor(user)
     if uid != user_id:
         require_settings_admin(user)

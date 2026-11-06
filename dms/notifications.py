@@ -1,4 +1,5 @@
 """Review reminders: durable outbox, current access checks, explicit SMTP settings."""
+from .audit_text import optional_reason
 from .version import APP_NAME
 import base64
 import hashlib
@@ -77,6 +78,7 @@ def validate_config(config,require_ready=False):
 
 @transaction.atomic
 def save_config(user,data):
+    data = dict(data,reason=optional_reason(data.get('reason')))
     uid = require_settings_admin(user)
     s.query('SELECT pg_advisory_xact_lock(824010,1)')
     before = s.query('SELECT * FROM notification_settings WHERE id=1 FOR UPDATE')[0]
@@ -87,8 +89,6 @@ def save_config(user,data):
         updated['password_ciphertext'] = ''
     if data.get('password'):
         updated['password_ciphertext'] = cipher().encrypt(data['password'].encode()).decode()
-    if not data.get('reason','').strip():
-        raise ValidationError('Eine Begründung ist erforderlich.')
     validate_config(updated)
     s.query('''UPDATE notification_settings SET enabled=%s,reminder_days=%s,smtp_host=%s,smtp_port=%s,
         smtp_security=%s,smtp_username=%s,sender_email=%s,base_url=%s,password_ciphertext=%s,updated_at=clock_timestamp() WHERE id=1''',
@@ -102,6 +102,7 @@ def save_config(user,data):
 
 
 def mail_event(action,job_id,reason,details=None,actor_id=None):
+    reason = optional_reason(reason)
     s.query("INSERT INTO audit_events(actor_id,action,object_type,object_id,reason,details) VALUES (%s,%s,'notification',%s,%s,%s::jsonb)",[actor_id,action,str(job_id),reason,json.dumps(details or {})])
 
 
@@ -237,6 +238,7 @@ def retry_failed(user,notification_id):
 
 @transaction.atomic
 def set_contact_email(user,user_id,email,reason):
+    reason = optional_reason(reason)
     uid = require_settings_admin(user)
     if email:
         validate_email(email)
@@ -269,12 +271,13 @@ def send_test(user,recipient):
 
 @transaction.atomic
 def save_notification_policy(user,enabled,reminder_days,reason):
+    reason = optional_reason(reason)
     from .policies import require_qmb
     uid = require_qmb(user)
     s.query('SELECT pg_advisory_xact_lock(824010,1)')
     before = load_config()
-    if not reason.strip() or not 0<=reminder_days<=3650:
-        raise ValidationError('Begründung und gültiger Vorlauf erforderlich.')
+    if not 0<=reminder_days<=3650:
+        raise ValidationError('Gültigen Vorlauf angeben.')
     updated = dict(before,enabled=enabled,reminder_days=reminder_days)
     validate_config(updated)
     s.query('UPDATE notification_settings SET enabled=%s,reminder_days=%s,updated_at=clock_timestamp() WHERE id=1',[enabled,reminder_days])

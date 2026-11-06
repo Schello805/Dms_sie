@@ -109,6 +109,16 @@ der frühere Portal-/Kenntnisnahme-Worker wird vom Installer nicht gestartet.
 - Rückkehr zur Tabelle behält Filter, Sortierung und Scrollposition pro Tab. Ungespeicherte Formulare warnen beim Verlassen. Tabellenkopf und Dokumentnummer bleiben beim Scrollen sichtbar.
 - Der Installer fragt bei interaktiver Neuinstallation nach dem Domainnamen; leer bedeutet lokalen IP-Zugriff. Automatisiert sind `--host` oder `--non-interactive` erforderlich. Er legt keine Netzwerkkonfiguration an. Wechselnde IP-Adressen funktionieren; zusätzliche DNS-Namen sind optional über `--host` angebbar.
 
+## Änderungsgründe überall optional (0.4.5-dev)
+
+Allgemeine Begründungen und Änderungsbeschreibungen sind in allen Bereichen optional:
+Dokumentänderungen und Revisionen, Stammdaten, Gruppen, Systemeinstellungen, Logos,
+Aufbewahrung, Prüfbegründungen und Benutzerverwaltung. Ohne Eingabe protokolliert das System
+„Keine zusätzliche Begründung angegeben.“; Ausführender, Aktion und Zeitpunkt bleiben erhalten.
+Pflichtentscheidungen, Berechtigungen, Bestätigungen und die Rückmeldung bei Ablehnung bleiben
+bestehen. Freitext wird zentral über `audit_text.py` verarbeitet; vorhandene Audit-Einträge
+werden nicht verändert.
+
 ## Kompaktere Oberfläche und eindeutige Rollenanzeige (0.4.3-dev)
 
 Kopfzeile, Logo, Formulare und Tabellen benötigen weniger Platz. Auf Touch-Geräten bleiben

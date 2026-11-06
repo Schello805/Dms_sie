@@ -1,4 +1,5 @@
 """Transaction boundary for every document mutation; all SQL uses bound parameters."""
+from .audit_text import optional_reason
 import hashlib
 import json
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -32,6 +33,7 @@ def require(uid, department, role, document_id=None):
 
 
 def audit(uid, action, version_id, reason, details=None):
+    reason = optional_reason(reason)
     query("INSERT INTO audit_events(actor_id,action,object_type,object_id,reason,details) VALUES (%s,%s,'version',%s,%s,%s::jsonb)", [uid, action, str(version_id), reason, json.dumps(details or {})])
 
 
@@ -130,6 +132,7 @@ def fingerprint(v):
 
 @transaction.atomic
 def create_document(user, data):
+    data = dict(data,change_summary=optional_reason(data.get('change_summary')))
     query("SELECT pg_advisory_xact_lock(hashtext('ims-master-data'))")
     uid = actor(user)
     department = data['department']
@@ -214,6 +217,7 @@ def transition(user, version_id, action, comment):
 
 @transaction.atomic
 def edit_draft(user, version_id, data):
+    data = dict(data,change_summary=optional_reason(data.get('change_summary')))
     uid, v = get_version(user, version_id, lock=True)
     require(uid,v['responsible_department_id'],'AUTHOR',v['document_id'])
     if v['status'] != 'DRAFT':
@@ -230,12 +234,13 @@ def edit_draft(user, version_id, data):
 
 @transaction.atomic
 def new_revision(user, version_id, kind='major', reason='Neue Überarbeitung'):
+    reason = optional_reason(reason)
     uid, v = get_version(user, version_id, lock=True)
     require(uid,v['responsible_department_id'],'AUTHOR',v['document_id'])
     if v['status'] not in ('APPROVED','ARCHIVED'):
         raise ValidationError('Eine neue Revision setzt eine bereits freigegebene Ausgangsversion voraus.')
-    if kind not in ('major','minor') or not reason.strip():
-        raise ValidationError('Versionsart und Änderungsgrund sind erforderlich.')
+    if kind not in ('major','minor'):
+        raise ValidationError('Gültige Versionsart auswählen.')
     # Serialize numbering for all versions of the same document.
     query('SELECT pg_advisory_xact_lock(%s)',[v['document_id']])
     if query("SELECT 1 FROM document_versions WHERE document_id=%s AND status IN ('DRAFT','IN_REVIEW','PENDING_APPROVAL')",[v['document_id']]):
@@ -264,10 +269,11 @@ def new_revision(user, version_id, kind='major', reason='Neue Überarbeitung'):
 
 @transaction.atomic
 def remove_file(user, version_id, file_id, reason):
+    reason = optional_reason(reason)
     uid,v = get_version(user,version_id,lock=True)
     require(uid,v['responsible_department_id'],'AUTHOR',v['document_id'])
-    if v['status'] != 'DRAFT' or not reason.strip():
-        raise ValidationError('Dateien können nur im Entwurf und mit Begründung entfernt werden.')
+    if v['status'] != 'DRAFT':
+        raise ValidationError('Dateien können nur im Entwurf entfernt werden.')
     if not query('SELECT 1 FROM version_files WHERE version_id=%s AND file_id=%s',[version_id,file_id]):
         raise ValidationError('Datei gehört nicht zu diesem Entwurf.')
     query('DELETE FROM version_files WHERE version_id=%s AND file_id=%s',[version_id,file_id])
@@ -297,6 +303,7 @@ def save_mappings(version_id, department, data):
 
 @transaction.atomic
 def record_review(user, version_id, result, rationale, next_review_on=None):
+    rationale = optional_reason(rationale)
     uid,v = get_version(user,version_id,lock=True)
     from .policies import require_qmb
     require_qmb(user)
@@ -304,8 +311,8 @@ def record_review(user, version_id, result, rationale, next_review_on=None):
         raise PermissionDenied('Die periodische Prüfung muss unabhängig vom Ersteller erfolgen.')
     if v['status']!='APPROVED' or query('SELECT current_release(%s) AS id',[v['document_id']])[0]['id'] != version_id:
         raise ValidationError('Nur die aktuell wirksame freigegebene Fassung kann geprüft werden.')
-    if result not in ('UNCHANGED','REVISION_REQUIRED','WITHDRAWAL_REQUIRED') or not rationale.strip():
-        raise ValidationError('Prüfergebnis und Begründung sind erforderlich.')
+    if result not in ('UNCHANGED','REVISION_REQUIRED','WITHDRAWAL_REQUIRED'):
+        raise ValidationError('Gültiges Prüfergebnis auswählen.')
     from .policies import interval_for,add_months
     months = interval_for(v['document_type'])
     if result=='UNCHANGED' and next_review_on is None:
@@ -346,12 +353,13 @@ def access_policy(document_id):
 
 @transaction.atomic
 def change_access(user,version_id,access_mode,users,groups,reason):
+    reason = optional_reason(reason)
     uid,v = get_version(user,version_id,lock=True)
     document_id = v['document_id']
     require(uid,v['responsible_department_id'],'AUTHOR',document_id)
     query('SELECT id FROM documents WHERE id=%s FOR UPDATE',[document_id])
-    if access_mode not in ('DEPARTMENT','EXPLICIT') or not reason.strip():
-        raise ValidationError('Zugriffsbereich und Begründung sind erforderlich.')
+    if access_mode not in ('DEPARTMENT','EXPLICIT'):
+        raise ValidationError('Gültigen Zugriffsbereich auswählen.')
     before = access_policy(document_id)
     query('UPDATE documents SET access_mode=%s WHERE id=%s',[access_mode,document_id])
     for table,column,values in [('document_access_users','user_id',users),('document_access_groups','group_id',groups)]:
@@ -365,11 +373,12 @@ def change_access(user,version_id,access_mode,users,groups,reason):
 
 @transaction.atomic
 def lifecycle_action(user,version_id,action,reason,confirmed=False):
+    reason = optional_reason(reason)
     uid,v = get_version(user,version_id,lock=True)
     from .policies import require_qmb
     require_qmb(user)
-    if not confirmed or not reason.strip() or action not in ('withdraw','archive'):
-        raise ValidationError('Gültiger Vorgang, Begründung und Bestätigung sind erforderlich.')
+    if not confirmed or action not in ('withdraw','archive'):
+        raise ValidationError('Gültiger Vorgang und Bestätigung sind erforderlich.')
     query('SELECT pg_advisory_xact_lock(%s)',[v['document_id']])
     if action=='archive':
         if v['status']!='APPROVED':
@@ -402,12 +411,13 @@ def workflow_tasks(user):
 
 @transaction.atomic
 def takeover_review(user,version_id,reason):
+    reason = optional_reason(reason)
     from .policies import require_qmb
     uid = require_qmb(user)
     _,v = get_version(user,version_id,lock=True)
     query('SELECT pg_advisory_xact_lock(%s)',[v['document_id']])
-    if v['status']!='PENDING_APPROVAL' or not reason.strip() or uid==v['created_by']:
-        raise ValidationError('Übernahme erfordert eine fremde, bereits geprüfte Fassung und eine Begründung.')
+    if v['status']!='PENDING_APPROVAL' or uid==v['created_by']:
+        raise ValidationError('Übernahme erfordert eine fremde, bereits geprüfte Fassung.')
     w = query('SELECT * FROM workflow_instances WHERE version_id=%s AND closed_at IS NULL FOR UPDATE',[version_id])[0]
     if uid==w['submitted_by']:
         raise PermissionDenied('Der Einreicher kann die Prüfung nicht selbst übernehmen.')

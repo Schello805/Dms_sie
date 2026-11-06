@@ -1,4 +1,5 @@
 """Employee distribution supplements access control; audiences never grant access."""
+from .audit_text import optional_reason
 from datetime import timedelta
 from django.core.exceptions import PermissionDenied,ValidationError
 from django.db import transaction
@@ -48,9 +49,10 @@ def bookmark(user,document_id):
 
 @transaction.atomic
 def save_distribution(user,version_id,change_kind,requires_ack,ack_days,keywords,audiences,reason):
+    reason = optional_reason(reason)
     uid,v = s.get_version(user,version_id,lock=True)
     s.require(uid,v['responsible_department_id'],'AUTHOR',v['document_id'])
-    if v['status']!='DRAFT' or not reason.strip():
+    if v['status']!='DRAFT':
         raise ValidationError('Zielgruppen und Kenntnisnahme nur im Entwurf mit Begründung ändern.')
     if change_kind not in ('EDITORIAL','SUBSTANTIAL') or not 1<=ack_days<=3650 or len(keywords)>2000:
         raise ValidationError('Ungültige Verteilungsvorgabe.')
@@ -109,8 +111,9 @@ def acknowledge(user,assignment_id,confirmed):
 
 @transaction.atomic
 def create_audience(user,name,description,reason):
+    reason = optional_reason(reason)
     uid = require_qmb(user)
-    if not name.strip() or not reason.strip():
+    if not name.strip():
         raise ValidationError('Name und Begründung sind erforderlich.')
     group = s.query('INSERT INTO audience_groups(name,description) VALUES (%s,%s) RETURNING id',[name.strip(),description])[0]['id']
     s.query("INSERT INTO audit_events(actor_id,action,object_type,object_id,reason) VALUES (%s,'CREATE_AUDIENCE','audience',%s,%s)",[uid,str(group),reason])
@@ -118,8 +121,9 @@ def create_audience(user,name,description,reason):
 
 @transaction.atomic
 def save_workplace(user,user_id,department,site,activity,audiences,reason):
+    reason = optional_reason(reason)
     uid = require_settings_admin(user)
-    if not reason.strip() or not s.query('SELECT id FROM users WHERE id=%s',[user_id]):
+    if not s.query('SELECT id FROM users WHERE id=%s',[user_id]):
         raise ValidationError('Gültiger Benutzer und Begründung erforderlich.')
     if department and not s.query('SELECT id FROM departments WHERE id=%s',[department]):
         raise ValidationError('Abteilung nicht vorhanden.')

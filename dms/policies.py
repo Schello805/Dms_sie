@@ -1,3 +1,4 @@
+from .audit_text import optional_reason
 import calendar
 from datetime import date
 from django.core.exceptions import PermissionDenied,ValidationError
@@ -44,10 +45,9 @@ def require_settings_admin(user):
 
 @transaction.atomic
 def save_intervals(user,intervals,reason):
+    reason = optional_reason(reason)
     uid = require_qmb(user)
     query("SELECT pg_advisory_xact_lock(hashtext('ims-master-data'))")
-    if not reason.strip():
-        raise ValidationError('Eine Begründung ist erforderlich.')
     categories = query('SELECT * FROM document_categories WHERE active ORDER BY id FOR UPDATE')
     if set(intervals)!={c['id'] for c in categories}:
         raise ValidationError('Kategorien haben sich geändert. Bitte die Einstellungen neu laden.')
@@ -77,9 +77,10 @@ def require_qmb(user):
 
 @transaction.atomic
 def save_qmb_team(user,primary_id,deputy_id,reason,lead_id=None):
+    reason = optional_reason(reason)
     uid = require_settings_admin(user)
-    if not reason.strip() or (primary_id and primary_id==deputy_id):
-        raise ValidationError('QMB und Vertretung müssen unterschiedliche Personen sein; Begründung erforderlich.')
+    if (primary_id and primary_id==deputy_id):
+        raise ValidationError('QMB und Vertretung müssen unterschiedliche Personen sein.')
     query("SELECT pg_advisory_xact_lock(hashtext('ims-qmb-team'))")
     before = query("SELECT id,qmb_role,qmb_approval_lead FROM users WHERE qmb_role<>'NONE' OR qmb_approval_lead ORDER BY id FOR UPDATE")
     selected = list({value for value in (primary_id,deputy_id,lead_id) if value})
@@ -98,6 +99,7 @@ def save_qmb_team(user,primary_id,deputy_id,reason,lead_id=None):
 
 @transaction.atomic
 def save_category_management(user,intervals,retention,locations,reason):
+    reason = optional_reason(reason)
     require_qmb(user)
     query("SELECT pg_advisory_xact_lock(hashtext('ims-master-data'))")
     save_intervals(user,intervals,reason)

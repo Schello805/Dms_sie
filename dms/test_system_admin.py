@@ -83,7 +83,7 @@ class SystemAdministrationTests(TestCase):
 
     def test_directory_validation_and_csrf_leave_saved_config_unchanged(self):
         for changes in [{'host':'ldap://user:password@example.internal'}, {'security':'NONE'},
-            {'user_filter':'(uid=*)'}, {'username_attribute':'invalid)(uid=*'}, {'password':'new','clear_password':True}, {'reason':''}]:
+            {'user_filter':'(uid=*)'}, {'username_attribute':'invalid)(uid=*'}, {'password':'new','clear_password':True}]:
             with self.assertRaises(ValidationError):
                 directory.save_config(self.admin,self.config_data(**changes))
         self.assertEqual(directory.load_config()['host'],'')

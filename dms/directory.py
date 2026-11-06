@@ -1,4 +1,5 @@
 """Prepared directory configuration; authentication remains local until integrated."""
+from .audit_text import optional_reason
 import base64
 import hashlib
 import ipaddress
@@ -63,9 +64,8 @@ def validate_config(config):
 
 @transaction.atomic
 def save_config(user,data):
+    data = dict(data,reason=optional_reason(data.get('reason')))
     uid = require_settings_admin(user)
-    if not data.get('reason','').strip():
-        raise ValidationError('Eine Begründung ist erforderlich.')
     if data.get('clear_password') and data.get('password'):
         raise ValidationError('Kennwort entweder ersetzen oder entfernen.')
     before = s.query('SELECT * FROM directory_settings WHERE id=1 FOR UPDATE')[0]

@@ -126,7 +126,7 @@ def branding_settings(request):
             elif action!='upload':
                 raise ValidationError('Unbekannte Logo-Aktion.')
             else:
-                raise ValidationError('Bitte Bilddatei und Begründung prüfen.')
+                raise ValidationError('Bitte die Bilddatei prüfen.')
         except ValidationError as exc:
             form.add_error(None,exc)
         else:

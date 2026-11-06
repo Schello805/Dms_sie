@@ -1,4 +1,5 @@
 """Validated raster branding, immutable revisions and atomic selection."""
+from .audit_text import optional_reason
 import hashlib
 import io
 from pathlib import Path
@@ -51,9 +52,8 @@ def generate_assets(uploaded):
 
 @transaction.atomic
 def replace_logo(user,uploaded,reason):
+    reason = optional_reason(reason)
     uid = require_settings_admin(user)
-    if not reason.strip():
-        raise ValidationError('Eine Begründung für den Logowechsel ist erforderlich.')
     assets = generate_assets(uploaded)
     before = s.query('SELECT revision_id FROM branding_settings WHERE id=1 FOR UPDATE')[0]['revision_id']
     revision = s.query('''INSERT INTO branding_revisions(actor_id,original_name,source_sha256,reason,logo_png,favicon_ico,icon_32,icon_180,icon_192)
@@ -66,9 +66,8 @@ def replace_logo(user,uploaded,reason):
 
 @transaction.atomic
 def select_logo(user,revision_id,reason):
+    reason = optional_reason(reason)
     uid = require_settings_admin(user)
-    if not reason.strip():
-        raise ValidationError('Eine Begründung ist erforderlich.')
     before = s.query('SELECT revision_id FROM branding_settings WHERE id=1 FOR UPDATE')[0]['revision_id']
     if revision_id is not None and not s.query('SELECT id FROM branding_revisions WHERE id=%s',[revision_id]):
         raise ValidationError('Diese Logo-Version ist nicht vorhanden.')

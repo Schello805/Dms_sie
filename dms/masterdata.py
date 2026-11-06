@@ -1,4 +1,5 @@
 """Audited master-data lifecycle. Stable IDs and category keys never change."""
+from .audit_text import optional_reason
 import json
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, IntegrityError, transaction
@@ -42,7 +43,7 @@ def definition_locked(kind,target):
 
 def save(user,kind,target,data):
     actor=require(user,kind)
-    data=dict(data);reason=data.pop('reason','')
+    data=dict(data);reason=optional_reason(data.pop('reason',''))
     fields={
         'categories':{'name','active','review_interval_months','retention_months','storage_location_id'},
         'departments':{'name','code','active','parent_id'},
@@ -52,7 +53,6 @@ def save(user,kind,target,data):
         'groups':{'name','members','active'},
     }
     data={key:value for key,value in data.items() if key in fields[kind]}
-    if not reason.strip():raise ValidationError('Eine Begründung ist erforderlich.')
     try:
         with transaction.atomic():
             return s.query('SELECT save_ims_master(%s,%s,%s,%s::jsonb,%s) AS id',[actor,kind,target,json.dumps(data),reason])[0]['id']
@@ -76,9 +76,10 @@ def save(user,kind,target,data):
 
 
 def grant(user,group_id,role,department_id,document_number,reason):
+    reason = optional_reason(reason)
     actor=require_settings_admin(user)
-    if role not in ('READER','AUTHOR') or not reason.strip() or (department_id and document_number):
-        raise ValidationError('Rolle, Begründung und genau einen Geltungsbereich prüfen.')
+    if role not in ('READER','AUTHOR') or (department_id and document_number):
+        raise ValidationError('Rolle und genau einen Geltungsbereich prüfen.')
     document=None
     if document_number:
         rows=s.query('SELECT id FROM documents WHERE number=%s',[document_number])
@@ -88,8 +89,9 @@ def grant(user,group_id,role,department_id,document_number,reason):
 
 
 def revoke(user,group_id,assignment_id,reason):
+    reason = optional_reason(reason)
     actor=require_settings_admin(user)
     rows=s.query("SELECT * FROM role_assignments WHERE id=%s AND group_id=%s AND role IN ('READER','AUTHOR')",[assignment_id,group_id])
-    if not rows or not reason.strip():raise ValidationError('Berechtigung und Begründung prüfen.')
+    if not rows:raise ValidationError('Berechtigung prüfen.')
     row=rows[0]
     s.query('SELECT set_ims_group_grant(%s,%s,%s,%s,%s,true,%s)',[actor,group_id,row['role'],row['department_id'],row['document_id'],reason])

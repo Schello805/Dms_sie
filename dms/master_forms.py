@@ -1,3 +1,4 @@
+from .audit_text import OptionalReasonField
 from django import forms
 from . import services as s
 from .masterdata import definition_locked
@@ -6,7 +7,7 @@ from .masterdata import definition_locked
 class MasterForm(forms.Form):
     name=forms.CharField(label='Bezeichnung',max_length=200)
     active=forms.BooleanField(label='Aktiv · für neue Zuordnungen verfügbar',initial=True,required=False)
-    reason=forms.CharField(label='Begründung',max_length=4000,widget=forms.Textarea)
+    reason=OptionalReasonField(label='Begründung',max_length=4000,widget=forms.Textarea)
 
     def __init__(self,*args,kind,record=None,**kwargs):
         super().__init__(*args,**kwargs)
@@ -54,7 +55,7 @@ class GroupGrantForm(forms.Form):
     role=forms.ChoiceField(label='Rolle',choices=[('READER','Leser'),('AUTHOR','Autor')])
     department_id=forms.TypedChoiceField(label='Abteilung',coerce=int,empty_value=None,required=False)
     document_number=forms.CharField(label='Oder Dokumentnummer',max_length=100,required=False,help_text='Leer lassen für alle Dokumente im gewählten Bereich. Dokumentinhalte werden hier nicht angezeigt.')
-    reason=forms.CharField(label='Begründung',max_length=4000)
+    reason=OptionalReasonField(label='Begründung',max_length=4000)
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.fields['department_id'].choices=[('','Unternehmensweit')]+[(r['id'],r['name']) for r in s.query('SELECT id,name FROM departments WHERE active ORDER BY name')]
@@ -68,4 +69,4 @@ class GroupGrantForm(forms.Form):
 class ProfileForm(forms.Form):
     display_name=forms.CharField(label='Anzeigename',max_length=300)
     email=forms.EmailField(label='E-Mail',required=False,max_length=254)
-    reason=forms.CharField(label='Begründung (optional)',required=False,max_length=4000,widget=forms.Textarea)
+    reason=OptionalReasonField(label='Begründung (optional)',required=False,max_length=4000,widget=forms.Textarea)
