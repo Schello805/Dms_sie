@@ -15,10 +15,15 @@ Funktionsrechte bleiben bei CREATE OR REPLACE erhalten.
 
 ## Prüfverfahren
 
-35 gezielte PostgreSQL-/SMTP-/Proxy-Tests und 14 Installer-Tests erfolgreich ausgeführt.
-Zusätzlich werden die gesamte Anwendungssuite, lokale HTTP-Endpunkte mit unterschiedlichen
-Rollen und der Linux-Installations-/Updateworkflow ausgeführt. Python-Dateien sowie die drei
-UI-JavaScript-Dateien wurden auf Syntaxfehler geprüft.
+Ergebnisse der abschließenden Prüfung:
+
+- Gesamte Anwendungssuite: **190 Tests erfolgreich** (120 Sekunden).
+- Zuvor 35 gezielte PostgreSQL-/SMTP-/Proxy-Tests und 14 Installer-Tests erfolgreich.
+- 136 lokale HTTP-Aufrufe über Leser-, Autor-, QMB- und Admin-Konten ohne Serverfehler. Fachliche Berechtigungen zusätzlich durch die Testsuite geprüft.
+- [Linux-Installation, Update und echte nginx-Login-Tests](https://github.com/Schello805/Dms_sie/actions/runs/42169108617) erfolgreich; HTTPS-Origin und Host mit zusätzlichem Port jeweils vor und nach Update geprüft.
+- Sicherung in einer getrennten temporären Datenbank wiederhergestellt; Migrationen und acht Dateireferenzen stimmen überein.
+- Alle acht lokalen Dokumentversionen sind nach Migration mit der vorherigen Sicherung identisch.
+- Python-Dateien sowie die drei UI-JavaScript-Dateien auf Syntaxfehler geprüft.
 
 Eine visuelle Browserabnahme ist weiterhin offen, weil lokale Browsernutzung in den
 Work-Einstellungen deaktiviert ist. Die Tests hier ersetzen außerdem keine Lastprüfung mit
