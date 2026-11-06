@@ -49,7 +49,7 @@ def validate_ref(value):
 
 
 def validate_host(value):
-    if len(value) > 253 or not re.fullmatch(r'[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?', value):
+    if len(value) > 253 or not all(re.fullmatch(r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?', label) for label in value.split('.')):
         raise ValueError('Host ohne http://, Port oder Pfad angeben (DNS-Name oder IPv4).')
     return value.lower()
 

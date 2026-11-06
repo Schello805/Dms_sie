@@ -29,7 +29,7 @@ class InstallerTests(unittest.TestCase):
                 installer.validate_ref(value)
         for value in ['dms.intern', '192.168.1.10', 'localhost']:
             self.assertEqual(installer.validate_host(value), value)
-        for value in ['http://dms.intern', 'dms.intern; include /etc/passwd;', 'a\nb', '*.example.test']:
+        for value in ['http://dms.intern', 'dms.intern; include /etc/passwd;', 'a\nb', '*.example.test', 'dms..firma.de', '-dms.firma.de', 'dms-.firma.de', 'x'*64+'.de']:
             with self.assertRaises(ValueError):
                 installer.validate_host(value)
         for value in ['0','65536','bad']:
