@@ -177,3 +177,8 @@ select[multiple]{width:100%;min-height:14rem;padding:.5rem;border:1px solid #bcc
 .account-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
 .account-role{font-size:.75rem;color:#c4dce0;font-weight:500;white-space:normal}
 @media(pointer:coarse){button,.button,input:not([type=checkbox]):not([type=radio]),select,header .main-nav>a,.account-menu summary,.table-sort,.filters .check{min-height:44px}input,select,textarea{font-size:16px}}
+
+.catalog-toolbar{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin:.65rem 0}
+.catalog-toolbar p{margin:0;flex:1 1 28rem}
+.catalog-toolbar .button{flex-shrink:0}
+@media(max-width:650px){.catalog-toolbar .button{width:100%}}

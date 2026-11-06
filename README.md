@@ -118,7 +118,7 @@ Rollenänderungen wirken auch bei einer bestehenden Anmeldung beim nächsten Sei
 
 ## Upload für Autoren und QMB (0.4.3-dev)
 
-Autoren und aktive QMBs sehen oben **Dokument hochladen** (`/new/`). QMBs benötigen dafür
+Autoren und aktive QMBs sehen direkt über der Dokumententabelle **Dokument hochladen** (`/new/`). QMBs benötigen dafür
 keine zusätzliche Autorenrolle. Sie können ihre Dokumente als Entwurf speichern, bearbeiten und
 zur Freigabe senden. Eigene Dokumente müssen durch einen anderen QMB freigegeben werden.
 Die QMB-Rolle allein erlaubt keine Bearbeitung fremder Autorenentwürfe.
