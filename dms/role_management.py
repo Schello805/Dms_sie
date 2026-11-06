@@ -15,6 +15,8 @@ def save_roles(user,user_id,author,qmb,admin,reason):
     if user_id==uid and not admin:
         raise ValidationError('Das eigene Adminrecht kann hier nicht entzogen werden.')
     before = rows[0]
+    if not qmb and s.query('SELECT 1 FROM users WHERE id=%s AND is_qmb(id)',[user_id]) and not s.query('SELECT 1 FROM users WHERE id<>%s AND is_qmb(id)',[user_id]):
+        raise ValidationError('Vorher einen weiteren aktiven QMB zuordnen.')
     if s.query("SELECT 1 FROM role_assignments r JOIN group_memberships m ON m.group_id=r.group_id JOIN dms_groups g ON g.id=r.group_id AND g.active WHERE m.user_id=%s AND r.role IN ('AUTHOR','ADMIN')",[user_id]):
         raise ValidationError('Gruppenbasierte Rechte zuerst in der Gruppenverwaltung ändern.')
     s.query('SELECT set_operational_roles(%s,%s,%s,%s,%s,%s)',[uid,user_id,author,qmb,admin,reason])

@@ -40,3 +40,9 @@ class ProxyLoginTests(TestCase):
         self.assertEqual(local.get('/login/').status_code,200)
         result = local.post('/login/', {'username':'proxy-reader','password':'Proxy-Test-Password-2026!', 'csrfmiddlewaretoken':local.cookies['csrftoken'].value}, HTTP_ORIGIN='http://192.168.10.20')
         self.assertEqual(result.status_code,302)
+
+    def test_http_domain_with_nondefault_port_keeps_same_origin(self):
+        client=Client(enforce_csrf_checks=True,HTTP_HOST='dms.proxy.test:8080')
+        self.assertEqual(client.get('/login/').status_code,200)
+        result=client.post('/login/',{'username':'proxy-reader','password':'Proxy-Test-Password-2026!', 'csrfmiddlewaretoken':client.cookies['csrftoken'].value},HTTP_ORIGIN='http://dms.proxy.test:8080')
+        self.assertEqual(result.status_code,302)

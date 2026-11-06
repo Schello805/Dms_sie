@@ -109,6 +109,15 @@ der frühere Portal-/Kenntnisnahme-Worker wird vom Installer nicht gestartet.
 - Rückkehr zur Tabelle behält Filter, Sortierung und Scrollposition pro Tab. Ungespeicherte Formulare warnen beim Verlassen. Tabellenkopf und Dokumentnummer bleiben beim Scrollen sichtbar.
 - Der Installer fragt bei interaktiver Neuinstallation nach dem Domainnamen; leer bedeutet lokalen IP-Zugriff. Automatisiert sind `--host` oder `--non-interactive` erforderlich. Er legt keine Netzwerkkonfiguration an. Wechselnde IP-Adressen funktionieren; zusätzliche DNS-Namen sind optional über `--host` angebbar.
 
+## Fehlerkorrekturen aus der erneuten Prüfung (0.4.2-dev)
+
+- Der letzte aktive QMB kann über die Benutzerrollenverwaltung nicht mehr entfernt werden; die Datenbankfunktion schützt ebenfalls davor.
+- Autoren mit Rechten für einzelne Dokumente sehen ihre Aufgabenglocke, Rückgaben und Autorenrolle. Ein Uploadrecht für neue Dokumente wird dadurch nicht erteilt.
+- Eine im Benutzerprofil ergänzte E-Mail-Adresse gibt Erinnerungen mit Fehler „fehlende Adresse“ erneut frei. Bereits versandte oder unklare Sendungen werden nicht wiederholt.
+- Nginx erhält den ursprünglichen Host einschließlich Port. Damit bleibt die CSRF-Prüfung auch beim HTTP-Zugriff über einen zusätzlichen Port korrekt.
+
+Prüfumfang und Grenzen: [Fehlerprüfung 0.4.2](docs/error-review-0.4.2.md).
+
 ## Proxy-Login-Korrektur (0.4.1-dev)
 
 Hinterlegte Domainnamen werden automatisch als erlaubte HTTPS-Ursprünge für die CSRF-Prüfung

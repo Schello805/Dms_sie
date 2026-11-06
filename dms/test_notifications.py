@@ -280,3 +280,21 @@ class NotificationTests(TestCase):
         self.assertTrue(config['enabled'])  # IT cannot change QMB reminder activation.
         self.assertEqual(n.cipher().decrypt(config['password_ciphertext'].encode()).decode(),' padded SMTP secret ')
         self.assertEqual(self.server.messages,[])
+
+    def test_profile_email_correction_recovers_only_missing_address_failures(self):
+        n.set_contact_email(self.admin,s.actor(self.author),'','Test: Adresse fehlt')
+        n.queue_due(self.today);self.dispatch_pending(self.today)
+        uid=s.actor(self.author)
+        job=s.query("SELECT id,status,error_code FROM review_notifications WHERE recipient_id=%s",[uid])[0]
+        self.assertEqual((job['status'],job['error_code']),('FAILED','MISSING_EMAIL'))
+        self.client.force_login(self.admin)
+        response=self.client.post(f'/settings/users/{uid}/profile/',{'display_name':'Autor korrigiert','email':'fixed@example.test','reason':'Adresse ergänzen'})
+        self.assertEqual(response.status_code,302)
+        self.assertEqual(s.query('SELECT status FROM review_notifications WHERE id=%s',[job['id']])[0]['status'],'PENDING')
+        self.dispatch_pending(self.today)
+        self.assertEqual(s.query('SELECT status,recipient_email FROM review_notifications WHERE id=%s',[job['id']])[0],{'status':'SENT','recipient_email':'fixed@example.test'})
+        for status in ('SENT','UNCERTAIN'):
+            s.query('UPDATE review_notifications SET status=%s WHERE id=%s',[status,job['id']])
+            self.client.post(f'/settings/users/{uid}/profile/',{'display_name':'Autor korrigiert','email':'other@example.test','reason':'Kontakt ändern'})
+            self.assertEqual(s.query('SELECT status FROM review_notifications WHERE id=%s',[job['id']])[0]['status'],status)
+        self.assertEqual(len(s.query("SELECT 1 FROM audit_events WHERE action='MAIL_RETRY' AND object_id=%s",[str(job['id'])])),1)

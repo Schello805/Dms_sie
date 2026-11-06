@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
 from django.core.exceptions import PermissionDenied,ValidationError
 from django.test import TestCase,override_settings
+from django.db import DatabaseError,transaction
 from django.utils import timezone
 from . import tests as fixtures,services as s,accounts,health
 from .worklist import tasks_for
@@ -106,3 +107,30 @@ class ImprovementTests(TestCase):
             self.assertTrue(any('Sicherung' in text for text in health.status()['notices']))
             (Path(directory)/'index.json').write_text(json.dumps({'time':0,'status':'ok'}))
             self.assertTrue(any('Volltextdienst' in text for text in health.status()['notices']))
+
+    def test_last_qmb_cannot_lose_role_through_ui_or_database(self):
+        from .role_management import save_roles
+        admin=self.admin();target=s.actor(self.reviewer);actor=s.actor(admin)
+        self.enable_runtime_role()
+        with self.assertRaises(ValidationError):
+            save_roles(admin,target,False,False,False,'Letzten QMB entfernen')
+        with self.assertRaises(DatabaseError),transaction.atomic():
+            s.query('SELECT set_operational_roles(%s,%s,false,false,false,%s)',[actor,target,'Direkter Aufruf'])
+        self.assertTrue(s.query('SELECT is_qmb(%s) AS qmb',[target])[0]['qmb'])
+        save_roles(admin,s.actor(self.approver),False,True,False,'Vertretung benennen')
+        save_roles(admin,target,False,False,False,'Aufgabe übergeben')
+        self.assertFalse(s.query('SELECT is_qmb(%s) AS qmb',[target])[0]['qmb'])
+
+    def test_document_scoped_author_sees_returned_tasks_without_upload_permission(self):
+        s.transition(self.author,self.vid,'submit','Prüfung')
+        s.transition(self.reviewer,self.vid,'return','Inhalt korrigieren')
+        uid=s.actor(self.author)
+        s.query("DELETE FROM role_assignments WHERE user_id=%s AND role='AUTHOR'",[uid])
+        s.query("INSERT INTO role_assignments(user_id,role,document_id) VALUES (%s,'AUTHOR',%s)",[uid,s.query('SELECT document_id FROM document_versions WHERE id=%s',[self.vid])[0]['document_id']])
+        self.client.force_login(self.author)
+        result=self.client.get('/')
+        self.assertContains(result,'Aufgaben, 1 offen')
+        self.assertContains(result,'>Autor</span>',html=False)
+        self.assertNotContains(result,'Dokument hochladen')
+        self.assertContains(self.client.get('/tasks/'),'Inhalt korrigieren')
+        self.assertEqual(self.client.get('/new/').status_code,403)

@@ -65,6 +65,8 @@ class InstallerTests(unittest.TestCase):
         self.assertIn('listen 8080 default_server;', nginx)
         self.assertIn('proxy_pass http://127.0.0.1:8000;', nginx)
         self.assertNotIn('alias ', nginx)
+        self.assertEqual(nginx.count('proxy_set_header Host $http_host;'),2)
+        self.assertNotIn('proxy_set_header Host $host;',nginx)
 
     def test_owned_config_can_update_but_foreign_files_are_not_overwritten(self):
         with tempfile.TemporaryDirectory() as directory:
