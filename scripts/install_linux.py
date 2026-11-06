@@ -273,6 +273,32 @@ def install(args):
         _install_locked(args)
 
 
+def configure_hosts(args, state):
+    """Ask before making changes; unattended installs must opt out explicitly."""
+    if state is not None or args.host or args.non_interactive:
+        return
+    if not sys.stdin.isatty():
+        raise RuntimeError('Domain-Abfrage benötigt ein Terminal. --host dms.firma.de oder --non-interactive für reinen IP-Zugriff angeben.')
+    print('Unter welchem Domainnamen soll das DMS erreichbar sein?')
+    print('Bei Reverse Proxy dessen Domain angeben, z. B. dms.firma.de. Ohne https:// oder Pfad.')
+    print('Mehrere Namen mit Komma trennen. Leer lassen: nur lokale IP / Serverhostname. Keine feste IP wird vergeben.')
+    while True:
+        try:
+            answer = input('Domainname(n): ').strip()
+        except EOFError:
+            raise RuntimeError('Domain-Abfrage abgebrochen; keine Installation gestartet.') from None
+        if not answer:
+            args.host = []
+            return
+        try:
+            hosts = [validate_host(value.strip().lower()) for value in answer.split(',')]
+        except ValueError as error:
+            print('Ungültige Eingabe: ' + str(error))
+            continue
+        args.host = list(dict.fromkeys(hosts))
+        return
+
+
 def _install_locked(args):
     exists = STATE.exists()
     if args.update and not exists:
@@ -288,6 +314,9 @@ def _install_locked(args):
                 raise RuntimeError(f'{path} ist bereits belegt; vorhandene Installation nicht überschrieben.')
     if not exists and not args.repo:
         raise ValueError('Neuinstallation benötigt --repo; --host ist optional.')
+    configure_hosts(args, state)
+    hosts = args.host if args.host is not None else (state['hosts'] if state else [])
+    print('Zugelassene Domainnamen: ' + (', '.join(hosts) if hosts else 'keine zusätzlichen; lokale IP / Serverhostname'))
     print('1/7 Systempakete installieren', flush=True)
     run(['apt-get', *APT_OPTIONS, 'update'])
     run(['apt-get', *APT_OPTIONS, 'install', '-y', 'python3', 'python3-venv', 'python3-dev', 'build-essential', 'libffi-dev', 'libssl-dev', 'git', 'curl', 'ca-certificates', 'postgresql', 'postgresql-client', 'nginx', 'fonts-dejavu-core'], env=dict(os.environ, DEBIAN_FRONTEND='noninteractive'))
@@ -378,6 +407,7 @@ def parser():
     result.add_argument('--repo', type=validate_repo)
     result.add_argument('--ref', type=validate_ref, help='Branch, Tag oder Commit (Standard: main bzw. bisheriger Ref)')
     result.add_argument('--host', action='append', type=validate_host, help='Optionaler zusätzlicher DNS-Name; IP/DHCP wird nicht festgelegt')
+    result.add_argument('--non-interactive', action='store_true', help='Keine Domain-Abfrage; ohne --host nur IP/Serverhostname (für automatisierte Installation)')
     result.add_argument('--port', type=validate_port, metavar='1..65535')
     result.add_argument('--admin-user', help='Initialer IT-Administrator (Standard: admin)')
     result.add_argument('--update', action='store_true')

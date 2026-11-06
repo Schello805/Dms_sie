@@ -90,6 +90,32 @@ class InstallerTests(unittest.TestCase):
         self.assertIn('server_name _;',installer.nginx_config(state))
         self.assertEqual(installer.environment(state,'app')['DMS_ALLOWED_HOSTS'],'localhost,127.0.0.1')
 
+    def test_domain_prompt_retries_and_registers_validated_names(self):
+        args = installer.parser().parse_args([])
+        with patch.object(installer.sys.stdin, 'isatty', return_value=True), patch('builtins.input', side_effect=['https://bad.test', 'DMS.firma.de, dms.intern,DMS.firma.de']), patch('builtins.print'):
+            installer.configure_hosts(args, None)
+        self.assertEqual(args.host, ['dms.firma.de', 'dms.intern'])
+        state = self.state() | {'hosts': args.host}
+        self.assertIn('dms.firma.de', installer.environment(state, 'app')['DMS_ALLOWED_HOSTS'])
+        self.assertIn('dms.firma.de', installer.nginx_config(state))
+
+    def test_domain_prompt_allows_ip_only_and_handles_closed_input(self):
+        args = installer.parser().parse_args([])
+        with patch.object(installer.sys.stdin, 'isatty', return_value=True), patch('builtins.input', return_value=''), patch('builtins.print'):
+            installer.configure_hosts(args, None)
+        self.assertEqual(args.host, [])
+        args = installer.parser().parse_args([])
+        with patch.object(installer.sys.stdin, 'isatty', return_value=True), patch('builtins.input', side_effect=EOFError), patch('builtins.print'):
+            with self.assertRaises(RuntimeError): installer.configure_hosts(args, None)
+
+    def test_domain_prompt_never_silently_skips_without_terminal(self):
+        with patch.object(installer.sys.stdin, 'isatty', return_value=False):
+            with self.assertRaises(RuntimeError): installer.configure_hosts(installer.parser().parse_args([]), None)
+        with patch('builtins.input') as prompt:
+            for arguments, state in [(['--non-interactive'], None), (['--host', 'dms.firma.de'], None), (['--update'], self.state())]:
+                installer.configure_hosts(installer.parser().parse_args(arguments), state)
+            prompt.assert_not_called()
+
     def test_database_grants_are_applied_to_all_dedicated_roles(self):
         with patch.object(installer,'psql') as psql:
             installer.apply_grants(Path(__file__).resolve().parents[1])

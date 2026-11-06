@@ -107,7 +107,7 @@ der frühere Portal-/Kenntnisnahme-Worker wird vom Installer nicht gestartet.
 - Die IT sieht Lebenszeichen der Worker, den Nachweis der letzten Sicherung und Hinweise bei knappem Speicher. Lokale Hinweise ersetzen keine externe Alarmierung.
 - Versionsvergleich für Metadaten, Norm-/Abteilungszuordnungen und Dateiprüfsummen; kein visueller PDF-Inhaltsvergleich.
 - Rückkehr zur Tabelle behält Filter, Sortierung und Scrollposition pro Tab. Ungespeicherte Formulare warnen beim Verlassen. Tabellenkopf und Dokumentnummer bleiben beim Scrollen sichtbar.
-- Der Installer legt keine Netzwerkkonfiguration an. Wechselnde IP-Adressen funktionieren; zusätzliche DNS-Namen sind optional über `--host` angebbar.
+- Der Installer fragt bei interaktiver Neuinstallation nach dem Domainnamen; leer bedeutet lokalen IP-Zugriff. Automatisiert sind `--host` oder `--non-interactive` erforderlich. Er legt keine Netzwerkkonfiguration an. Wechselnde IP-Adressen funktionieren; zusätzliche DNS-Namen sind optional über `--host` angebbar.
 
 ## Neu: Stammdatenverwaltung (0.4.0-dev)
 

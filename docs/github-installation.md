@@ -32,7 +32,17 @@ python3 /tmp/install-ims-dms.py \
   --ref main
 ```
 
-Zusätzliche DNS-Namen sind optional: `--host dms.firma.intern`. Ohne diesen Parameter funktionieren die aktuelle IP (auch nach DHCP-Wechsel), localhost und der Serverhostname. Standardport ist **80**; optional `--port 8080`. DNS muss auf den Server zeigen. Netzwerk-/Proxmox-Firewallregeln und Paketquellen werden nicht verändert. APT-Zugriffe haben begrenzte Netzwerk-Wartezeiten und brechen bei nicht erreichbaren Quellen ab; dann Paketspiegel/Proxy prüfen und erneut starten.
+Bei einer interaktiven Neuinstallation fragt das Skript vor allen Änderungen nach dem
+Domainnamen (z. B. `dms.firma.de`). Bei einem Reverse Proxy dessen Domain eintragen, ohne
+Protokoll oder Pfad; mehrere Namen mit Komma trennen. Eine leere Eingabe wählt lokalen IP-Zugriff.
+Ungültige Eingaben werden erneut abgefragt. Der Name wird gespeichert und bei Updates beibehalten.
+
+Ohne Terminal muss die Auswahl ausdrücklich erfolgen: `--host dms.firma.de` oder
+`--non-interactive` für reinen IP-/Serverhostname-Zugriff. Updates können zusätzliche Domainnamen
+mit `--update --host dms.firma.de` konfigurieren (mehrere `--host` für mehrere Namen).
+Dies ersetzt die bisherige Liste zusätzlicher Namen, nicht die Netzwerkkonfiguration.
+
+Zusätzliche DNS-Namen sind auch direkt angebbar: `--host dms.firma.intern`. Ohne diesen Parameter funktionieren die aktuelle IP (auch nach DHCP-Wechsel), localhost und der Serverhostname. Standardport ist **80**; optional `--port 8080`. DNS muss auf den Server zeigen. Netzwerk-/Proxmox-Firewallregeln und Paketquellen werden nicht verändert. APT-Zugriffe haben begrenzte Netzwerk-Wartezeiten und brechen bei nicht erreichbaren Quellen ab; dann Paketspiegel/Proxy prüfen und erneut starten.
 
 Für private Repositories: Code mit deinem bereits eingerichteten GitHub-Zugang klonen und `sudo python3 scripts/install_linux.py --repo git@github.com:Schello805/Dms_sie.git --source-dir "$PWD"` verwenden. Spätere Online-Updates benötigen einen passenden SSH-Zugang für root oder erneut `--source-dir`. Keine Tokens in Repository-URLs eintragen. Der Installer richtet keine GitHub-Zugangsdaten ein.
 

@@ -39,7 +39,7 @@ jobs:
       - name: Fresh local-source installation
         env:
           INSTALL_REPO: https://github.com/${{ github.repository }}
-        run: sudo python3 scripts/install_linux.py --source-dir "$GITHUB_WORKSPACE" --repo "$INSTALL_REPO"
+        run: sudo python3 scripts/install_linux.py --non-interactive --source-dir "$GITHUB_WORKSPACE" --repo "$INSTALL_REPO"
       - name: Health and bootstrap checks
         run: |
           curl --fail http://localhost/ > /tmp/ims-home.html
