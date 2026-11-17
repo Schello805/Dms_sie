@@ -40,7 +40,7 @@ jobs:
         with:
           node-version: '22'
       - name: Dependencies
-        run: pip install -r requirements.lock.txt playwright==1.64.1 ruff==0.14.5
+        run: pip install -r requirements.lock.txt ruff==0.14.5
       - name: Static checks
         run: |
           python -m compileall -q config dms scripts tests
@@ -52,6 +52,38 @@ jobs:
         run: python manage.py test dms --noinput -v 2
       - name: Installer unit tests
         run: python -m unittest discover -s tests -p test_linux_installer.py -v
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ci-only-postgres
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci-only-postgres
+      PGDATABASE: postgres
+      DMS_SECRET_KEY: ci-only-synthetic-secret
+      DMS_DEBUG: '1'
+      DMS_INTERNAL_HTTP: '1'
+      DMS_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      DMS_DEMO_PASSWORD: CI-Only-Strong-Password-2026!
+      CI_APP_PASSWORD: CI-Only-App-Password-2026!
+      DMS_MEDIA_ROOT: /tmp/ims-ci-files
+      DMS_ERROR_LOG_DIR: /tmp/ims-ci-errors
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Browser dependencies
+        run: pip install -r requirements.lock.txt playwright==1.64.1
       - name: Isolated browser fixtures
         run: |
           python scripts/ci_prepare.py

@@ -52,7 +52,7 @@ with sync_playwright() as p:
    row.get_by_role('link',name='Dokumentlink').click()
    expect(reader).to_have_url(re.compile(r'/versions/\d+/files/\d+/viewer/'))
    own=upload(qmb,'CI-QMB-'+device,True)
-   expect(qmb.locator('.badge').filter(has_text='Freigegeben').first).to_be_visible()
+   expect(qmb.locator('[data-document-status=APPROVED]')).to_be_visible()
    expect(qmb.locator('main')).to_contain_text('QMB_DIRECT_RELEASE')
    reader.goto(base+'/documents/');reader.locator('#q').fill('CI-LAZY')
    expect(reader.locator('#document-rows tr')).to_have_count(30)
