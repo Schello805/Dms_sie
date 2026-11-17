@@ -1,3 +1,4 @@
+from .form_ui import AppForm
 from .audit_text import DEFAULT_REASON, OptionalReasonField
 from django import forms
 from .services import actor, query
@@ -31,7 +32,7 @@ class DocumentForm(MappingFieldsMixin, forms.Form):
         self.load_mapping_choices()
         self.order_fields(['document_type','number','title','department'])
 
-class ActionForm(forms.Form):
+class ActionForm(AppForm):
     action = forms.ChoiceField(choices=[('submit','Einreichen'),('accept','Zustimmen'),('return','Zurückgeben'),('approve','Freigeben'),('reject','Ablehnen')])
     comment = forms.CharField(label='Bemerkung',required=False,max_length=4000,widget=forms.Textarea)
 
@@ -48,20 +49,20 @@ class EditForm(MappingFieldsMixin, forms.Form):
         super().__init__(*args,**kwargs)
         self.load_mapping_choices()
 
-class UploadForm(forms.Form):
+class UploadForm(AppForm):
     file = forms.FileField(label='Dokumentdatei (maximal 25 MiB)')
 
-class ReviewForm(forms.Form):
+class ReviewForm(AppForm):
     result = forms.ChoiceField(label='Prüfergebnis',choices=[('','Bitte Prüfergebnis auswählen'),('UNCHANGED','Weiterhin geeignet'),('REVISION_REQUIRED','Überarbeitung erforderlich'),('WITHDRAWAL_REQUIRED','Rückzug erforderlich')])
     rationale = OptionalReasonField(label='Prüfbegründung',max_length=4000,widget=forms.Textarea)
     # Successful reviews receive the configured category interval automatically.
 
-class RevisionForm(forms.Form):
+class RevisionForm(AppForm):
     kind = forms.ChoiceField(label='Versionssprung',choices=[('minor','Minor: ergänzende Änderung (z. B. 1.0 → 1.1)'),('major','Major: grundlegende Änderung (z. B. 1.1 → 2.0)')],initial='minor')
     reason = OptionalReasonField(label='Grund der Überarbeitung',max_length=4000,widget=forms.Textarea)
 
 
-class AccessForm(forms.Form):
+class AccessForm(AppForm):
     access_mode = forms.ChoiceField(label='Zugriffsbereich',choices=[('DEPARTMENT','Abteilungs- und Dokumentrollen'),('EXPLICIT','Zusätzlich nur ausdrücklich freigegebene Personen/Gruppen')])
     users = forms.TypedMultipleChoiceField(label='Ausdrücklich berechtigte Personen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple)
     groups = forms.TypedMultipleChoiceField(label='Ausdrücklich berechtigte Gruppen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple)
@@ -71,13 +72,13 @@ class AccessForm(forms.Form):
         self.fields['users'].choices = [(r['id'],r['display_name']) for r in query('SELECT u.id,u.display_name FROM users u JOIN auth_user a ON a.id=u.auth_user_id WHERE u.active AND a.is_active ORDER BY u.display_name,u.id')]
         self.fields['groups'].choices = [(r['id'],r['name']) for r in query('SELECT id,name FROM dms_groups WHERE active ORDER BY name')]
 
-class LifecycleForm(forms.Form):
+class LifecycleForm(AppForm):
     action = forms.ChoiceField(label='Vorgang',choices=[('withdraw','Dokument mit allen vorab freigegebenen Fassungen sofort zurückziehen'),('archive','Diese Fassung archivieren')])
     reason = OptionalReasonField(label='Begründung',max_length=4000,widget=forms.Textarea)
     confirmed = forms.BooleanField(label='Ich bestätige die Auswirkung auf die Verfügbarkeit für Leser.')
 
 
-class CategorySettingsForm(forms.Form):
+class CategorySettingsForm(AppForm):
     reason = OptionalReasonField(label='Grund der Änderung',max_length=4000,widget=forms.Textarea)
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
@@ -97,7 +98,7 @@ class CategorySettingsForm(forms.Form):
         return [{'name':c['name'],'validity':self[f"category_{c['id']}"],'retention':self[f"retention_{c['id']}"],'location':self[f"location_{c['id']}"]} for c in self.categories]
 
 
-class SMTPSettingsForm(forms.Form):
+class SMTPSettingsForm(AppForm):
     enabled = forms.BooleanField(label='Automatische E-Mail-Erinnerungen aktivieren',required=False)
     reminder_days = forms.IntegerField(label='Tage vor Ablauf erinnern',min_value=0,max_value=3650,initial=30,help_text='0 = nur bei Fälligkeit. Je Prüftermin höchstens eine Vorab- und eine Fälligkeitsmeldung.')
     smtp_host = forms.CharField(label='SMTP-Server',max_length=253,required=False)
@@ -115,16 +116,16 @@ class SMTPSettingsForm(forms.Form):
         self.fields.pop('enabled')
         self.fields.pop('reminder_days')
 
-class SMTPTestForm(forms.Form):
+class SMTPTestForm(AppForm):
     recipient = forms.EmailField(label='Empfänger der Test-E-Mail')
 
-class ContactEmailForm(forms.Form):
+class ContactEmailForm(AppForm):
     user_id = forms.IntegerField(min_value=1)
     email = forms.EmailField(required=False,max_length=254)
     reason = OptionalReasonField(label='Begründung (optional)',required=False,max_length=4000)
 
 
-class QMBTeamForm(forms.Form):
+class QMBTeamForm(AppForm):
     primary_id = forms.TypedChoiceField(label='QMB',coerce=int,empty_value=None,required=False)
     lead_id = forms.TypedChoiceField(label='Leitung der QMB-Abteilung (zusätzliche Freigabe)',coerce=int,empty_value=None,required=False,help_text='Darf nach unabhängiger QMB-Prüfung freigeben. Keine QMB-Prüf- oder Verwaltungsrechte; keine Selbstfreigabe.')
     deputy_id = forms.TypedChoiceField(label='QMB-Vertretung',coerce=int,empty_value=None,required=False)
@@ -136,18 +137,18 @@ class QMBTeamForm(forms.Form):
         self.fields['deputy_id'].choices = people
         self.fields['lead_id'].choices = people
 
-class StorageLocationForm(forms.Form):
+class StorageLocationForm(AppForm):
     name = forms.CharField(label='Aufbewahrungsort',max_length=200)
     description = forms.CharField(label='Beschreibung',required=False,max_length=2000,widget=forms.Textarea)
     reason = OptionalReasonField(label='Grund der Anlage',max_length=4000)
 
 
-class ReminderPolicyForm(forms.Form):
+class ReminderPolicyForm(AppForm):
     enabled = forms.BooleanField(label='Automatische Review-Erinnerungen aktivieren',required=False)
     reminder_days = forms.IntegerField(label='Tage vor Ablauf erinnern',min_value=0,max_value=3650)
     reason = OptionalReasonField(label='Grund der Änderung',max_length=4000,widget=forms.Textarea)
 
-class BrandingForm(forms.Form):
+class BrandingForm(AppForm):
     logo = forms.FileField(label='Neues Hauptlogo',help_text='PNG, JPEG oder WebP, maximal 5 MiB, 64–4096 Pixel je Seite. Favicons werden automatisch erzeugt.',widget=forms.ClearableFileInput(attrs={'accept':'image/png,image/jpeg,image/webp'}))
     reason = OptionalReasonField(label='Begründung für den Logowechsel',max_length=4000,widget=forms.Textarea)
 
@@ -172,7 +173,7 @@ class DocumentUploadForm(DocumentForm):
     def clean_change_summary(self):
         return 'Erstupload' if self.cleaned_data.get('change_summary') in (None,'',DEFAULT_REASON) else self.cleaned_data['change_summary']
 
-class UserRolesForm(forms.Form):
+class UserRolesForm(AppForm):
     user_id = forms.IntegerField(min_value=1,widget=forms.HiddenInput)
     author = forms.BooleanField(label='Autor',required=False)
     qmb = forms.BooleanField(label='QMB',required=False)

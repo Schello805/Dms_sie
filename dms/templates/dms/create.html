@@ -7,6 +7,7 @@
   {% csrf_token %}
   {% if form.errors %}<div class="messages" role="alert">Bitte prüfe die markierten Felder. Deine Texteingaben bleiben erhalten. Eine Datei muss gegebenenfalls erneut ausgewählt werden.</div>{% endif %}
   {{ form.non_field_errors }}
+  {% include 'dms/forms/required_note.html' %}
   {% if not is_edit %}<fieldset class="upload-section"><legend>1 · Dokument zuordnen</legend><div class="form-fields">
     <div class="form-field">{{ form.document_type.as_field_group }}</div><div class="form-field">{{ form.number.as_field_group }}</div>
   </div></fieldset>{% endif %}

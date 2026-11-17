@@ -1,7 +1,8 @@
+from .form_ui import AppForm
 from .audit_text import OptionalReasonField
 from django import forms
 
-class DirectorySettingsForm(forms.Form):
+class DirectorySettingsForm(AppForm):
     directory_type = forms.ChoiceField(label='Verzeichnistyp',choices=[('AD','Microsoft Active Directory'),('LDAP','LDAP-Verzeichnis')])
     domain = forms.CharField(label='AD-Domäne',max_length=253,required=False,help_text='Zum Beispiel firma.local; bei allgemeinem LDAP optional.')
     host = forms.CharField(label='Server / Domaincontroller',max_length=253,required=False,help_text='Hostname oder IP, ohne ldap://, Port oder Zugangsdaten.')

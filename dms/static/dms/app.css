@@ -191,3 +191,6 @@ select[multiple]{width:100%;min-height:14rem;padding:.5rem;border:1px solid #bcc
 .upload-actions{position:sticky;bottom:.5rem;background:#fff;padding:.75rem;border:1px solid #dce5e8;border-radius:6px;box-shadow:0 3px 12px #102e3b12;z-index:5}
 
 @media(pointer:coarse){.upload-options summary{min-height:44px}}
+
+.required-marker{color:#a52e2e;font-weight:700;white-space:nowrap}
+.required-note{font-size:.85rem;color:#526875;margin:.25rem 0 .75rem}

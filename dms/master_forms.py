@@ -1,10 +1,11 @@
+from .form_ui import AppForm
 from .audit_text import OptionalReasonField
 from django import forms
 from . import services as s
 from .masterdata import definition_locked
 
 
-class MasterForm(forms.Form):
+class MasterForm(AppForm):
     name=forms.CharField(label='Bezeichnung',max_length=200)
     active=forms.BooleanField(label='Aktiv · für neue Zuordnungen verfügbar',initial=True,required=False)
     reason=OptionalReasonField(label='Begründung',max_length=4000,widget=forms.Textarea)
@@ -51,7 +52,7 @@ class MasterForm(forms.Form):
         self.order_fields([name for name in self.fields if name not in ('active','reason')]+['active','reason'])
 
 
-class GroupGrantForm(forms.Form):
+class GroupGrantForm(AppForm):
     role=forms.ChoiceField(label='Rolle',choices=[('READER','Leser'),('AUTHOR','Autor')])
     department_id=forms.TypedChoiceField(label='Abteilung',coerce=int,empty_value=None,required=False)
     document_number=forms.CharField(label='Oder Dokumentnummer',max_length=100,required=False,help_text='Leer lassen für alle Dokumente im gewählten Bereich. Dokumentinhalte werden hier nicht angezeigt.')
@@ -66,7 +67,7 @@ class GroupGrantForm(forms.Form):
         return data
 
 
-class ProfileForm(forms.Form):
+class ProfileForm(AppForm):
     display_name=forms.CharField(label='Anzeigename',max_length=300)
     email=forms.EmailField(label='E-Mail',required=False,max_length=254)
     reason=OptionalReasonField(label='Begründung (optional)',required=False,max_length=4000,widget=forms.Textarea)

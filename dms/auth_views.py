@@ -1,8 +1,15 @@
+from django.contrib.auth.forms import AuthenticationForm
+from .form_ui import RequiredFormMixin
 from django.contrib import messages
 from django.contrib.auth.views import LoginView, LogoutView
 
 
+class DMSAuthenticationForm(RequiredFormMixin,AuthenticationForm):
+    pass
+
+
 class DMSLoginView(LoginView):
+    authentication_form = DMSAuthenticationForm
     def form_valid(self, form):
         response = super().form_valid(form)
         messages.success(self.request, 'Sie sind angemeldet.')

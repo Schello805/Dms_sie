@@ -1,8 +1,9 @@
+from .form_ui import AppForm
 from .audit_text import OptionalReasonField
 from django import forms
 from .services import query,actor
 
-class DistributionForm(forms.Form):
+class DistributionForm(AppForm):
     change_kind = forms.ChoiceField(label='Art der Änderung',choices=[('SUBSTANTIAL','Fachlich wesentlich'),('EDITORIAL','Redaktionell')])
     requires_ack = forms.BooleanField(label='Versionsbezogene Kenntnisnahme erforderlich',required=False)
     ack_days = forms.IntegerField(label='Kenntnisnahme innerhalb von Tagen',min_value=1,max_value=3650,initial=30)
@@ -14,12 +15,12 @@ class DistributionForm(forms.Form):
         super().__init__(*args,**kwargs)
         self.fields['audiences'].choices = [(g['id'],g['name']) for g in query('SELECT id,name FROM audience_groups WHERE active ORDER BY name')]
 
-class AudienceForm(forms.Form):
+class AudienceForm(AppForm):
     name = forms.CharField(label='Zielgruppe',max_length=200)
     description = forms.CharField(label='Beschreibung',required=False,max_length=2000,widget=forms.Textarea)
     reason = OptionalReasonField(label='Begründung',max_length=4000)
 
-class WorkplaceForm(forms.Form):
+class WorkplaceForm(AppForm):
     user_id = forms.TypedChoiceField(label='Mitarbeiter',coerce=int)
     department = forms.TypedChoiceField(label='Arbeitsplatz-Abteilung',coerce=int,empty_value=None,required=False)
     site = forms.CharField(label='Standort',max_length=200,required=False)
@@ -32,7 +33,7 @@ class WorkplaceForm(forms.Form):
         self.fields['department'].choices = [('', 'Nicht zugeordnet')]+[(d['id'],d['name']) for d in query('SELECT id,name FROM departments ORDER BY name')]
         self.fields['audiences'].choices = [(g['id'],g['name']) for g in query('SELECT id,name FROM audience_groups WHERE active ORDER BY name')]
 
-class EvidenceForm(forms.Form):
+class EvidenceForm(AppForm):
     number = forms.CharField(label='Nachweisnummer',max_length=100)
     title = forms.CharField(label='Titel',max_length=400)
     category_id = forms.TypedChoiceField(label='Kategorie',coerce=int)
@@ -50,12 +51,12 @@ class EvidenceForm(forms.Form):
         self.fields['category_id'].choices = [(c['id'],c['name']) for c in query('SELECT id,coalesce(display_name,name) AS name FROM document_categories WHERE active ORDER BY name')]
         self.fields['department_id'].choices = [(d['id'],d['name']) for d in query("SELECT id,name FROM departments d WHERE d.active AND has_role(%s,'AUTHOR',d.id,NULL) ORDER BY name",[uid])]
 
-class RetentionForm(forms.Form):
+class RetentionForm(AppForm):
     retain_until = forms.DateField(label='Aufbewahren bis einschließlich',widget=forms.DateInput(attrs={'type':'date'},format='%Y-%m-%d'))
     legal_hold = forms.BooleanField(label='Aussonderungssperre aktiv',required=False)
     reason = OptionalReasonField(label='Begründung der Aufbewahrungsentscheidung',max_length=4000,widget=forms.Textarea)
 
-class AuditFilterForm(forms.Form):
+class AuditFilterForm(AppForm):
     document_number = forms.CharField(label='Dokumentnummer (optional)',required=False,max_length=100)
     since = forms.DateField(label='Von',required=False,widget=forms.DateInput(attrs={'type':'date'},format='%Y-%m-%d'))
     until = forms.DateField(label='Bis einschließlich',required=False,widget=forms.DateInput(attrs={'type':'date'},format='%Y-%m-%d'))

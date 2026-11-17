@@ -109,6 +109,13 @@ der frühere Portal-/Kenntnisnahme-Worker wird vom Installer nicht gestartet.
 - Rückkehr zur Tabelle behält Filter, Sortierung und Scrollposition pro Tab. Ungespeicherte Formulare warnen beim Verlassen. Tabellenkopf und Dokumentnummer bleiben beim Scrollen sichtbar.
 - Der Installer fragt bei interaktiver Neuinstallation nach dem Domainnamen; leer bedeutet lokalen IP-Zugriff. Automatisiert sind `--host` oder `--non-interactive` erforderlich. Er legt keine Netzwerkkonfiguration an. Wechselnde IP-Adressen funktionieren; zusätzliche DNS-Namen sind optional über `--host` angebbar.
 
+## Einheitliche Pflichtfeldanzeige (0.4.9-dev)
+
+Pflichtfelder tragen ein Sternchen an der Beschriftung. Eine gemeinsame Formularbasis übernimmt
+die Kennzeichnung anhand der tatsächlichen Felddefinition, auch bei Login und dynamischen
+Feldern. Optionale, versteckte oder deaktivierte Felder bekommen keinen Stern. Die vorhandene
+Validierung bleibt unverändert. Allgemeine Begründungen bleiben optional.
+
 ## Lesbare Dauerlinks und übersichtlicher Upload (0.4.8-dev)
 
 Dauerlinks enthalten Dokumentenart und Nummer, z. B. `/d/arbeitsanweisungen/aa-it-001/`.
