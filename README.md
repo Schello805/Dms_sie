@@ -4,6 +4,17 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.5.0: Qualitätssicherung und QMB-Direktfreigabe
+
+**Ab 0.5.0 werden eigene QMB-Uploads direkt genehmigt.** Die frühere Forderung nach einem
+zweiten QMB für diese Uploads ist damit ersetzt. Eigene Revisionen werden nach dem Bearbeiten
+explizit direkt freigegeben; Autoren ohne QMB-Rolle behalten den bisherigen Prüfablauf.
+
+Automatische PostgreSQL-/JavaScript-/Browsertests, gemeinsame Berechtigungsabfragen,
+aufgeteilte Dienste und eine effizientere Tabellenabfrage sichern die Weiterentwicklung ab.
+Details, Änderung des Freigabeprozesses und reproduzierbares Update über einen festen Tag:
+[Release 0.5.0](docs/releases/v0.5.0.md).
+
 ## Aktueller Stand
 
 - Der Code und der Linux-Installer sind in [Schello805/Dms_sie](https://github.com/Schello805/Dms_sie) veröffentlicht.

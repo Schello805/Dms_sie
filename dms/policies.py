@@ -32,9 +32,8 @@ def default_due(category,effective_from=None):
 
 
 def is_settings_admin(user):
-    if not user.is_authenticated or not user.is_active:
-        return False
-    return bool(query("SELECT 1 FROM users WHERE auth_user_id=%s AND active AND has_role(id,'ADMIN',NULL,NULL)",[user.pk]))
+    from .capabilities import for_user
+    return for_user(user).admin
 
 
 def require_settings_admin(user):
@@ -64,9 +63,8 @@ def save_intervals(user,intervals,reason):
 
 
 def is_qmb(user):
-    if not user.is_authenticated or not user.is_active:
-        return False
-    return bool(query('SELECT 1 FROM users WHERE auth_user_id=%s AND is_qmb(id)',[user.pk]))
+    from .capabilities import for_user
+    return for_user(user).qmb
 
 
 def require_qmb(user):

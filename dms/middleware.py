@@ -19,9 +19,9 @@ class ReaderSurfaceMiddleware(MiddlewareMixin):
     def process_view(self,request,view_func,view_args,view_kwargs):
         if request.path.startswith('/assets/') or request.path=='/favicon.ico' or not request.user.is_authenticated:
             return None
-        from .services import query
-        rows = query("SELECT u.id FROM users u WHERE u.auth_user_id=%s AND u.active AND (is_qmb(u.id) OR has_role(u.id,'ADMIN',NULL,NULL) OR EXISTS(SELECT 1 FROM effective_role_assignments r WHERE r.user_id=u.id AND r.role='AUTHOR'))",[request.user.pk])
-        request.reader_only = not bool(rows)
+        from .capabilities import for_request
+        caps=for_request(request)
+        request.reader_only=not (caps.qmb or caps.admin or caps.author)
         if not request.reader_only:
             return None
         match = request.resolver_match

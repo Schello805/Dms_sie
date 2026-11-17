@@ -18,9 +18,9 @@
   {% csrf_token %}
   {{ form.non_field_errors }}
   {% if workflow_is_submission %}
-    <p>Der eingereichte Stand wird für Änderungen gesperrt. Ein unabhängiger QMB prüft und entscheidet über die Freigabe.</p>
+    <p>{% if qmb_self_release %}Als verantwortlicher QMB gibst du diese Fassung direkt frei. Der freigegebene Stand wird für Änderungen gesperrt.{% else %}Der eingereichte Stand wird für Änderungen gesperrt. Ein unabhängiger QMB prüft und entscheidet über die Freigabe.{% endif %}</p>
     {{ form.comment.as_field_group }}
-    <div class="form-actions"><button name="action" value="submit">An QMB senden</button></div>
+    <div class="form-actions"><button name="action" value="submit">{% if qmb_self_release %}Änderungen direkt freigeben{% else %}An QMB senden{% endif %}</button></div>
   {% else %}
     <p>Bitte prüfe die Dateien und Metadaten. Eine Freigabe macht das Dokument ab dem Wirksamkeitsdatum für berechtigte Leser verfügbar. Die Gültigkeitsdauer beginnt mit der Freigabe.</p>
     {{ form.comment.as_field_group }}

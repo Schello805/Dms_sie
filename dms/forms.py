@@ -26,7 +26,7 @@ class DocumentForm(MappingFieldsMixin, forms.Form):
     def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
         uid = actor(user)
-        rows = query("SELECT d.id,d.name FROM departments d WHERE d.active AND (is_qmb(%s) OR EXISTS (SELECT 1 FROM effective_role_assignments r WHERE r.user_id=%s AND r.role='AUTHOR' AND r.document_id IS NULL AND (r.department_id IS NULL OR r.department_id=d.id))) ORDER BY d.name", [uid,uid])
+        rows = query("SELECT d.id,d.name FROM departments d WHERE d.active AND has_role(%s,'AUTHOR',d.id,NULL) ORDER BY d.name",[uid])
         self.fields['document_type'].choices = [('', 'Bitte Dokumentenart auswählen')]+[(r['name'],r['label']) for r in query('SELECT name,coalesce(display_name,name) AS label FROM document_categories WHERE active ORDER BY label')]
         self.fields['department'].choices = [('', 'Bitte Abteilung auswählen')]+[(r['id'],r['name']) for r in rows]
         self.load_mapping_choices()

@@ -31,3 +31,20 @@ Die PostgreSQL-Tests prüfen auch Filter, Sortierung, Seitengrenzen, Sichtbarkei
 - `master_forms.py` / `master_views.py`: Formulare, Listen, Statusfilter und Rollenoberflächen.
 - `db/016_masterdata.sql`: Aktivstatus, Kategorieanzeigenamen, dauerhafter Normnutzungsnachweis und auditierte Schreibfunktionen.
 - `test_masterdata.py`: fachliche Grenzen, Datenbankrechte und UI-Endpunkte.
+
+## Dienste und Qualität ab 0.5.0
+
+- `services.py`: kompatible öffentliche Fassade und kleine gemeinsame Datenbank-/Audit-Helfer.
+- `catalog_service.py`: Sichtbarkeit, Suche, Sortierung und Tabellenabfrage.
+- `document_service.py`: Dokumente, Entwürfe, Revisionen und Dateizuordnungen.
+- `workflow_service.py`: bestehende Prüfzyklen, periodische Reviews und Aufgaben.
+- `access_service.py`: Zugriff, Historie, Rückzug und Archivierung.
+- `capabilities.py`: einheitliche UI-Berechtigungen; nur innerhalb eines Requests gecacht.
+- `simple_workflow.py` und Migration 0022: explizit protokollierte Direktfreigabe eigener QMB-Dokumente.
+- `.github/workflows/quality.yml`: Backend, JavaScript, statische Checks und Browsertests.
+- `scripts/ci_prepare.py` / `tests/browser/run.py`: ausschließlich synthetische CI-Daten und CI-Browserläufe.
+- `profile_catalog`: read-only Planmessung ohne sensible SQL-/Dokumentausgabe.
+
+Releases werden erst nach erfolgreichen Anwendungs- und Installationstests als Tag veröffentlicht.
+Migrationen werden nicht umgeschrieben. Bei Fehlern nach einer Migration wird die geprüfte
+zusammengehörige Sicherung wiederhergestellt, statt blind alten Code gegen neues Schema zu starten.

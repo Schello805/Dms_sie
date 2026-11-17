@@ -2,7 +2,7 @@
 from django.core.exceptions import PermissionDenied,ValidationError
 from django.db import transaction
 from . import services as s,storage
-from .policies import require_qmb
+from .policies import require_qmb,is_qmb
 
 
 def upload_document(user,data,uploaded,submit=False):
@@ -14,13 +14,35 @@ def upload_document(user,data,uploaded,submit=False):
             storage.upload(user,vid,uploaded)
             from django.conf import settings
             paths = [settings.MEDIA_ROOT/f['storage_key'] for f in s.query('SELECT f.storage_key FROM file_objects f JOIN version_files vf ON vf.file_id=f.id WHERE vf.version_id=%s',[vid])]
-            if submit:
+            if is_qmb(user):
+                release_own_qmb_document(user,vid)
+            elif submit:
                 s.transition(user,vid,'submit','Autor hat die Freigabe angefordert.')
             return vid
     except Exception:
         for path in paths:
             path.unlink(missing_ok=True)
         raise
+
+
+@transaction.atomic
+def release_own_qmb_document(user,version_id):
+    uid=require_qmb(user)
+    _,version=s.get_version(user,version_id,lock=True)
+    if version['created_by']!=uid:
+        raise PermissionDenied('Direktfreigabe gilt nur für eigene QMB-Dokumente.')
+    if version['status']=='DRAFT' and not version['approval_based_validity']:
+        s.query('UPDATE document_versions SET approval_based_validity=true WHERE id=%s',[version_id])
+    from django.db import DatabaseError
+    try:
+        with transaction.atomic():
+            s.query('SELECT release_qmb_document(%s,%s,%s)',[uid,version_id,s.fingerprint(version)])
+    except DatabaseError as error:
+        if getattr(error.__cause__,'sqlstate',None)=='P0001':
+            raise ValidationError('Direktfreigabe nicht möglich. Aktive QMB-Rolle, Datei und Dokumentstatus prüfen.') from error
+        raise
+    from .portal import synchronize_acknowledgements
+    synchronize_acknowledgements()
 
 
 @transaction.atomic

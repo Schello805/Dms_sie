@@ -11,8 +11,8 @@ from .forms import ActionForm, DocumentForm, ReviewForm, RevisionForm, AccessFor
 @login_required
 def create(request):
     uid = services.actor(request.user)
-    from .policies import is_qmb
-    if not is_qmb(request.user) and not services.query("SELECT 1 FROM effective_role_assignments WHERE user_id=%s AND role='AUTHOR' AND document_id IS NULL",[uid]):
+    from .capabilities import for_request
+    if not for_request(request).can_create:
         from django.core.exceptions import PermissionDenied
         raise PermissionDenied('Dokumente hochladen erfordert die Autoren- oder QMB-Rolle.')
     from .forms import DocumentUploadForm
@@ -29,7 +29,8 @@ def create(request):
         except IntegrityError:
             form.add_error(None,'Dokumentnummer bereits vergeben oder Stammdaten ungültig.')
         else:
-            messages.success(request,'Dokument hochgeladen.' if intent=='draft' else 'Dokument hochgeladen und QMB-Freigabe angefordert.')
+            approved=services.get_version(request.user,vid)[1]['status']=='APPROVED'
+            messages.success(request,'Dokument durch QMB direkt freigegeben.' if approved else ('Dokument hochgeladen.' if intent=='draft' else 'Dokument hochgeladen und QMB-Freigabe angefordert.'))
             return redirect('detail',version_id=vid)
     return render(request,'dms/create.html',{'form':form})
 
@@ -62,7 +63,7 @@ def detail(request, version_id, action_form=None):
         choices = [('approve','Freigeben'),('reject','Ablehnen / Überarbeitung anfordern')]
     approval_review = services.query("SELECT a.comment,a.decided_at,u.display_name FROM approval_decisions a JOIN workflow_instances w ON w.id=a.workflow_id JOIN users u ON u.id=a.actor_id WHERE w.version_id=%s AND w.closed_at IS NULL AND a.stage='REVIEW' AND a.decision='ACCEPT'",[version_id]) if v['status']=='PENDING_APPROVAL' else []
     workflow_form.fields['action'].choices = choices
-    return render(request,'dms/detail.html',{'returned_note':returned[0] if returned else None,'workflow_is_submission':v['status']=='DRAFT','approval_review':approval_review,'v':v,'events':events,'files':files,'mappings':mappings,'departments':departments,'reviews':reviews,'review_form':ReviewForm(),'can_review':can_review,'can_workflow':bool(choices),'form':workflow_form,'can_author':can_author,'revision_form':RevisionForm(),'can_history':editor,'document_withdrawn':bool(services.query('SELECT 1 FROM document_withdrawals WHERE document_id=%s LIMIT 1',[v['document_id']])) and services.query('SELECT current_release(%s) AS id',[v['document_id']])[0]['id'] is None,'lifecycle_form':LifecycleForm(),'can_lifecycle':qmb and v['status']=='APPROVED','can_takeover':False})
+    return render(request,'dms/detail.html',{'returned_note':returned[0] if returned else None,'qmb_self_release':qmb and uid==v['created_by'],'workflow_is_submission':v['status']=='DRAFT','approval_review':approval_review,'v':v,'events':events,'files':files,'mappings':mappings,'departments':departments,'reviews':reviews,'review_form':ReviewForm(),'can_review':can_review,'can_workflow':bool(choices),'form':workflow_form,'can_author':can_author,'revision_form':RevisionForm(),'can_history':editor,'document_withdrawn':bool(services.query('SELECT 1 FROM document_withdrawals WHERE document_id=%s LIMIT 1',[v['document_id']])) and services.query('SELECT current_release(%s) AS id',[v['document_id']])[0]['id'] is None,'lifecycle_form':LifecycleForm(),'can_lifecycle':qmb and v['status']=='APPROVED','can_takeover':False})
 
 @login_required
 @require_POST
@@ -73,6 +74,9 @@ def action(request, version_id):
             if form.cleaned_data['action'] in ('approve','reject'):
                 from .simple_workflow import decide
                 decide(request.user,version_id,form.cleaned_data['action']=='approve',form.cleaned_data['comment'])
+            elif form.cleaned_data['action']=='submit' and services.query('SELECT is_qmb(%s) AS yes',[services.actor(request.user)])[0]['yes'] and services.get_version(request.user,version_id)[1]['created_by']==services.actor(request.user):
+                from .simple_workflow import release_own_qmb_document
+                release_own_qmb_document(request.user,version_id)
             else:
                 services.transition(request.user,version_id,form.cleaned_data['action'],form.cleaned_data['comment'] or ('Autor hat die Freigabe angefordert.' if form.cleaned_data['action']=='submit' else ''))
         except ValidationError as exc:

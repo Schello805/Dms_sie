@@ -60,17 +60,13 @@ class SimpleIMSWorkflowTests(TestCase):
         self.assertNotContains(response,'Nur ausgewählte Personen')
         self.assertNotContains(response,'SOP-NEW')
 
-    def test_qmb_author_draft_has_submission_controls_and_rejection_note(self):
+    def test_qmb_author_upload_is_released_without_a_draft_step(self):
         save_roles(self.admin(),s.actor(self.author),True,True,False,'Autor ist zusätzlich QMB')
-        vid = self.upload()
+        vid=self.upload()
         self.client.force_login(self.author)
-        response = self.client.get(f'/versions/{vid}/')
-        self.assertContains(response,'An QMB senden')
-        self.assertNotContains(response,'Dokument freigeben')
-        s.transition(self.author,vid,'submit','Prüfen')
-        decide(self.reviewer,vid,False,'Bitte Verantwortlichkeiten ergänzen.')
-        self.assertContains(self.client.get(f'/versions/{vid}/'),'Bitte Verantwortlichkeiten ergänzen.')
-        self.assertContains(self.client.get(f'/versions/{vid}/edit/'),'Entwurf bearbeiten')
+        self.assertEqual(s.get_version(self.author,vid)[1]['status'],'APPROVED')
+        self.assertEqual(self.client.get(f'/versions/{vid}/edit/').status_code,403)
+        self.assertTrue(s.query('SELECT 1 FROM qmb_direct_releases WHERE version_id=%s',[vid]))
 
     def test_office_file_does_not_offer_broken_pdf_preview(self):
         from . import storage
@@ -241,25 +237,17 @@ class SimpleIMSWorkflowTests(TestCase):
             with self.assertRaises(PermissionDenied):
                 decide(user,vid,True,'Unberechtigt')
 
-    def test_qmb_uploads_without_extra_author_role_but_cannot_approve_own_document(self):
+    def test_qmb_uploads_are_directly_approved_with_runtime_database_role(self):
         self.enable_runtime_role();self.client.force_login(self.reviewer)
         self.assertContains(self.client.get('/'),'Dokument hochladen')
-        self.assertContains(self.client.get('/new/'),'IT')
-        response=self.client.post('/new/',{'number':'QMB-UPLOAD','title':'QMB-Dokument','document_type':'Arbeitsanweisung','department':self.dep,'classification':'INTERNAL','intent':'draft','file':SimpleUploadedFile('qmb.txt',b'QMB upload fixture')})
+        self.assertContains(self.client.get('/new/'),'Hochladen und direkt freigeben')
+        response=self.client.post('/new/',{'number':'QMB-UPLOAD','title':'QMB-Dokument','document_type':'Arbeitsanweisung','department':self.dep,'classification':'INTERNAL','intent':'submit','file':SimpleUploadedFile('qmb.txt',b'QMB upload fixture')})
         vid=s.query("SELECT v.id FROM document_versions v JOIN documents d ON d.id=v.document_id WHERE d.number='QMB-UPLOAD'")[0]['id']
         self.assertRedirects(response,f'/versions/{vid}/')
-        self.assertContains(self.client.get('/'),'QMB-UPLOAD')
-        self.assertContains(self.client.get(f'/versions/{vid}/'),'An QMB senden')
-        self.client.post(f'/versions/{vid}/action/',{'action':'submit'})
-        self.assertEqual(s.get_version(self.reviewer,vid)[1]['status'],'IN_REVIEW')
-        self.assertEqual(self.client.post(f'/versions/{vid}/action/',{'action':'approve'}).status_code,403)
-        self.assertEqual(s.get_version(self.reviewer,vid)[1]['status'],'IN_REVIEW')
-        s.query("UPDATE users SET qmb_role='DEPUTY' WHERE auth_user_id=%s",[self.approver.pk])
-        decide(self.approver,vid,False,'QMB-Upload bitte ergänzen')
-        self.assertContains(self.client.get('/tasks/'),'QMB-Upload bitte ergänzen')
-        self.client.post(f'/versions/{vid}/action/',{'action':'submit'})
-        decide(self.approver,vid,True,'Unabhängig freigegeben')
         self.assertEqual(s.get_version(self.reviewer,vid)[1]['status'],'APPROVED')
+        self.assertEqual(s.query('SELECT actor_id FROM qmb_direct_releases WHERE version_id=%s',[vid])[0]['actor_id'],s.actor(self.reviewer))
+        self.assertTrue(s.query("SELECT 1 FROM audit_events WHERE action='QMB_DIRECT_RELEASE' AND object_id=%s",[str(vid)]))
+        self.assertEqual(len(s.query('SELECT 1 FROM approval_decisions WHERE version_id=%s',[vid])),2)
 
     def test_qmb_upload_right_does_not_enable_editing_other_authors_drafts(self):
         self.client.force_login(self.reviewer)

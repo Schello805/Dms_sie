@@ -18,10 +18,18 @@ def index(request):
     filters = dict(sort=sort,direction=direction,search=request.GET.get('q',''),status=request.GET.get('status',''),
         department=request.GET.get('department',''),standard=request.GET.get('standard',''),
         due_only=request.GET.get('due')=='1',catalog_only=True)
-    first = services.visible_versions(request.user,**filters,limit=1)
-    total = first[0]['total_count'] if first else 0
-    page = Paginator(range(total),PAGE_SIZE).get_page(request.GET.get('page'))
-    versions = services.visible_versions(request.user,**filters,limit=PAGE_SIZE,offset=page.start_index()-1) if total else []
+    try:
+        requested_page=int(request.GET.get('page','1'))
+        requested_page=min(requested_page,2**31) if requested_page>0 else 2**31
+    except (ValueError,TypeError): requested_page=1
+    # One catalogue query in the normal case; fallback only for an empty/out-of-range page.
+    versions=services.visible_versions(request.user,**filters,limit=PAGE_SIZE,offset=(requested_page-1)*PAGE_SIZE)
+    if not versions and requested_page>1:
+        versions=services.visible_versions(request.user,**filters,limit=PAGE_SIZE)
+    total=versions[0]['total_count'] if versions else 0
+    page=Paginator(range(total),PAGE_SIZE).get_page(requested_page)
+    if versions and page.number!=requested_page and page.number!=1:
+        versions=services.visible_versions(request.user,**filters,limit=PAGE_SIZE,offset=page.start_index()-1)
     page_query = request.GET.copy()
     page_query.pop('page',None)
     page_query.pop('fragment',None)
