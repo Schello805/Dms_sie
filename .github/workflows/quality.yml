@@ -88,6 +88,22 @@ jobs:
         run: |
           python scripts/ci_prepare.py
           python manage.py profile_catalog leser > catalog-profile.json
+      - name: Use official HTTPS Ubuntu package mirrors on the CI runner
+        run: |
+          cat > /tmp/ims-ubuntu.sources <<'EOF'
+          Types: deb
+          URIs: https://archive.ubuntu.com/ubuntu
+          Suites: noble noble-updates noble-backports
+          Components: main restricted universe multiverse
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+          Types: deb
+          URIs: https://security.ubuntu.com/ubuntu
+          Suites: noble-security
+          Components: main restricted universe multiverse
+          Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          EOF
+          sudo install -m 0644 /tmp/ims-ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources
       - name: Install browser on CI runner
         run: python -m playwright install --with-deps chromium
       - name: Browser tests with restricted runtime role
@@ -98,6 +114,9 @@ jobs:
           python manage.py runserver 127.0.0.1:8000 --noreload > /tmp/ims-ci-web.log 2>&1 &
           for attempt in $(seq 1 60); do curl -fsS http://127.0.0.1:8000/login/ > /dev/null && break; sleep 1; done
           python tests/browser/run.py
+      - name: Runtime diagnostics on failure
+        if: failure()
+        run: test ! -f /tmp/ims-ci-web.log || tail -100 /tmp/ims-ci-web.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:

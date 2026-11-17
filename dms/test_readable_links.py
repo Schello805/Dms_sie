@@ -49,5 +49,8 @@ class ReadableLinkTests(TestCase):
         self.assertLess(html.index('name="document_type"'),html.index('name="number"'))
         self.assertLess(html.index('name="file"'),html.index('name="title"'))
         self.assertContains(response,'Als Entwurf speichern')
+        from .forms import DocumentUploadForm,EditForm
+        self.assertIn('required-marker',str(DocumentUploadForm(user=self.author)['document_type'].label_tag()))
+        self.assertIn('required-marker',str(EditForm()['title'].label_tag()))
         edit=self.client.get(f'/versions/{self.vid}/edit/').content.decode()
         self.assertLess(edit.index('name="effective_from"'),edit.index('<details class="upload-options"'))

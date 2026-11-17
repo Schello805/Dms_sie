@@ -11,7 +11,7 @@ class MappingFieldsMixin:
             JOIN standards s ON s.id=r.standard_id WHERE (r.active AND s.active) OR r.id=ANY(%s::bigint[]) ORDER BY s.name,s.edition,r.reference''',[self.initial.get('standard_references',[])])
         self.fields['standard_references'].choices = [(r['id'],f"{r['name']} · {r['edition']} · {r['reference']} — {r['label']}") for r in rows]
 
-class DocumentForm(MappingFieldsMixin, forms.Form):
+class DocumentForm(MappingFieldsMixin, AppForm):
     number = forms.CharField(label='Dokumentnummer', max_length=100, help_text='Feste Dokumentnummer ohne Versionsstand. Die Version wird separat geführt.')
     title = forms.CharField(label='Titel', max_length=300)
     document_type = forms.ChoiceField(label='Dokumentenart', choices=[(x,x) for x in ['Richtlinie','Prozess','Arbeitsanweisung','Betriebsanweisung','Vorlage','Externe Norm']])
@@ -36,7 +36,7 @@ class ActionForm(AppForm):
     action = forms.ChoiceField(choices=[('submit','Einreichen'),('accept','Zustimmen'),('return','Zurückgeben'),('approve','Freigeben'),('reject','Ablehnen')])
     comment = forms.CharField(label='Bemerkung',required=False,max_length=4000,widget=forms.Textarea)
 
-class EditForm(MappingFieldsMixin, forms.Form):
+class EditForm(MappingFieldsMixin, AppForm):
     title = forms.CharField(label='Titel', max_length=300)
     change_summary = OptionalReasonField(label='Änderungsbeschreibung', widget=forms.Textarea)
     effective_from = forms.DateTimeField(label='Erstmalig gültig ab', widget=forms.DateTimeInput(attrs={'type':'datetime-local'}, format='%Y-%m-%dT%H:%M'))
