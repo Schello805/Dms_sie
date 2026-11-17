@@ -55,6 +55,8 @@ with sync_playwright() as p:
    expect(qmb.locator('[data-document-status=APPROVED]')).to_be_visible()
    expect(qmb.locator('main')).to_contain_text('QMB_DIRECT_RELEASE')
    reader.goto(base+'/documents/');reader.locator('#q').fill('CI-LAZY')
+   expect(reader.locator('#document-count')).to_have_text('32')
+   expect(reader.locator('#document-rows tr').first).to_contain_text('CI-LAZY-000')
    expect(reader.locator('#document-rows tr')).to_have_count(30)
    reader.locator('.table-wrap').evaluate('(node)=>node.scrollTop=node.scrollHeight')
    expect(reader.locator('#document-rows tr')).to_have_count(32)
