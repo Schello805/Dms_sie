@@ -89,3 +89,9 @@ class DocumentNumberTests(TestCase):
         data=masterdata.get('categories',category);data['number_prefix']='NEU'
         masterdata.save(self.reviewer,'categories',category,data)
         self.assertEqual(masterdata.get('categories',category)['number_prefix'],'NEU')
+
+    def test_document_scoped_author_can_refresh_own_worklist(self):
+        doc=s.get_version(self.author,self.vid)[1]['document_id']
+        s.query("INSERT INTO role_assignments(user_id,role,document_id) VALUES (%s,'AUTHOR',%s)",[s.actor(self.outsider),doc])
+        self.client.force_login(self.outsider)
+        self.assertEqual(self.client.get('/tasks/summary/').status_code,200)

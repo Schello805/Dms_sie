@@ -414,7 +414,8 @@ def task_summary(request):
     if request.method != 'GET':
         from django.http import HttpResponseNotAllowed
         return HttpResponseNotAllowed(['GET'])
-    if not for_request(request).can_create:
+    caps = for_request(request)
+    if not (caps.author or caps.qmb):
         raise PermissionDenied
     tasks = tasks_for(request.user)
     response = JsonResponse({key: tasks[key] for key in ('work_count','pending_count','returned_count','review_count')})
