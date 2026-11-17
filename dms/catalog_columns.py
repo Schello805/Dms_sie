@@ -2,6 +2,7 @@
 COLUMNS = (
     ('number', 'Dokumentnummer', 'd.number'),
     ('title', 'Dokument', 'v.title'),
+    ('author', 'Autor', '(SELECT display_name FROM users WHERE id=d.owner_id)'),
     ('uploaded', 'Hochgeladen', 'uploaded_at'),
     ('approved', 'Freigabe', 'approved_at'),
     ('status', 'Status', "(CASE WHEN v.status='APPROVED' THEN 'Freigegeben' ELSE 'Entwurf' END)"),

@@ -109,6 +109,14 @@ der frühere Portal-/Kenntnisnahme-Worker wird vom Installer nicht gestartet.
 - Rückkehr zur Tabelle behält Filter, Sortierung und Scrollposition pro Tab. Ungespeicherte Formulare warnen beim Verlassen. Tabellenkopf und Dokumentnummer bleiben beim Scrollen sichtbar.
 - Der Installer fragt bei interaktiver Neuinstallation nach dem Domainnamen; leer bedeutet lokalen IP-Zugriff. Automatisiert sind `--host` oder `--non-interactive` erforderlich. Er legt keine Netzwerkkonfiguration an. Wechselnde IP-Adressen funktionieren; zusätzliche DNS-Namen sind optional über `--host` angebbar.
 
+## Dokumentenübersicht und Dokumentenarten (0.4.6-dev)
+
+- QMB: **Verwaltung → Abteilungen verwalten** bzw. **Dokumentenarten / Kategorien verwalten**. Anlegen, Bearbeiten, Deaktivieren und Reaktivieren sind möglich; historische Zuordnungen bleiben erhalten.
+- Dokumentenart und Kategorie verwenden dieselbe bestehende Stammdatenliste einschließlich Reviewfristen. Standardwerte: Arbeitsanweisungen, Handbücher, Normen, Prozessbeschreibungen, Richtlinien, Vorlagen. Die Auswahl ist alphabetisch sortiert und steht im Upload vor der Dokumentnummer.
+- Die Dokumentnummer enthält keinen automatisch angehängten Versionsstand; Major/Minor werden separat geführt. Vorhandene Nummern bleiben unverändert.
+- Die Übersicht enthält den verantwortlichen **Autor** (sortierbar) und **Dokumentlink**. Der Link `/documents/<Dokument-ID>/current/` öffnet nach Anmeldung die aktuell wirksame, berechtigte Freigabe. Er bleibt bei neuen Revisionen unverändert; zurückgezogene Dokumente werden darüber nicht freigegeben.
+- Eigene bisherige Kategorien und belegte ältere Arten bleiben erhalten. Nicht belegte zusätzliche Standardarten SOP/Betriebsanweisung werden deaktiviert und können durch den QMB reaktiviert werden.
+
 ## Änderungsgründe überall optional (0.4.5-dev)
 
 Allgemeine Begründungen und Änderungsbeschreibungen sind in allen Bereichen optional:

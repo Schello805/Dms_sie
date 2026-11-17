@@ -49,7 +49,7 @@ def visible_versions(user, search='', status='', department='', standard='', due
         ' NULLS LAST,d.number,v.major DESC,v.minor DESC,v.id') if sort in CATALOG_SORTS else 'COALESCE(matched.score,0) DESC,d.number,v.major DESC,v.minor DESC,v.id'
     rows = query("""WITH input AS (
             SELECT CASE WHEN %s='' THEN NULL::tsquery ELSE websearch_to_tsquery('german',%s) END AS terms
-        ) SELECT v.*,count(*) OVER() AS total_count,d.number,dep.name AS department,
+        ) SELECT v.*,count(*) OVER() AS total_count,d.number,dep.name AS department,(SELECT display_name FROM users WHERE id=d.owner_id) AS author_name,
         review.review_due_on,review.last_review_on,
         (SELECT uploaded_at FROM document_upload_origins WHERE document_id=v.document_id) AS uploaded_at,
         (SELECT coalesce(rv.approved_at,(SELECT max(a.decided_at) FROM approval_decisions a WHERE a.version_id=v.id AND a.stage='APPROVAL' AND a.decision='ACCEPT')) FROM document_versions ignored LEFT JOIN release_validity rv ON rv.version_id=ignored.id WHERE ignored.id=v.id) AS approved_at,

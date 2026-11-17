@@ -11,9 +11,9 @@ class MappingFieldsMixin:
         self.fields['standard_references'].choices = [(r['id'],f"{r['name']} · {r['edition']} · {r['reference']} — {r['label']}") for r in rows]
 
 class DocumentForm(MappingFieldsMixin, forms.Form):
-    number = forms.CharField(label='Dokumentnummer', max_length=100)
+    number = forms.CharField(label='Dokumentnummer', max_length=100, help_text='Feste Dokumentnummer ohne Versionsstand. Die Version wird separat geführt.')
     title = forms.CharField(label='Titel', max_length=300)
-    document_type = forms.ChoiceField(label='Kategorie', choices=[(x,x) for x in ['Richtlinie','Prozess','Arbeitsanweisung','Betriebsanweisung','Vorlage','Externe Norm']])
+    document_type = forms.ChoiceField(label='Dokumentenart', choices=[(x,x) for x in ['Richtlinie','Prozess','Arbeitsanweisung','Betriebsanweisung','Vorlage','Externe Norm']])
     department = forms.TypedChoiceField(label='Verantwortliche Abteilung', coerce=int)
     change_summary = OptionalReasonField(label='Änderungsbeschreibung', widget=forms.Textarea)
     effective_from = forms.DateTimeField(label='Erstmalig gültig ab', widget=forms.DateTimeInput(attrs={'type':'datetime-local'}, format='%Y-%m-%dT%H:%M'))
@@ -26,9 +26,10 @@ class DocumentForm(MappingFieldsMixin, forms.Form):
         super().__init__(*args, **kwargs)
         uid = actor(user)
         rows = query("SELECT d.id,d.name FROM departments d WHERE d.active AND (is_qmb(%s) OR EXISTS (SELECT 1 FROM effective_role_assignments r WHERE r.user_id=%s AND r.role='AUTHOR' AND r.document_id IS NULL AND (r.department_id IS NULL OR r.department_id=d.id))) ORDER BY d.name", [uid,uid])
-        self.fields['document_type'].choices = [('', 'Bitte Kategorie auswählen')]+[(r['name'],r['label']) for r in query('SELECT name,coalesce(display_name,name) AS label FROM document_categories WHERE active ORDER BY label')]
+        self.fields['document_type'].choices = [('', 'Bitte Dokumentenart auswählen')]+[(r['name'],r['label']) for r in query('SELECT name,coalesce(display_name,name) AS label FROM document_categories WHERE active ORDER BY label')]
         self.fields['department'].choices = [('', 'Bitte Abteilung auswählen')]+[(r['id'],r['name']) for r in rows]
         self.load_mapping_choices()
+        self.order_fields(['document_type','number','title','department'])
 
 class ActionForm(forms.Form):
     action = forms.ChoiceField(choices=[('submit','Einreichen'),('accept','Zustimmen'),('return','Zurückgeben'),('approve','Freigeben'),('reject','Ablehnen')])

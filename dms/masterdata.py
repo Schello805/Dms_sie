@@ -7,7 +7,7 @@ from . import services as s
 from .policies import require_qmb,require_settings_admin
 
 KINDS={
-    'categories':('Kategorien','document_categories'),
+    'categories':('Dokumentenarten / Kategorien','document_categories'),
     'departments':('Abteilungen','departments'),
     'locations':('Aufbewahrungsorte','storage_locations'),
     'standards':('Normausgaben','standards'),
