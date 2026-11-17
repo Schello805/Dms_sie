@@ -14,6 +14,7 @@ class MasterForm(AppForm):
         super().__init__(*args,**kwargs)
         record=record or {};self.locked=False
         if kind=='categories':
+            self.fields['number_prefix']=forms.RegexField(r'^[A-Za-z][A-Za-z0-9]{0,11}$',label='Nummernkürzel',required=False,max_length=12,initial='DOK',help_text='Zum Beispiel PB für Prozessbeschreibungen oder AA für Arbeitsanweisungen. Gilt für neue Nummern.')
             self.fields['review_interval_months']=forms.IntegerField(label='Gültigkeit (Monate)',min_value=1,max_value=1200,initial=24)
             self.fields['retention_months']=forms.IntegerField(label='Aufbewahrung (Monate)',min_value=1,max_value=1200,required=False)
             rows=s.query('SELECT id,name,active FROM storage_locations WHERE active OR id=%s ORDER BY name',[record.get('storage_location_id')])

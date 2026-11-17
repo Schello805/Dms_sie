@@ -1,5 +1,6 @@
 {% extends 'dms/base.html' %}
 {% block content %}
+{% if not is_edit %}{{ form.number_prefixes|json_script:"document-number-prefixes" }}{% endif %}
 <p><a href="{% url 'index' %}">← Dokumentenübersicht</a></p>
 <h1>{% if is_edit %}Entwurf bearbeiten{% else %}Dokument hochladen{% endif %}</h1>
 <p>{% if is_edit %}Änderungen werden als Entwurf gespeichert. Anschließend kannst du die Freigabe beim QMB anfordern.{% else %}Uploaddatum und erstmalige Gültigkeit werden vorbelegt. Die Gültigkeitsdauer beginnt erst mit der QMB-Freigabe und richtet sich nach der Kategorie.{% endif %}</p>

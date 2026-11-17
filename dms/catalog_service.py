@@ -49,7 +49,7 @@ def visible_versions(user, search='', status='', department='', standard='', due
                 AND i.status='READY' AND i.search_vector @@ input.terms
             ORDER BY score DESC,i.file_id LIMIT 1
         ) matched ON true
-        WHERE (can_read_version(%s,v.id) OR (%s::bigint IS NULL AND d.access_mode='DEPARTMENT' AND v.classification='PUBLIC' AND v.status='APPROVED' AND v.id=current_release(v.document_id)))
+        WHERE d.active AND (can_read_version(%s,v.id) OR (%s::bigint IS NULL AND d.access_mode='DEPARTMENT' AND v.classification='PUBLIC' AND v.status='APPROVED' AND v.id=current_release(v.document_id)))
         AND (%s='' OR v.title ILIKE %s OR d.number ILIKE %s OR matched.file_id IS NOT NULL OR EXISTS(SELECT 1 FROM version_distribution dist WHERE dist.version_id=v.id AND dist.keywords ILIKE %s))
         AND (%s='' OR v.status=%s OR (%s AND %s='DRAFT' AND v.status IN ('IN_REVIEW','PENDING_APPROVAL')))
         AND (NOT %s OR (

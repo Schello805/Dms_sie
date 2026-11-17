@@ -1,3 +1,4 @@
+from dms import number_views
 from dms import auth_views as auth
 from django.urls import path
 from dms import views,portal_views,branding,admin_views,catalog_views,ui_assets,account_views,comparison,master_views
@@ -48,6 +49,9 @@ urlpatterns = [
     path('versions/<int:version_id>/takeover/',views.takeover,name='takeover'),
     path('versions/<int:version_id>/files/<int:file_id>/reindex/',views.retry_index,name='retry_index'),
     path('tasks/',views.tasks,name='tasks'),
+    path('tasks/summary/',views.task_summary,name='task_summary'),
+    path('management/numbers/',number_views.listing,name='document_numbers'),
+    path('management/numbers/<int:document_id>/active/',number_views.set_active,name='document_active'),
     path('versions/<int:version_id>/lifecycle/',views.lifecycle,name='lifecycle'),
     path('versions/<int:version_id>/access/',views.access,name='access'),
     path('versions/<int:version_id>/history/',views.history,name='history'),

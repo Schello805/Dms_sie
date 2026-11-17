@@ -10,7 +10,7 @@ from .master_forms import MasterForm,GroupGrantForm,ProfileForm
 from .policies import is_qmb,is_settings_admin,require_settings_admin
 
 BASES={
- 'categories':"SELECT c.id,coalesce(c.display_name,c.name) AS title,c.active,c.review_interval_months::text||' Monate · '||l.name AS summary FROM document_categories c JOIN storage_locations l ON l.id=c.storage_location_id",
+ 'categories':"SELECT c.id,coalesce(c.display_name,c.name) AS title,c.active,c.number_prefix||' · '||c.review_interval_months::text||' Monate · '||l.name AS summary FROM document_categories c JOIN storage_locations l ON l.id=c.storage_location_id",
  'departments':"SELECT d.id,d.name AS title,d.active,d.code AS summary FROM departments d",
  'locations':"SELECT id,name AS title,active,description AS summary FROM storage_locations",
  'standards':"SELECT id,name AS title,active,edition AS summary FROM standards",

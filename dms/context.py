@@ -19,4 +19,4 @@ def navigation(request):
                  'roles':caps.roles,'role_label':' · '.join(caps.roles)}
     from .health import status
     health = status() if admin else None
-    return {'system_health':health,'account_info':profile,**branding_context(),'can_tasks':can_tasks,'can_author_tasks':author or qmb,'task_count':task_count,'can_admin_settings':admin,'can_create_documents':can_create,'can_qmb_management':qmb,'can_find_management':qmb or admin}
+    return {'current_actor_id':caps.uid,'system_health':health,'account_info':profile,**branding_context(),'can_tasks':can_tasks,'can_author_tasks':author or qmb,'task_count':task_count,'can_admin_settings':admin,'can_create_documents':can_create,'can_qmb_management':qmb,'can_find_management':qmb or admin}

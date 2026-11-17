@@ -10,6 +10,7 @@ ASSET_ROOT = Path(__file__).resolve().parent / 'static' / 'dms'
 ASSET_TYPES = {
     'app.css': 'text/css',
     'branding.css': 'text/css',
+    'workflow-ui.js': 'text/javascript',
     'app.js': 'text/javascript',
     'catalog.js': 'text/javascript',
     'catalog-state.js': 'text/javascript',

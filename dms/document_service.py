@@ -12,13 +12,15 @@ from . import services as s
 
 def get_version(user, version_id, lock=False):
     uid = s.actor(user)
-    rows = s.query('''SELECT v.*,d.number,d.document_type,d.owner_id,(SELECT display_name FROM users WHERE id=d.owner_id) AS owner_name,d.responsible_department_id,c.review_interval_months,coalesce(c.display_name,c.name) AS category_label,review.review_due_on,review.last_review_on,(SELECT uploaded_at FROM document_upload_origins WHERE document_id=v.document_id) AS uploaded_at,(SELECT max(a.decided_at) FROM approval_decisions a WHERE a.version_id=v.id AND a.stage='APPROVAL' AND a.decision='ACCEPT') AS approved_at FROM document_versions v
+    rows = s.query('''SELECT v.*,d.active AS document_active,d.number,d.document_type,d.owner_id,(SELECT display_name FROM users WHERE id=d.owner_id) AS owner_name,d.responsible_department_id,c.review_interval_months,coalesce(c.display_name,c.name) AS category_label,review.review_due_on,review.last_review_on,(SELECT uploaded_at FROM document_upload_origins WHERE document_id=v.document_id) AS uploaded_at,(SELECT max(a.decided_at) FROM approval_decisions a WHERE a.version_id=v.id AND a.stage='APPROVAL' AND a.decision='ACCEPT') AS approved_at FROM document_versions v
                     JOIN documents d ON d.id=v.document_id
                     JOIN document_categories c ON c.name=d.document_type
                     JOIN version_review_status review ON review.version_id=v.id WHERE v.id=%s''' + (' FOR UPDATE OF v' if lock else ''), [version_id])
     if not rows:
         raise PermissionDenied('Dokument nicht verfügbar.')
     v = rows[0]
+    if lock and not v['document_active']:
+        raise PermissionDenied('Deaktivierte Dokumente müssen zuerst durch den QMB reaktiviert werden.')
     if not s.query('SELECT can_read_version(%s,%s) AS permitted',[uid,version_id])[0]['permitted']:
         raise PermissionDenied('Dokument nicht verfügbar.')
     return uid, v
@@ -34,6 +36,8 @@ def create_document(user, data):
         raise ValidationError('Für neue Dokumente eine aktive Abteilung auswählen.')
     if not s.query('SELECT 1 FROM document_categories WHERE name=%s AND active',[data['document_type']]):
         raise ValidationError('Für neue Dokumente eine aktive Kategorie auswählen.')
+    if not data.get('number'):
+        data['number']=s.query('SELECT allocate_document_number(%s,%s) AS number',[uid,data['document_type']])[0]['number']
     from .policies import default_due
     review_due = data.get('next_review_on') or default_due(data['document_type'],data.get('effective_from'))
     doc = s.query('''INSERT INTO documents(number,document_type,owner_id,responsible_department_id)

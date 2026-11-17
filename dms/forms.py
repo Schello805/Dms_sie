@@ -27,7 +27,9 @@ class DocumentForm(MappingFieldsMixin, AppForm):
         super().__init__(*args, **kwargs)
         uid = actor(user)
         rows = query("SELECT d.id,d.name FROM departments d WHERE d.active AND has_role(%s,'AUTHOR',d.id,NULL) ORDER BY d.name",[uid])
-        self.fields['document_type'].choices = [('', 'Bitte Dokumentenart auswählen')]+[(r['name'],r['label']) for r in query('SELECT name,coalesce(display_name,name) AS label FROM document_categories WHERE active ORDER BY label')]
+        categories=query('SELECT name,coalesce(display_name,name) AS label,number_prefix FROM document_categories WHERE active ORDER BY label')
+        self.number_prefixes={row['name']:row['number_prefix'] for row in categories}
+        self.fields['document_type'].choices=[('', 'Bitte Dokumentenart auswählen')]+[(row['name'],row['label']) for row in categories]
         self.fields['department'].choices = [('', 'Bitte Abteilung auswählen')]+[(r['id'],r['name']) for r in rows]
         self.load_mapping_choices()
         self.order_fields(['document_type','number','title','department'])
@@ -157,6 +159,9 @@ class DocumentUploadForm(DocumentForm):
     intent = forms.ChoiceField(label='Nach dem Upload',choices=[('draft','Als Entwurf speichern'),('submit','Freigabe durch QMB anfordern')])
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
+        self.fields['number'].required=False
+        self.fields['number'].widget.attrs.update(readonly=True,placeholder='Wird automatisch vergeben')
+        self.fields['number'].help_text='Feste Dokumentnummer ohne Versionsstand. Kürzel nach Dokumentenart; die eindeutige ID wird beim Speichern vergeben.'
         from django.utils import timezone
         self.fields['effective_from'].label = 'Erstmalig gültig ab'
         self.fields['effective_from'].required = False
@@ -167,6 +172,9 @@ class DocumentUploadForm(DocumentForm):
         self.fields['file'].widget.attrs['accept'] = '.pdf,.docx,.xlsx,.odt,.txt'
         self.fields['file'].help_text = 'PDF und TXT können direkt angesehen werden. Für Office-Dateien kannst du im Entwurf zusätzlich eine PDF-Lesefassung hinterlegen.'
         self.fields['applicable_departments'].help_text = 'Die verantwortliche Abteilung ist automatisch enthalten.'
+    def clean_number(self):
+        return ''  # Allocate atomically on the server; never trust a submitted preview.
+
     def clean_effective_from(self):
         from django.utils import timezone
         return self.cleaned_data.get('effective_from') or timezone.now()

@@ -98,7 +98,7 @@ def workflow_tasks(user):
         CASE WHEN v.status='IN_REVIEW' THEN 'QMB-Prüfung' ELSE 'Freigabe nach QMB-Prüfung' END AS task_label
         FROM document_versions v JOIN documents d ON d.id=v.document_id
         JOIN workflow_instances w ON w.version_id=v.id AND w.closed_at IS NULL
-        WHERE (is_qmb(%s) OR can_lead_approve(%s,v.id)) AND can_read_version(%s,v.id)
+        WHERE d.active AND (is_qmb(%s) OR can_lead_approve(%s,v.id)) AND can_read_version(%s,v.id)
           AND v.created_by<>%s AND w.submitted_by<>%s
           AND v.status IN ('IN_REVIEW','PENDING_APPROVAL')
         ORDER BY w.started_at,v.id LIMIT 5000""",[uid,uid,uid,uid,uid])

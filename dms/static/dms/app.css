@@ -194,3 +194,19 @@ select[multiple]{width:100%;min-height:14rem;padding:.5rem;border:1px solid #bcc
 
 .required-marker{color:#a52e2e;font-weight:700;white-space:nowrap}
 .required-note{font-size:.85rem;color:#526875;margin:.25rem 0 .75rem}
+
+/* Compact catalogue controls, without reducing touch targets on tablets. */
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.catalog-filters{display:grid;grid-template-columns:minmax(14rem,2fr) repeat(3,minmax(8rem,1fr));gap:.4rem .65rem;padding:.65rem .8rem;align-items:end}
+.catalog-filters label{font-size:.8rem;margin:0 0 .2rem}
+.catalog-filters input:not([type=checkbox]),.catalog-filters select{min-height:32px;height:32px;padding:.3rem .55rem;margin:0;font-size:.875rem}
+.catalog-filters .check{grid-column:1/3;align-self:center;display:flex;gap:.4rem;align-items:center;margin:0}
+.catalog-filters .filter-actions{grid-column:3/-1;justify-content:flex-end;gap:.4rem;margin:0}
+.catalog-filters .button,.catalog-filters button{min-height:32px;padding:.35rem .65rem;font-size:.8rem;margin:0}
+.catalog-filters.reader-filters{grid-template-columns:minmax(14rem,2fr) repeat(2,minmax(8rem,1fr)) auto}
+.catalog-filters.reader-filters .filter-actions{grid-column:auto}
+.task-bell.has-tasks .badge{background:#ffdc88;color:#273c43}
+#document-workflow{scroll-margin-top:1rem}
+@media(max-width:1000px){.catalog-filters,.catalog-filters.reader-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.catalog-filters .check{grid-column:1}.catalog-filters .filter-actions,.catalog-filters.reader-filters .filter-actions{grid-column:2}}
+@media(pointer:coarse){.catalog-filters input:not([type=checkbox]),.catalog-filters select{height:44px;min-height:44px;font-size:16px}.catalog-filters .button,.catalog-filters button{min-height:44px}}
+@media(max-width:560px){.catalog-filters,.catalog-filters.reader-filters{grid-template-columns:minmax(0,1fr)}.catalog-filters .check,.catalog-filters .filter-actions,.catalog-filters.reader-filters .filter-actions{grid-column:1}}

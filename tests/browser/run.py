@@ -18,7 +18,8 @@ def upload(page,number,qmb=False):
  page.goto(base+'/new/')
  expect(page.locator('label[for=id_document_type] .required-marker')).to_have_count(1)
  page.locator('[name=document_type]').select_option(label='Arbeitsanweisungen')
- page.locator('[name=number]').fill(number)
+ expect(page.locator('[name=number]')).to_have_value('AA-…')
+ expect(page.locator('[name=number]')).to_have_attribute('readonly','')
  page.locator('[name=title]').fill(number+' Dokument')
  page.locator('[name=department]').select_option(label='Informationstechnik')
  page.locator('[name=file]').set_input_files({'name':'ci.txt','mimeType':'text/plain','buffer':b'Synthetic browser fixture'})
@@ -37,7 +38,10 @@ with sync_playwright() as p:
     page=context.new_page();login(page,username);pages[username]=page
    author,qmb,reader=(pages[name] for name in ('autor','pruefer','leser'))
    number='CI-AUTHOR-'+device
+   qmb.goto(base+'/documents/')
    detail=upload(author,number)
+   qmb.bring_to_front()
+   expect(qmb.locator('[data-task-summary]')).to_have_attribute('data-pending-approvals','1',timeout=20000)
    qmb.goto(base+'/tasks/');expect(qmb.locator('main')).to_contain_text(number)
    qmb.goto(detail);qmb.locator('[name=comment]').fill('Bitte ergänzen')
    qmb.locator('button[value=reject]').click()
@@ -49,6 +53,7 @@ with sync_playwright() as p:
    row=reader.locator('#document-rows tr').filter(has_text=number)
    expect(row).to_have_count(1)
    expect(row.get_by_role('link',name='Dokumentlink')).to_have_attribute('href',re.compile('/d/arbeitsanweisungen/'))
+   reader.screenshot(path=str(artifacts/(device+'-catalog.png')),full_page=True)
    row.get_by_role('link',name='Dokumentlink').click()
    expect(reader).to_have_url(re.compile(r'/versions/\d+/files/\d+/viewer/'))
    own=upload(qmb,'CI-QMB-'+device,True)

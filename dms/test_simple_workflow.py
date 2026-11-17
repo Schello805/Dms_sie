@@ -197,10 +197,10 @@ class SimpleIMSWorkflowTests(TestCase):
         response = self.client.post('/new/',{'number':'UI-SOP','title':'UI Test','document_type':'Arbeitsanweisung','department':self.dep,
             'effective_from':'','change_summary':'','classification':'INTERNAL','intent':'submit','file':SimpleUploadedFile('ui.txt',b'SOP Test')})
         self.assertEqual(response.status_code,302)
-        vid = s.query("SELECT v.id FROM document_versions v JOIN documents d ON d.id=v.document_id WHERE d.number='UI-SOP'")[0]['id']
+        vid = int(response.url.strip('/').split('/')[-1])
         self.client.force_login(self.reviewer)
         self.assertContains(self.client.get('/'),'Aufgaben,')
-        self.assertContains(self.client.get('/tasks/'),'UI-SOP')
+        self.assertContains(self.client.get('/tasks/'),'UI Test')
         response = self.client.post(f'/versions/{vid}/action/',{'action':'reject','comment':'Titel konkretisieren'})
         self.assertEqual(response.status_code,302)
         self.client.force_login(self.author)
@@ -242,7 +242,7 @@ class SimpleIMSWorkflowTests(TestCase):
         self.assertContains(self.client.get('/'),'Dokument hochladen')
         self.assertContains(self.client.get('/new/'),'Hochladen und direkt freigeben')
         response=self.client.post('/new/',{'number':'QMB-UPLOAD','title':'QMB-Dokument','document_type':'Arbeitsanweisung','department':self.dep,'classification':'INTERNAL','intent':'submit','file':SimpleUploadedFile('qmb.txt',b'QMB upload fixture')})
-        vid=s.query("SELECT v.id FROM document_versions v JOIN documents d ON d.id=v.document_id WHERE d.number='QMB-UPLOAD'")[0]['id']
+        vid=int(response.url.strip('/').split('/')[-1])
         self.assertRedirects(response,f'/versions/{vid}/')
         self.assertEqual(s.get_version(self.reviewer,vid)[1]['status'],'APPROVED')
         self.assertEqual(s.query('SELECT actor_id FROM qmb_direct_releases WHERE version_id=%s',[vid])[0]['actor_id'],s.actor(self.reviewer))

@@ -45,7 +45,7 @@ def save(user,kind,target,data):
     actor=require(user,kind)
     data=dict(data);reason=optional_reason(data.pop('reason',''))
     fields={
-        'categories':{'name','active','review_interval_months','retention_months','storage_location_id'},
+        'categories':{'name','number_prefix','active','review_interval_months','retention_months','storage_location_id'},
         'departments':{'name','code','active','parent_id'},
         'locations':{'name','description','active'},
         'standards':{'name','edition','active'},
@@ -55,7 +55,10 @@ def save(user,kind,target,data):
     data={key:value for key,value in data.items() if key in fields[kind]}
     try:
         with transaction.atomic():
-            return s.query('SELECT save_ims_master(%s,%s,%s,%s::jsonb,%s) AS id',[actor,kind,target,json.dumps(data),reason])[0]['id']
+            saved=s.query('SELECT save_ims_master(%s,%s,%s,%s::jsonb,%s) AS id',[actor,kind,target,json.dumps(data),reason])[0]['id']
+            if kind=='categories' and 'number_prefix' in data:
+                s.query('SELECT set_category_number_prefix(%s,%s,%s,%s)',[actor,saved,data['number_prefix'],reason])
+            return saved
     except IntegrityError:
         raise ValidationError('Bezeichnung oder Kennung ist bereits vorhanden, oder eine Zuordnung ist ungültig.')
     except DatabaseError as error:

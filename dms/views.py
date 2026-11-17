@@ -51,7 +51,7 @@ def detail(request, version_id, action_form=None):
     mappings = services.query('SELECT s.name,s.edition,r.reference,r.label FROM version_standard_links l JOIN standard_references r ON r.id=l.reference_id JOIN standards s ON s.id=r.standard_id WHERE l.version_id=%s ORDER BY s.name,r.reference',[version_id])
     departments = services.query('SELECT d.name FROM departments d JOIN version_departments vd ON vd.department_id=d.id WHERE vd.version_id=%s ORDER BY d.name',[version_id])
     reviews = services.query('SELECT pr.*,u.display_name AS reviewer_name FROM periodic_reviews pr JOIN users u ON u.id=pr.reviewer_id WHERE version_id=%s ORDER BY pr.id DESC',[version_id]) if editor else []
-    can_author = services.allowed(uid,v['responsible_department_id'],'AUTHOR',v['document_id'])
+    can_author = v['document_active'] and services.allowed(uid,v['responsible_department_id'],'AUTHOR',v['document_id'])
     from .policies import is_qmb
     qmb = is_qmb(request.user)
     can_review = v['status']=='APPROVED' and uid!=v['created_by'] and qmb and services.query('SELECT current_release(%s) AS id',[v['document_id']])[0]['id']==version_id
@@ -59,11 +59,11 @@ def detail(request, version_id, action_form=None):
     choices = []
     if v['status']=='DRAFT' and can_author:
         choices = [('submit','Zur Prüfung einreichen')]
-    elif v['status'] in ('IN_REVIEW','PENDING_APPROVAL') and qmb and uid!=v['created_by']:
+    elif v['document_active'] and v['status'] in ('IN_REVIEW','PENDING_APPROVAL') and qmb and uid!=v['created_by']:
         choices = [('approve','Freigeben'),('reject','Ablehnen / Überarbeitung anfordern')]
     approval_review = services.query("SELECT a.comment,a.decided_at,u.display_name FROM approval_decisions a JOIN workflow_instances w ON w.id=a.workflow_id JOIN users u ON u.id=a.actor_id WHERE w.version_id=%s AND w.closed_at IS NULL AND a.stage='REVIEW' AND a.decision='ACCEPT'",[version_id]) if v['status']=='PENDING_APPROVAL' else []
     workflow_form.fields['action'].choices = choices
-    return render(request,'dms/detail.html',{'returned_note':returned[0] if returned else None,'qmb_self_release':qmb and uid==v['created_by'],'workflow_is_submission':v['status']=='DRAFT','approval_review':approval_review,'v':v,'events':events,'files':files,'mappings':mappings,'departments':departments,'reviews':reviews,'review_form':ReviewForm(),'can_review':can_review,'can_workflow':bool(choices),'form':workflow_form,'can_author':can_author,'revision_form':RevisionForm(),'can_history':editor,'document_withdrawn':bool(services.query('SELECT 1 FROM document_withdrawals WHERE document_id=%s LIMIT 1',[v['document_id']])) and services.query('SELECT current_release(%s) AS id',[v['document_id']])[0]['id'] is None,'lifecycle_form':LifecycleForm(),'can_lifecycle':qmb and v['status']=='APPROVED','can_takeover':False})
+    return render(request,'dms/detail.html',{'returned_note':returned[0] if returned else None,'qmb_self_release':qmb and uid==v['created_by'],'workflow_is_submission':v['status']=='DRAFT','approval_review':approval_review,'v':v,'events':events,'files':files,'mappings':mappings,'departments':departments,'reviews':reviews,'review_form':ReviewForm(),'can_review':can_review,'can_workflow':bool(choices),'form':workflow_form,'can_author':can_author,'revision_form':RevisionForm(),'can_history':editor,'document_withdrawn':bool(services.query('SELECT 1 FROM document_withdrawals WHERE document_id=%s LIMIT 1',[v['document_id']])) and services.query('SELECT current_release(%s) AS id',[v['document_id']])[0]['id'] is None,'lifecycle_form':LifecycleForm(),'can_lifecycle':v['document_active'] and qmb and v['status']=='APPROVED','can_takeover':False})
 
 @login_required
 @require_POST
@@ -403,3 +403,20 @@ def reminder_management(request):
             messages.success(request,'Erinnerungsregeln gespeichert. Autor und aktive QMBs werden berücksichtigt.')
             return redirect('reminder_management')
     return render(request,'dms/reminder_management.html',{'form':form,'smtp_ready':bool(config['smtp_host'] and config['sender_email'] and config['base_url'])})
+
+
+@login_required
+def task_summary(request):
+    from django.http import JsonResponse
+    from .capabilities import for_request
+    from django.core.exceptions import PermissionDenied
+    from .worklist import tasks_for
+    if request.method != 'GET':
+        from django.http import HttpResponseNotAllowed
+        return HttpResponseNotAllowed(['GET'])
+    if not for_request(request).can_create:
+        raise PermissionDenied
+    tasks = tasks_for(request.user)
+    response = JsonResponse({key: tasks[key] for key in ('work_count','pending_count','returned_count','review_count')})
+    response['Cache-Control'] = 'no-store, private'
+    return response
