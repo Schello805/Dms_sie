@@ -29,6 +29,7 @@ def index(request):
         next_query = page_query.copy()
         next_query['page'] = page.next_page_number() if page.has_next() else ''
         return JsonResponse({'html':render_to_string('dms/document_rows.html',{'versions':versions},request=request),
+            'total_count':total,'page':page.number,'page_count':page.paginator.num_pages,
             'next_url':request.path+'?'+next_query.urlencode() if page.has_next() else None})
     uid = services.actor(request.user) if request.user.is_authenticated else None
     departments = services.query('SELECT d.id,d.name FROM departments d WHERE EXISTS (SELECT 1 FROM effective_role_assignments r WHERE r.user_id=%s AND ((r.document_id IS NULL AND (r.department_id IS NULL OR r.department_id=d.id)) OR EXISTS (SELECT 1 FROM documents doc WHERE doc.id=r.document_id AND doc.responsible_department_id=d.id))) ORDER BY d.name',[uid])

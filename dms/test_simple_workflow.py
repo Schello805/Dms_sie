@@ -93,6 +93,7 @@ class SimpleIMSWorkflowTests(TestCase):
         self.assertContains(response,'LAZY-000')
         self.assertNotContains(response,'LAZY-030')
         chunk = self.client.get('/documents/',{'q':'LAZY-','page':2,'fragment':1}).json()
+        self.assertEqual((chunk['total_count'],chunk['page'],chunk['page_count']),(32,2,2))
         self.assertIn('LAZY-030',chunk['html'])
         self.assertIn('LAZY-031',chunk['html'])
         self.assertNotIn('LAZY-000',chunk['html'])
@@ -114,6 +115,7 @@ class SimpleIMSWorkflowTests(TestCase):
             self.assertEqual(self.client.get('/documents/',{'sort':key,'direction':'desc'}).status_code,200)
         self.client.force_login(self.reader)
         hidden = self.client.get('/documents/',{'q':'LAZY-','page':2,'fragment':1}).json()
+        self.assertEqual(hidden['total_count'],0)
         self.assertNotIn('LAZY-',hidden['html'])
         self.assertIsNone(hidden['next_url'])
 
