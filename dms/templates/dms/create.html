@@ -7,10 +7,22 @@
   {% csrf_token %}
   {% if form.errors %}<div class="messages" role="alert">Bitte prüfe die markierten Felder. Deine Texteingaben bleiben erhalten. Eine Datei muss gegebenenfalls erneut ausgewählt werden.</div>{% endif %}
   {{ form.non_field_errors }}
-  <div class="form-fields">
-  {% for field in form %}{% if field.name != 'intent' %}<div class="form-field {% if field.name == 'change_summary' or field.name == 'applicable_departments' or field.name == 'standard_references' or field.name == 'file' %}field-wide{% endif %}">{{ field.as_field_group }}</div>{% endif %}{% endfor %}
-  </div>
+  {% if not is_edit %}<fieldset class="upload-section"><legend>1 · Dokument zuordnen</legend><div class="form-fields">
+    <div class="form-field">{{ form.document_type.as_field_group }}</div><div class="form-field">{{ form.number.as_field_group }}</div>
+  </div></fieldset>{% endif %}
+  <fieldset class="upload-section"><legend>{% if is_edit %}Dokument und Zuständigkeit{% else %}2 · Datei und Zuständigkeit{% endif %}</legend><div class="form-fields">
+    {% if not is_edit %}<div class="form-field field-wide">{{ form.file.as_field_group }}</div>{% endif %}
+    <div class="form-field field-wide">{{ form.title.as_field_group }}</div>
+    {% if form.department %}<div class="form-field">{{ form.department.as_field_group }}</div>{% elif is_edit %}<div class="form-field">{{ form.effective_from.as_field_group }}</div>{% endif %}<div class="form-field">{{ form.classification.as_field_group }}</div>
+  </div></fieldset>
+  <details class="upload-options" {% if form.errors %}open{% endif %}><summary>Weitere Angaben und Zuordnungen</summary><div class="form-fields">
+    <div class="form-field field-wide">{{ form.change_summary.as_field_group }}</div>
+    {% if not is_edit %}<div class="form-field">{{ form.effective_from.as_field_group }}</div>{% endif %}
+    <div class="form-field field-wide">{{ form.applicable_departments.as_field_group }}</div>
+    <div class="form-field field-wide">{{ form.standard_references.as_field_group }}</div>
+  </div></details>
   {% if form.intent.errors %}{{ form.intent.errors }}{% endif %}
-  <div class="form-actions"><a class="button secondary" href="{% url 'index' %}">Zur Übersicht</a>{% if is_edit %}<button>Entwurf speichern</button>{% else %}<button class="secondary" name="intent" value="draft">Als Entwurf hochladen</button><button name="intent" value="submit">Hochladen und an QMB senden</button>{% endif %}</div>
+  {% if not is_edit %}<p class="muted">Als Entwurf weiterbearbeiten oder zur unabhängigen QMB-Prüfung senden.{% if can_qmb_management %} Dein eigenes Dokument muss ein anderer QMB freigeben.{% endif %}</p>{% endif %}
+  <div class="form-actions upload-actions"><a class="button secondary" href="{% url 'index' %}">Zur Übersicht</a>{% if is_edit %}<button>Entwurf speichern</button>{% else %}<button class="secondary" name="intent" value="draft">Als Entwurf speichern</button><button name="intent" value="submit">Zur QMB-Freigabe senden</button>{% endif %}</div>
 </form>
 {% endblock %}

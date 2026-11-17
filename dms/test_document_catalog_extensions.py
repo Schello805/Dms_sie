@@ -30,7 +30,9 @@ class DocumentCatalogExtensionTests(TestCase):
     def test_author_and_stable_link_follow_current_release_after_revision(self):
         self.publish();self.client.force_login(self.reader)
         document=s.get_version(self.author,self.vid)[1]['document_id']
-        stable=f'/documents/{document}/current/'
+        from .document_links import document_url
+        stable=document_url(document)
+        legacy=f'/documents/{document}/current/'
         page=self.client.get('/documents/')
         self.assertContains(page,'<th>Dokumentlink</th>',html=True)
         self.assertContains(page,'author')
@@ -44,6 +46,7 @@ class DocumentCatalogExtensionTests(TestCase):
         s.transition(self.reviewer,revision,'accept','Freigegeben')
         self.assertContains(self.client.get('/documents/'),'href="'+stable+'"')
         self.assertTrue(self.client.get(stable).url.startswith(f'/versions/{revision}/'))
+        self.assertTrue(self.client.get(legacy).url.startswith(f'/versions/{revision}/'))
         self.assertEqual(s.get_version(self.author,revision)[1]['number'],'IT-001')
         s.lifecycle_action(self.reviewer,revision,'withdraw','',True)
         self.assertEqual(self.client.get(stable).status_code,403)

@@ -22,6 +22,7 @@ urlpatterns = [
     path('versions/<int:version_id>/files/<int:file_id>/viewer/',portal_views.pdf_viewer,name='pdf_viewer'),
     path('',portal_views.home,name='home'),
     path('portal/',portal_views.home),
+    path('d/<slug:kind_slug>/<slug:number_slug>/',portal_views.read_named,name='read_named'),
     path('documents/<int:document_id>/current/',portal_views.read_current,name='read_current'),
     path('documents/<int:document_id>/qr/',portal_views.document_qr,name='document_qr'),
     path('documents/<int:document_id>/bookmark/',portal_views.toggle_bookmark,name='toggle_bookmark'),

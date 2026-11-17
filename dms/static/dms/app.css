@@ -182,3 +182,12 @@ select[multiple]{width:100%;min-height:14rem;padding:.5rem;border:1px solid #bcc
 .catalog-toolbar p{margin:0;flex:1 1 28rem}
 .catalog-toolbar .button{flex-shrink:0}
 @media(max-width:650px){.catalog-toolbar .button{width:100%}}
+
+.upload-section{border:0;border-top:1px solid #dce5e8;padding:.85rem 0;margin:.5rem 0;min-width:0}
+.upload-section legend{font-weight:650;padding:0 .5rem 0 0}
+.upload-options{border:1px solid #dce5e8;border-radius:6px;padding:.75rem;margin-top:.5rem}
+.upload-options summary{cursor:pointer;font-weight:600;min-height:32px;display:list-item}
+.upload-options[open] summary{margin-bottom:.85rem}
+.upload-actions{position:sticky;bottom:.5rem;background:#fff;padding:.75rem;border:1px solid #dce5e8;border-radius:6px;box-shadow:0 3px 12px #102e3b12;z-index:5}
+
+@media(pointer:coarse){.upload-options summary{min-height:44px}}

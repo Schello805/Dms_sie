@@ -19,6 +19,13 @@ def home(request):
     return index(request)
 
 @login_required
+def read_named(request,kind_slug,number_slug):
+    from django.http import Http404
+    rows=s.query('SELECT document_id FROM document_links WHERE kind_slug=%s AND number_slug=%s',[kind_slug,number_slug])
+    if not rows:raise Http404
+    return read_current(request,rows[0]['document_id'])
+
+@login_required
 def read_current(request,document_id):
     vid = portal.current_version(request.user,document_id)
     if getattr(request,'reader_only',False):
@@ -34,8 +41,9 @@ def read_current(request,document_id):
     assignments = portal.pending_acknowledgements(request.user)
     assignment = next((a for a in assignments if a['version_id']==vid),None)
     bookmarked = bool(s.query('SELECT 1 FROM document_bookmarks WHERE user_id=%s AND document_id=%s',[uid,document_id]))
+    from .document_links import document_url
     return render(request,'dms/reading.html',{'v':v,'files':files,'assignment':assignment,'bookmarked':bookmarked,
-        'distribution':distribution[0] if distribution else None,'stable_url':request.build_absolute_uri()})
+        'distribution':distribution[0] if distribution else None,'stable_url':request.build_absolute_uri(document_url(document_id))})
 
 @login_required
 def document_qr(request,document_id):
@@ -43,7 +51,8 @@ def document_qr(request,document_id):
     import qrcode
     from qrcode.image.svg import SvgPathImage
     from django.urls import reverse
-    url = request.build_absolute_uri(reverse('read_current',args=[document_id]))
+    from .document_links import document_url
+    url = request.build_absolute_uri(document_url(document_id))
     stream = io.BytesIO()
     qrcode.make(url,image_factory=SvgPathImage).save(stream)
     return HttpResponse(stream.getvalue(),content_type='image/svg+xml')

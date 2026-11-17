@@ -109,6 +109,20 @@ der frühere Portal-/Kenntnisnahme-Worker wird vom Installer nicht gestartet.
 - Rückkehr zur Tabelle behält Filter, Sortierung und Scrollposition pro Tab. Ungespeicherte Formulare warnen beim Verlassen. Tabellenkopf und Dokumentnummer bleiben beim Scrollen sichtbar.
 - Der Installer fragt bei interaktiver Neuinstallation nach dem Domainnamen; leer bedeutet lokalen IP-Zugriff. Automatisiert sind `--host` oder `--non-interactive` erforderlich. Er legt keine Netzwerkkonfiguration an. Wechselnde IP-Adressen funktionieren; zusätzliche DNS-Namen sind optional über `--host` angebbar.
 
+## Lesbare Dauerlinks und übersichtlicher Upload (0.4.8-dev)
+
+Dauerlinks enthalten Dokumentenart und Nummer, z. B. `/d/arbeitsanweisungen/aa-it-001/`.
+Sie werden einmal beim Anlegen bzw. beim Update für Bestandsdokumente gespeichert und bleiben
+bei Revisionen oder späteren Umbenennungen unverändert. Alte numerische Links funktionieren
+weiterhin. Umlaute werden vereinheitlicht; bei einer Kollision nach Normalisierung wird eine
+feste Dokument-ID ergänzt. Zugriffsrechte und Rückzug gelten für beide Linkformen. Tabellenlinks
+und neu erzeugte QR-Codes verwenden die lesbare Adresse.
+
+Der Upload ist in Dokumentzuordnung (Art/Nummer), Datei und Zuständigkeit sowie ausklappbare
+weitere Angaben gegliedert. Pflichtfelder bleiben sichtbar; Fehler öffnen die weiteren Angaben.
+Die Abschlussaktionen bleiben beim Scrollen am Formularende erreichbar. Entwurf und unabhängige
+QMB-Freigabe behalten denselben fachlichen Ablauf.
+
 ## Direktsuche und Lazy Loading (0.4.7-dev)
 
 Die Dokumentensuche aktualisiert die Tabelle ab drei Zeichen nach 300 ms Tipp-Pause.
