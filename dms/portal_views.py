@@ -50,7 +50,6 @@ def document_qr(request,document_id):
     portal.current_version(request.user,document_id)
     import qrcode
     from qrcode.image.svg import SvgPathImage
-    from django.urls import reverse
     from .document_links import document_url
     url = request.build_absolute_uri(document_url(document_id))
     stream = io.BytesIO()
@@ -61,9 +60,9 @@ def document_qr(request,document_id):
 @xframe_options_sameorigin
 def preview_pdf(request,version_id,file_id):
     from .previews import reading_pdf
-    from django.urls import reverse
     _,v = s.get_version(request.user,version_id)
-    url = request.build_absolute_uri(reverse('read_current',args=[v['document_id']]))
+    from .document_links import document_url
+    url = request.build_absolute_uri(document_url(v['document_id']))
     try:
         filename,content = reading_pdf(request.user,version_id,file_id,url)
     except ValidationError as exc:
