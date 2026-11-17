@@ -17,7 +17,7 @@ class ReviewPolicyTests(TestCase):
         return user
 
     def intervals(self):
-        return {r['id']:r['review_interval_months'] for r in s.query('SELECT * FROM document_categories')}
+        return {r['id']:r['review_interval_months'] for r in s.query('SELECT * FROM document_categories WHERE active')}
 
     def test_default_is_two_calendar_years_and_handles_leap_days(self):
         self.assertEqual(policies.interval_for('Richtlinie'),24)
