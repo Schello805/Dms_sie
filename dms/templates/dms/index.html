@@ -15,4 +15,5 @@
 <div class="table-wrap"><table><thead><tr>{% for header in sort_headers %}<th scope="col" aria-sort="{{ header.aria_sort }}"><a class="table-sort" href="{{ header.url }}">{{ header.label }} <span aria-hidden="true">{{ header.arrow }}</span></a></th>{% endfor %}<th>Dokumentlink</th><th>{% if can_tasks %}Aktionen{% else %}Dokument öffnen{% endif %}</th></tr></thead><tbody id="document-rows">{% include 'dms/document_rows.html' %}</tbody></table></div>
 <nav class="pagination" aria-label="Dokumentseiten" id="document-pagination">{% if page.has_previous %}<a href="?{{ page_query }}&page={{ page.previous_page_number }}">← Zurück</a>{% endif %}<span>Seite {{ page.number }} / {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a class="button secondary" data-load-next href="?{{ page_query }}&page={{ page.next_page_number }}">Weitere Dokumente laden</a>{% endif %}</nav>
 <p id="table-load-status" class="muted" role="status" aria-live="polite"></p>
-<script src="{% url 'ui_asset' 'catalog.js' %}" defer></script>{% endblock %}
+{% endblock %}
+{% block page_scripts %}<script src="{% url 'ui_asset' 'catalog.js' %}" defer></script>{% endblock %}

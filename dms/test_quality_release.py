@@ -34,6 +34,8 @@ class QualityReleaseTests(TestCase):
             return execute(sql,params,many,context)
         with connection.execute_wrapper(capture):self.assertEqual(self.client.get('/documents/').status_code,200)
         self.assertEqual(len(captured),1)
+        html=self.client.get('/documents/').content.decode()
+        self.assertLess(html.index('/assets/ui/catalog-state.js'),html.index('/assets/ui/catalog.js'))
         self.assertEqual(self.client.get('/documents/',{'page':'9'*100}).status_code,200)
         output=io.StringIO();call_command('profile_catalog',self.author.username,stdout=output)
         self.assertGreaterEqual(json.loads(output.getvalue())['execution_ms'],0)
