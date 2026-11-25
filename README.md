@@ -4,6 +4,12 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.5.2: Gleichmäßig ausgerichtete Formularfelder
+
+Eingabefelder und Filter sind auf gleicher Höhe ausgerichtet. Gemeinsame Zeilen für
+Beschriftung, Eingabe und Hinweise verhindern Versätze durch mehrzeilige Texte.
+Details und Update: [Release 0.5.2](docs/releases/v0.5.2.md).
+
 ## Release 0.5.1: Freigaben, Dokumentnummern und kompakte Filter
 
 Eigene QMB-Entwürfe lassen sich über **Jetzt freigeben** direkt zum Freigabebereich

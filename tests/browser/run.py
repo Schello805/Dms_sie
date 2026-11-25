@@ -14,12 +14,26 @@ def login(page,username):
  page.get_by_role('button',name='Anmelden',exact=True).click()
  expect(page.locator('.account-name')).to_be_visible()
 
+def assert_aligned(page,selectors):
+ boxes=[page.locator(selector).bounding_box() for selector in selectors]
+ assert all(boxes),f'Missing visible controls: {selectors}'
+ assert max(b['y'] for b in boxes)-min(b['y'] for b in boxes)<=1,f'Controls are vertically offset: {boxes}'
+ assert max(b['height'] for b in boxes)-min(b['height'] for b in boxes)<=1,f'Control heights differ: {boxes}'
+
 def upload(page,number,qmb=False):
  page.goto(base+'/new/')
  expect(page.locator('label[for=id_document_type] .required-marker')).to_have_count(1)
  page.locator('[name=document_type]').select_option(label='Arbeitsanweisungen')
  expect(page.locator('[name=number]')).to_have_value('AA-…')
  expect(page.locator('[name=number]')).to_have_attribute('readonly','')
+ assert_aligned(page,['#id_document_type','#id_number'])
+ assert_aligned(page,['#id_department','#id_classification'])
+ # A wrapped label must not push just one of the paired controls down.
+ label=page.locator('label[for=id_document_type]')
+ original=label.inner_html()
+ label.evaluate('(node)=>node.firstChild.textContent="Dokumentenart mit einer ausführlichen mehrzeiligen Beschriftung für die Zuordnung im Managementsystem "')
+ assert_aligned(page,['#id_document_type','#id_number'])
+ label.evaluate('(node,html)=>node.innerHTML=html',original)
  page.locator('[name=title]').fill(number+' Dokument')
  page.locator('[name=department]').select_option(label='Informationstechnik')
  page.locator('[name=file]').set_input_files({'name':'ci.txt','mimeType':'text/plain','buffer':b'Synthetic browser fixture'})
@@ -39,6 +53,12 @@ with sync_playwright() as p:
    author,qmb,reader=(pages[name] for name in ('autor','pruefer','leser'))
    number='CI-AUTHOR-'+device
    qmb.goto(base+'/documents/')
+   if device=='desktop':
+    assert_aligned(qmb,['#q','#status','#department','#standard'])
+   else:
+    assert_aligned(qmb,['#q','#status'])
+    assert_aligned(qmb,['#department','#standard'])
+   qmb.screenshot(path=str(artifacts/(device+'-filters.png')),full_page=True)
    detail=upload(author,number)
    qmb.bring_to_front()
    expect(qmb.locator('[data-task-summary]')).to_have_attribute('data-pending-approvals','1',timeout=20000)
@@ -51,8 +71,14 @@ with sync_playwright() as p:
    expect(qmb.locator('button[value=approve]')).to_have_count(0)
    reader.goto(base+'/documents/');reader.locator('#q').fill(number)
    row=reader.locator('#document-rows tr').filter(has_text=number)
+   expect(reader.locator('#document-count')).to_have_text('1')
    expect(row).to_have_count(1)
    expect(row.get_by_role('link',name='Dokumentlink')).to_have_attribute('href',re.compile('/d/arbeitsanweisungen/'))
+   if device=='desktop':
+    assert_aligned(reader,['#q','#department','#standard','.filter-actions button','.filter-actions .button'])
+   else:
+    assert_aligned(reader,['#q','#department'])
+    assert_aligned(reader,['#standard','.filter-actions button','.filter-actions .button'])
    reader.screenshot(path=str(artifacts/(device+'-catalog.png')),full_page=True)
    row.get_by_role('link',name='Dokumentlink').click()
    expect(reader).to_have_url(re.compile(r'/versions/\d+/files/\d+/viewer/'))
