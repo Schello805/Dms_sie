@@ -31,12 +31,12 @@ class QMBWorkflowTests(TestCase):
         decide(lead,self.vid,True,'Als QMB geprüft und freigegeben')
         self.assertEqual(s.get_version(self.reader,self.vid)[1]['status'],'APPROVED')
 
-    def test_qmb_cannot_approve_own_document_or_after_revocation(self):
+    def test_qmb_requires_recorded_self_release_and_active_role(self):
         from .simple_workflow import decide
         s.query("UPDATE users SET qmb_role='PRIMARY' WHERE auth_user_id=%s",[self.author.pk])
         s.transition(self.author,self.vid,'submit','Eigene Fassung')
         with self.assertRaises(PermissionDenied):
-            decide(self.author,self.vid,True,'Selbstfreigabe')
+            s.transition(self.author,self.vid,'accept','Unprotokollierte Selbstfreigabe')
         deputy = self.person('additional-qmb','PRIMARY')
         self.assertEqual(len(s.workflow_tasks(deputy)),1)
         s.query("UPDATE users SET qmb_role='NONE' WHERE auth_user_id=%s",[deputy.pk])
