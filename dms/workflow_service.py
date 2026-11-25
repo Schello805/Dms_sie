@@ -99,9 +99,9 @@ def workflow_tasks(user):
         FROM document_versions v JOIN documents d ON d.id=v.document_id
         JOIN workflow_instances w ON w.version_id=v.id AND w.closed_at IS NULL
         WHERE d.active AND (is_qmb(%s) OR can_lead_approve(%s,v.id)) AND can_read_version(%s,v.id)
-          AND v.created_by<>%s AND w.submitted_by<>%s
+          AND ((v.created_by<>%s AND w.submitted_by<>%s) OR (v.created_by=%s AND is_qmb(%s)))
           AND v.status IN ('IN_REVIEW','PENDING_APPROVAL')
-        ORDER BY w.started_at,v.id LIMIT 5000""",[uid,uid,uid,uid,uid])
+        ORDER BY w.started_at,v.id LIMIT 5000""",[uid,uid,uid,uid,uid,uid,uid])
 
 @transaction.atomic
 def takeover_review(user,version_id,reason):
@@ -112,7 +112,10 @@ def takeover_review(user,version_id,reason):
     s.query('SELECT pg_advisory_xact_lock(%s)',[v['document_id']])
     if v['status']!='PENDING_APPROVAL' or uid==v['created_by']:
         raise ValidationError('Übernahme erfordert eine fremde, bereits geprüfte Fassung.')
-    w = s.query('SELECT * FROM workflow_instances WHERE version_id=%s AND closed_at IS NULL FOR UPDATE',[version_id])[0]
+    workflows = s.query('SELECT * FROM workflow_instances WHERE version_id=%s AND closed_at IS NULL FOR UPDATE',[version_id])
+    if len(workflows)!=1:
+        raise ValidationError('Kein eindeutiger aktiver Prüfzyklus.')
+    w = workflows[0]
     if uid==w['submitted_by']:
         raise PermissionDenied('Der Einreicher kann die Prüfung nicht selbst übernehmen.')
     s.query('UPDATE workflow_instances SET closed_at=clock_timestamp() WHERE id=%s',[w['id']])

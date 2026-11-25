@@ -4,6 +4,13 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.5.3: Konsistenter QMB-Freigabeprozess
+
+Ein QMB kann auch eine eigene bereits eingereichte Fassung ausdrücklich freigeben,
+etwa nach einer späteren Rollenzuordnung. Diese Fassungen erscheinen in Aufgabenliste
+und Glocke. Vorherige Prüfentscheidungen bleiben unverändert; die Übernahme zur
+Direktfreigabe wird gesondert protokolliert. Details: [Release 0.5.3](docs/releases/v0.5.3.md).
+
 ## Release 0.5.2: Gleichmäßig ausgerichtete Formularfelder
 
 Eingabefelder und Filter sind auf gleicher Höhe ausgerichtet. Gemeinsame Zeilen für

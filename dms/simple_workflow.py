@@ -26,11 +26,23 @@ def upload_document(user,data,uploaded,submit=False):
 
 
 @transaction.atomic
-def release_own_qmb_document(user,version_id):
+def release_own_qmb_document(user,version_id,comment=""):
     uid=require_qmb(user)
     _,version=s.get_version(user,version_id,lock=True)
     if version['created_by']!=uid:
         raise PermissionDenied('Direktfreigabe gilt nur für eigene QMB-Dokumente.')
+    # Restart an already submitted own version without erasing prior decisions.
+    if version['status'] in ('IN_REVIEW','PENDING_APPROVAL'):
+        workflows=s.query('SELECT * FROM workflow_instances WHERE version_id=%s AND closed_at IS NULL FOR UPDATE',[version_id])
+        if len(workflows)!=1:
+            raise ValidationError('Kein eindeutiger aktiver Prüfzyklus. Bitte den QMB kontaktieren.')
+        previous=workflows[0]
+        if s.fingerprint(version)!=previous['content_fingerprint']:
+            raise ValidationError('Inhalt stimmt nicht mit dem eingereichten Stand überein.')
+        s.query('UPDATE workflow_instances SET closed_at=clock_timestamp() WHERE id=%s',[previous['id']])
+        s.query("UPDATE document_versions SET status='DRAFT' WHERE id=%s",[version_id])
+        s.audit(uid,'QMB_SELF_RELEASE_RESTART',version_id,'Eigene eingereichte Fassung zur QMB-Direktfreigabe übernommen',{'previous_workflow_id':previous['id'],'previous_status':version['status']})
+        _,version=s.get_version(user,version_id,lock=True)
     if version['status']=='DRAFT' and not version['approval_based_validity']:
         s.query('UPDATE document_versions SET approval_based_validity=true WHERE id=%s',[version_id])
     from django.db import DatabaseError
@@ -41,6 +53,8 @@ def release_own_qmb_document(user,version_id):
         if getattr(error.__cause__,'sqlstate',None)=='P0001':
             raise ValidationError('Direktfreigabe nicht möglich. Aktive QMB-Rolle, Datei und Dokumentstatus prüfen.') from error
         raise
+    if comment.strip():
+        s.audit(uid,'QMB_RELEASE_NOTE',version_id,comment.strip())
     from .portal import synchronize_acknowledgements
     synchronize_acknowledgements()
 
@@ -50,7 +64,9 @@ def decide(user,version_id,approve,comment):
     uid = require_qmb(user)
     _,v = s.get_version(user,version_id,lock=True)
     if uid==v['created_by']:
-        raise PermissionDenied('Eigene Dokumente dürfen nicht selbst freigegeben werden.')
+        if not approve:
+            raise ValidationError('Eigene QMB-Dokumente direkt freigeben; eine Ablehnung ist hier nicht vorgesehen.')
+        return release_own_qmb_document(user,version_id,comment)
     if v['status'] not in ('IN_REVIEW','PENDING_APPROVAL'):
         raise ValidationError('Für diese Fassung liegt keine offene Freigabeanfrage vor.')
     if not approve and not comment.strip():

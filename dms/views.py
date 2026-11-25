@@ -59,7 +59,9 @@ def detail(request, version_id, action_form=None):
     choices = []
     if v['status']=='DRAFT' and can_author:
         choices = [('submit','Zur Prüfung einreichen')]
-    elif v['document_active'] and v['status'] in ('IN_REVIEW','PENDING_APPROVAL') and qmb and uid!=v['created_by']:
+    elif v['document_active'] and v['status'] in ('IN_REVIEW','PENDING_APPROVAL') and qmb and uid==v['created_by']:
+        choices = [('approve','Eigene Fassung direkt freigeben')]
+    elif v['document_active'] and v['status'] in ('IN_REVIEW','PENDING_APPROVAL') and qmb:
         choices = [('approve','Freigeben'),('reject','Ablehnen / Überarbeitung anfordern')]
     approval_review = services.query("SELECT a.comment,a.decided_at,u.display_name FROM approval_decisions a JOIN workflow_instances w ON w.id=a.workflow_id JOIN users u ON u.id=a.actor_id WHERE w.version_id=%s AND w.closed_at IS NULL AND a.stage='REVIEW' AND a.decision='ACCEPT'",[version_id]) if v['status']=='PENDING_APPROVAL' else []
     workflow_form.fields['action'].choices = choices
@@ -76,7 +78,7 @@ def action(request, version_id):
                 decide(request.user,version_id,form.cleaned_data['action']=='approve',form.cleaned_data['comment'])
             elif form.cleaned_data['action']=='submit' and services.query('SELECT is_qmb(%s) AS yes',[services.actor(request.user)])[0]['yes'] and services.get_version(request.user,version_id)[1]['created_by']==services.actor(request.user):
                 from .simple_workflow import release_own_qmb_document
-                release_own_qmb_document(request.user,version_id)
+                release_own_qmb_document(request.user,version_id,form.cleaned_data['comment'])
             else:
                 services.transition(request.user,version_id,form.cleaned_data['action'],form.cleaned_data['comment'] or ('Autor hat die Freigabe angefordert.' if form.cleaned_data['action']=='submit' else ''))
         except ValidationError as exc:
