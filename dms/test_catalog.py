@@ -16,7 +16,7 @@ class CatalogVisibilityTests(TestCase):
             self.client.force_login(self.author)
             response = self.client.get('/documents/')
             self.assertContains(response,'Testdokument')
-            self.assertContains(response,'<span class="badge">Entwurf</span>',html=True)
+            self.assertNotContains(response,'<span class="badge">Entwurf</span>',html=True)
             self.assertNotContains(response,'In Prüfung')
             self.assertNotContains(response,'Zur Freigabe')
             if phase=='DRAFT':
@@ -42,7 +42,7 @@ class CatalogVisibilityTests(TestCase):
         for user in [self.author,self.reviewer,self.reader]:
             self.assertEqual([v['id'] for v in s.visible_versions(user,catalog_only=True)],[self.vid])
         self.client.force_login(self.reader)
-        self.assertContains(self.client.get('/documents/'),'<span class="badge">Freigegeben</span>',html=True)
+        self.assertContains(self.client.get('/documents/'),'Testdokument')
         revision = s.new_revision(self.author,self.vid,'minor','Überarbeitung')
         self.assertEqual({v['id'] for v in s.visible_versions(self.author,catalog_only=True)},{self.vid,revision})
         self.assertEqual([v['id'] for v in s.visible_versions(self.reviewer,catalog_only=True)],[self.vid])

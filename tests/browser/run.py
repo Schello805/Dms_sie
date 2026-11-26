@@ -90,6 +90,11 @@ with sync_playwright() as p:
    row=reader.locator('#document-rows tr').filter(has_text=number)
    expect(reader.locator('#document-count')).to_have_text('1')
    expect(row).to_have_count(1)
+   expect(reader.get_by_role('link',name=re.compile('^Dokumentenart'))).to_be_visible()
+   expect(row.locator('td').nth(2)).to_have_text('Arbeitsanweisungen')
+   expect(row.locator('td')).to_have_count(9)
+   expect(reader.get_by_role('columnheader',name='Freigabe',exact=True)).to_have_count(0)
+   expect(reader.get_by_role('columnheader',name='Status',exact=True)).to_have_count(0)
    expect(row.get_by_role('link',name='Dokumentlink')).to_have_attribute('href',re.compile('/d/arbeitsanweisungen/'))
    if device=='desktop':
     assert_aligned(reader,['#q','#department','#standard','.filter-actions button','.filter-actions .button'])
