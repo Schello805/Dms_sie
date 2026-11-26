@@ -67,6 +67,7 @@ with sync_playwright() as p:
    qmb.goto(base+'/tasks/');expect(qmb.locator('main')).to_contain_text(number)
    qmb.goto(detail)
    expect(qmb.locator('.detail-toolbar')).to_be_visible()
+   assert_aligned(qmb,['button[value=approve]','button[value=reject]'])
    assert qmb.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),'Detail page overflows viewport'
    qmb.screenshot(path=str(artifacts/(device+'-detail-review.png')),full_page=True)
    qmb.locator('[name=comment]').fill('Bitte ergänzen')
