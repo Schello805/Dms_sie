@@ -29,7 +29,8 @@ class DocumentForm(MappingFieldsMixin, AppForm):
         uid = actor(user)
         rows = query("SELECT d.id,d.name FROM departments d WHERE d.active AND has_role(%s,'AUTHOR',d.id,NULL) ORDER BY d.name",[uid])
         categories=query('SELECT name,coalesce(display_name,name) AS label,number_prefix FROM document_categories WHERE active ORDER BY label')
-        self.number_prefixes={row['name']:row['number_prefix'] for row in categories}
+        next_id=query("SELECT greatest((SELECT last_value+is_called::int FROM document_number_sequence),coalesce(max(((regexp_match(number,'([0-9]{1,15})$'))[1])::bigint),0)+1) AS n FROM document_number_registry")[0]['n']
+        self.number_prefixes={row['name']:row['number_prefix']+'-'+str(next_id).zfill(4) for row in categories}
         self.fields['document_type'].choices=[('', 'Bitte Dokumentenart auswählen')]+[(row['name'],row['label']) for row in categories]
         self.fields['department'].choices = [('', 'Bitte Abteilung auswählen')]+[(r['id'],r['name']) for r in rows]
         self.load_mapping_choices()
@@ -160,9 +161,8 @@ class DocumentUploadForm(DocumentForm):
     intent = forms.ChoiceField(label='Nach dem Upload',choices=[('draft','Als Entwurf speichern'),('submit','Freigabe durch QMB anfordern')])
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
-        self.fields['number'].required=False
-        self.fields['number'].widget.attrs.update(readonly=True,placeholder='Wird automatisch vergeben')
-        self.fields['number'].help_text='Feste Dokumentnummer ohne Versionsstand. Kürzel nach Dokumentenart; die eindeutige ID wird beim Speichern vergeben.'
+        self.fields['number'].widget.attrs.update(placeholder='Eindeutige Dokumentnummer')
+        self.fields['number'].help_text='Eindeutige Dokumentnummer ohne Versionsstand. Der Vorschlag kann geändert werden und wird beim Speichern geprüft.'
         from django.utils import timezone
         self.fields['effective_from'].label = 'Erstmalig gültig ab'
         self.fields['effective_from'].required = False
@@ -174,7 +174,10 @@ class DocumentUploadForm(DocumentForm):
         self.fields['file'].help_text = 'PDF und TXT können direkt angesehen werden. Für Office-Dateien kannst du im Entwurf zusätzlich eine PDF-Lesefassung hinterlegen.'
         self.fields['applicable_departments'].help_text = 'Die verantwortliche Abteilung ist automatisch enthalten.'
     def clean_number(self):
-        return ''  # Allocate atomically on the server; never trust a submitted preview.
+        number=self.cleaned_data['number'].strip()
+        if query('SELECT 1 FROM document_number_registry WHERE lower(btrim(number))=lower(%s)',[number]):
+            raise forms.ValidationError('Diese Dokumentnummer ist bereits vergeben oder dauerhaft reserviert.')
+        return number
 
     def clean_effective_from(self):
         from django.utils import timezone
@@ -188,3 +191,8 @@ class UserRolesForm(AppForm):
     qmb = forms.BooleanField(label='QMB',required=False)
     admin = forms.BooleanField(label='Admin (IT)',required=False)
     reason = OptionalReasonField(label='Begründung (optional)',required=False,max_length=4000)
+
+
+class DocumentNumberForm(AppForm):
+    number=forms.CharField(label='Dokumentnummer',max_length=100)
+    reason=OptionalReasonField(label='Grund der Änderung',max_length=4000,widget=forms.Textarea)

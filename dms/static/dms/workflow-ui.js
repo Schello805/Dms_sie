@@ -5,7 +5,12 @@
   const number = document.getElementById('id_number');
   if (prefixes && kind && number) {
     const values = JSON.parse(prefixes.textContent);
-    const update = () => { number.value = values[kind.value] ? `${values[kind.value]}-…` : ''; };
+    let previous = '';
+    const update = () => {
+      const suggestion = values[kind.value] || '';
+      if (!number.value || number.value === previous) number.value = suggestion;
+      previous = suggestion;
+    };
     kind.addEventListener('change', update);
     update();
   }

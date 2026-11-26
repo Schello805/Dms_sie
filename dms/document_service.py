@@ -40,8 +40,9 @@ def create_document(user, data):
         raise ValidationError('Für neue Dokumente eine aktive Abteilung auswählen.')
     if not s.query('SELECT 1 FROM document_categories WHERE name=%s AND active',[data['document_type']]):
         raise ValidationError('Für neue Dokumente eine aktive Kategorie auswählen.')
-    if not data.get('number'):
-        data['number']=s.query('SELECT allocate_document_number(%s,%s) AS number',[uid,data['document_type']])[0]['number']
+    if not str(data.get('number') or '').strip():
+        raise ValidationError('Eine Dokumentnummer ist erforderlich.')
+    data['number']=data['number'].strip()
     from .policies import default_due
     review_due = data.get('next_review_on') or default_due(data['document_type'],data.get('effective_from'))
     doc = s.query('''INSERT INTO documents(number,document_type,owner_id,responsible_department_id)

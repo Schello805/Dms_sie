@@ -1,0 +1,5 @@
+{% extends 'dms/base.html' %}{% block content %}
+<h1>Dokumentnummer ändern</h1>
+<p>Aktuelle Nummer: <strong>{{ document.number }}</strong>. Der bestehende Dokumentlink und die technische Dokument-ID bleiben unverändert. Frühere Nummern bleiben für andere Dokumente gesperrt.</p>
+<form method="post" class="card document-form">{% csrf_token %}{{ form.as_p }}<div class="form-actions"><a class="button secondary" href="{% url 'index' %}">Abbrechen</a><button>Dokumentnummer speichern</button></div></form>
+{% endblock %}

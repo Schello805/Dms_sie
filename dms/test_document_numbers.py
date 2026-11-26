@@ -10,6 +10,7 @@ class DocumentNumberTests(TestCase):
     enable_runtime_role=fixtures.WorkflowTests.enable_runtime_role
 
     def create(self,kind='Arbeitsanweisung',number=None,user=None):
+        number=number or s.query('SELECT allocate_document_number(%s,%s) AS number',[s.actor(user or self.author),kind])[0]['number']
         return s.create_document(user or self.author,dict(number=number,document_type=kind,department=self.dep,title='Automatische Nummer',change_summary='',effective_from=timezone.now()))
 
     def test_auto_numbers_share_sequence_and_prefix_change_keeps_issued_numbers(self):
@@ -75,15 +76,15 @@ class DocumentNumberTests(TestCase):
         self.assertEqual(self.client.post(f'/versions/{vid}/action/',{'action':'submit','comment':''}).status_code,302)
         self.assertEqual(s.get_version(self.reader,vid)[1]['status'],'APPROVED')
 
-    def test_upload_form_ignores_client_number_and_qmb_can_save_prefix(self):
+    def test_upload_number_is_required_editable_and_qmb_can_save_prefix(self):
         from .forms import DocumentUploadForm
         from django.core.files.uploadedfile import SimpleUploadedFile
         form=DocumentUploadForm({'document_type':'Arbeitsanweisung','number':'FORGED','title':'Automatisch','department':self.dep,'classification':'INTERNAL','intent':'draft'},
             {'file':SimpleUploadedFile('file.txt',b'Contents')},user=self.author)
         self.assertTrue(form.is_valid(),form.errors)
-        self.assertEqual(form.cleaned_data['number'],'')
-        self.assertFalse(form.fields['number'].required)
-        self.assertTrue(form.fields['number'].widget.attrs['readonly'])
+        self.assertEqual(form.cleaned_data['number'],'FORGED')
+        self.assertTrue(form.fields['number'].required)
+        self.assertFalse(form.fields['number'].widget.attrs.get('readonly',False))
         self.enable_runtime_role()
         category=s.query("SELECT id FROM document_categories WHERE name='Arbeitsanweisung'")[0]['id']
         data=masterdata.get('categories',category);data['number_prefix']='NEU'

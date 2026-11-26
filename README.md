@@ -4,6 +4,14 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.5.6: Änderbare eindeutige Dokumentnummern
+
+Die Dokumentnummer ist ein bearbeitbares Pflichtfeld. Eine Nummer wird vorgeschlagen
+und beim Speichern auf Eindeutigkeit geprüft. Verantwortlicher Autor und QMB können sie
+nachträglich unter „Dokumentnummer ändern“ anpassen, auch nach einer Freigabe.
+Der bestehende Link und die technische Dokument-ID bleiben unverändert. Frühere Nummern
+bleiben für andere Dokumente gesperrt. Details: [Release 0.5.6](docs/releases/v0.5.6.md).
+
 ## Release 0.5.5: Gültigkeit ohne Uhrzeit
 
 Gültigkeitsangaben verwenden reine Kalendertage. Formulare, Detailansicht,
