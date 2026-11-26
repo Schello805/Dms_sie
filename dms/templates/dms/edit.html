@@ -1,0 +1,26 @@
+{% extends 'dms/base.html' %}{% block content %}
+<p><a href="{% url 'detail' v.id %}">← Zur Dokumentansicht</a> · <a href="{% url 'help' %}#autoren">Hilfe zur Bearbeitung</a></p>
+<div class="page-heading"><div><p class="eyebrow">{{ v.category_label }} · Version {{ v.major }}.{{ v.minor }}</p><h1>Entwurf bearbeiten</h1><p class="muted">{{ v.number }} · {{ v.title }}</p></div><span class="badge">Entwurf</span></div>
+<div class="edit-layout">
+<form method="post" class="card document-form edit-form" aria-label="Dokument bearbeiten">
+{% csrf_token %}
+{% if form.errors %}<div class="messages" role="alert"><strong>Bitte prüfe die markierten Angaben.</strong><ul>{% for field in form %}{% if field.errors %}<li><a href="#{{ field.id_for_label }}">{{ field.label }}</a>: {{ field.errors|striptags }}</li>{% endif %}{% endfor %}</ul></div>{% endif %}
+{{ form.non_field_errors }}
+{% include 'dms/forms/required_note.html' %}
+<fieldset class="upload-section"><legend>Dokument und Gültigkeit</legend><div class="form-fields">
+<div class="form-field field-wide">{{ form.title.as_field_group }}</div>
+<div class="form-field">{{ form.effective_from.as_field_group }}</div><div class="form-field">{{ form.classification.as_field_group }}</div>
+<div class="form-field field-wide">{{ form.change_summary.as_field_group }}</div>
+</div></fieldset>
+<details class="upload-options" {% if form.applicable_departments.errors %}open{% endif %}><summary>Geltungsbereich · weitere Abteilungen</summary><div class="form-fields"><div class="form-field field-wide">{{ form.applicable_departments.as_field_group }}</div></div></details>
+<details class="upload-options" {% if form.standard_references.errors %}open{% endif %}><summary>Normzuordnungen · ISO 9001, ISO 27001 und ISO 50001</summary><div class="form-fields"><div class="form-field field-wide">{{ form.standard_references.as_field_group }}</div></div></details>
+<p class="muted">Speichern übernimmt deine Angaben in den Entwurf. Anschließend kannst du die Dateien prüfen und die Freigabe im Dokument anfordern{% if can_qmb_management and v.created_by == current_actor_id %} beziehungsweise als QMB direkt erteilen{% endif %}.</p>
+<div class="form-actions upload-actions"><a class="button secondary" href="{% url 'detail' v.id %}">Abbrechen</a><button type="submit">Entwurf speichern</button></div>
+</form>
+<aside class="edit-sidebar" aria-label="Dokument und nächste Schritte">
+<section class="card"><h2>Dokumentzuordnung</h2><dl class="edit-facts"><dt>Dokumentnummer</dt><dd>{{ v.number }}{% if can_rename_document %}<br><a href="{% url 'rename_document' v.document_id %}">Dokumentnummer ändern</a>{% endif %}</dd><dt>Dokumentenart</dt><dd>{{ v.category_label }}</dd><dt>Verantwortlicher Autor</dt><dd>{{ v.owner_name }}</dd><dt>Version</dt><dd>{{ v.major }}.{{ v.minor }}</dd></dl><p class="muted">Eine Nummernänderung erfolgt separat. Der bestehende Dokumentlink bleibt gleich.</p></section>
+<section class="card"><h2>Dateien <span class="badge">{{ files|length }}</span></h2><ul class="edit-files">{% for file in files %}<li><span>{{ file.original_name }}</span><div>{% if file.previewable %}<a href="{% url 'pdf_viewer' v.id file.id %}" target="_blank" rel="noopener">Ansehen</a> · {% endif %}<a href="{% url 'download' v.id file.id %}">Herunterladen</a></div></li>{% empty %}<li>Noch keine Datei hinterlegt.</li>{% endfor %}</ul><a class="button secondary" href="{% url 'detail' v.id %}#document-files">Dateien verwalten</a><p class="muted">Dateien hinzufügen oder entfernen kannst du in der Dokumentansicht. Speichere zuerst deine geänderten Angaben.</p></section>
+<section class="card"><h2>Nächster Schritt</h2><p>Nach dem Speichern die Fassung prüfen und die Freigabe im Dokument abschließen.</p><a href="{% url 'detail' v.id %}#document-workflow">Zum Freigabebereich</a><p><a href="{% url 'distribution' v.id %}">Zielgruppen und Kenntnisnahme</a></p><p><a href="{% url 'access' v.id %}">Zugriff auf Arbeitsstände</a></p></section>
+</aside>
+</div>
+{% endblock %}

@@ -100,8 +100,8 @@ def edit(request,version_id):
     from django.core.exceptions import PermissionDenied
     uid,v = services.get_version(request.user,version_id)
     services.require(uid,v['responsible_department_id'],'AUTHOR',v['document_id'])
-    if v['status'] != 'DRAFT':
-        raise PermissionDenied('Nur Entwürfe bearbeiten.')
+    if v['status'] != 'DRAFT' or not v['document_active']:
+        raise PermissionDenied('Nur aktive Entwürfe bearbeiten.')
     initial = dict(v)
     initial['applicable_departments'] = [r['department_id'] for r in services.query('SELECT department_id FROM version_departments WHERE version_id=%s',[version_id])]
     initial['standard_references'] = [r['reference_id'] for r in services.query('SELECT reference_id FROM version_standard_links WHERE version_id=%s',[version_id])]
@@ -114,7 +114,11 @@ def edit(request,version_id):
         else:
             messages.success(request,'Entwurf gespeichert.')
             return redirect('detail',version_id=version_id)
-    return render(request,'dms/create.html',{'form':form,'is_edit':True})
+    files=services.query('SELECT f.id,f.original_name FROM file_objects f JOIN version_files vf ON vf.file_id=f.id WHERE vf.version_id=%s ORDER BY f.id',[version_id])
+    from pathlib import Path
+    for file in files:file['previewable']=Path(file['original_name']).suffix.lower() in ('.pdf','.txt')
+    from .policies import is_qmb
+    return render(request,'dms/edit.html',{'form':form,'v':v,'files':files,'can_rename_document':is_qmb(request.user) or uid==v['owner_id']})
 
 @login_required
 @require_POST

@@ -4,6 +4,13 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.5.7: Hilfe und übersichtliche Dokumentbearbeitung
+
+Die über den Footer erreichbare Hilfe erklärt die Funktionen für Leser, Autoren,
+QMB und IT-Admins. Die eigene Bearbeitungsansicht bündelt Metadaten, Tagesgültigkeit
+und Zuordnungen und bietet eine Seitenleiste mit Nummernänderung, Dateien und Freigabe.
+Details: [Release 0.5.7](docs/releases/v0.5.7.md).
+
 ## Release 0.5.6: Änderbare eindeutige Dokumentnummern
 
 Die Dokumentnummer ist ein bearbeitbares Pflichtfeld. Eine Nummer wird vorgeschlagen
