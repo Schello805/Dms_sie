@@ -28,10 +28,10 @@ def current_versions(user,search='',personal=False,department='',standard=''):
     return [r for r in rows if not personal or r['relevant']]
 
 
-def current_version(user,document_id):
-    uid = s.actor(user)
+def current_version(user,document_id,public=False):
+    uid = None if public else s.actor(user)
     rows = s.query('''SELECT v.id FROM document_versions v WHERE v.document_id=%s AND v.id=current_release(%s)
-        AND v.status='APPROVED' AND can_read_version(%s,v.id)''',[document_id,document_id,uid])
+        AND v.status='APPROVED' AND (%s OR can_read_version(%s,v.id))''',[document_id,document_id,public,uid])
     if not rows:
         raise PermissionDenied('Keine aktuelle freigegebene Lesefassung verfügbar.')
     return rows[0]['id']

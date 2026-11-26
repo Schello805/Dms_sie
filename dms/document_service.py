@@ -10,15 +10,18 @@ from .catalog_columns import CATALOG_SORTS
 
 from . import services as s
 
-def get_version(user, version_id, lock=False):
-    uid = s.actor(user)
+def load_version(version_id,lock=False):
     rows = s.query('''SELECT v.*,d.active AS document_active,d.number,d.document_type,d.owner_id,(SELECT display_name FROM users WHERE id=d.owner_id) AS owner_name,d.responsible_department_id,c.review_interval_months,coalesce(c.display_name,c.name) AS category_label,review.review_due_on,review.last_review_on,(SELECT uploaded_at FROM document_upload_origins WHERE document_id=v.document_id) AS uploaded_at,(SELECT max(a.decided_at) FROM approval_decisions a WHERE a.version_id=v.id AND a.stage='APPROVAL' AND a.decision='ACCEPT') AS approved_at FROM document_versions v
                     JOIN documents d ON d.id=v.document_id
                     JOIN document_categories c ON c.name=d.document_type
                     JOIN version_review_status review ON review.version_id=v.id WHERE v.id=%s''' + (' FOR UPDATE OF v' if lock else ''), [version_id])
     if not rows:
         raise PermissionDenied('Dokument nicht verfügbar.')
-    v = rows[0]
+    return rows[0]
+
+def get_version(user, version_id, lock=False):
+    uid = s.actor(user)
+    v = load_version(version_id,lock)
     if lock and not v['document_active']:
         raise PermissionDenied('Deaktivierte Dokumente müssen zuerst durch den QMB reaktiviert werden.')
     if not s.query('SELECT can_read_version(%s,%s) AS permitted',[uid,version_id])[0]['permitted']:

@@ -4,6 +4,14 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.5.4: Freigegebene Dokumente ohne Anmeldung lesen
+
+Alle aktuellen freigegebenen Fassungen sind ohne Anmeldung in der Übersicht,
+Volltextsuche, PDF-Vorschau, über Dauerlinks und zum Download verfügbar. Das gilt
+unabhängig von Klassifizierung und Abteilungszuordnung. Nicht freigegebene Arbeitsstände,
+Bearbeitung, Freigaben, Nachweisverwaltung und Systemeinstellungen bleiben geschützt.
+Details und Update: [Release 0.5.4](docs/releases/v0.5.4.md).
+
 ## Release 0.5.3: Konsistenter QMB-Freigabeprozess
 
 Ein QMB kann auch eine eigene bereits eingereichte Fassung ausdrücklich freigeben,

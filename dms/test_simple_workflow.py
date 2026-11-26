@@ -48,7 +48,7 @@ class SimpleIMSWorkflowTests(TestCase):
         decide(self.reviewer,revision,True,'Geprüft und freigegeben')
         self.assertEqual(s.get_version(self.reader,revision)[1]['status'],'APPROVED')
 
-    def test_explicit_public_metadata_is_not_exposed_to_guests(self):
+    def test_approved_document_is_visible_to_guests_even_with_explicit_acl(self):
         vid = self.upload()
         _,draft = s.get_version(self.author,vid)
         s.edit_draft(self.author,vid,dict(title='Nur ausgewählte Personen',change_summary='Zugriff begrenzen',
@@ -57,8 +57,8 @@ class SimpleIMSWorkflowTests(TestCase):
         s.transition(self.author,vid,'submit','QMB anfordern')
         decide(self.reviewer,vid,True,'Geeignet')
         response = self.client.get('/')
-        self.assertNotContains(response,'Nur ausgewählte Personen')
-        self.assertNotContains(response,'SOP-NEW')
+        self.assertContains(response,'Nur ausgewählte Personen')
+        self.assertContains(response,'SOP-NEW')
 
     def test_qmb_author_upload_is_released_without_a_draft_step(self):
         save_roles(self.admin(),s.actor(self.author),True,True,False,'Autor ist zusätzlich QMB')
@@ -115,7 +115,7 @@ class SimpleIMSWorkflowTests(TestCase):
         self.assertNotIn('LAZY-',hidden['html'])
         self.assertIsNone(hidden['next_url'])
 
-    def test_anonymous_start_is_catalog_without_internal_documents(self):
+    def test_anonymous_start_lists_approved_documents(self):
         vid = self.upload(True)
         decide(self.reviewer,vid,True,'Geeignet')
         for path in ('/', '/documents/'):
@@ -123,7 +123,7 @@ class SimpleIMSWorkflowTests(TestCase):
             self.assertEqual(response.status_code,200)
             self.assertContains(response,'Dokumentenübersicht')
             self.assertContains(response,'Anmelden')
-            self.assertNotContains(response,'SOP-NEW')
+            self.assertContains(response,'SOP-NEW')
             self.assertNotContains(response,'Dokument hochladen')
         self.assertEqual(self.client.get('/new/').status_code,302)
 

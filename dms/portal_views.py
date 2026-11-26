@@ -1,3 +1,4 @@
+from .public_reading import get_read_version
 import io
 from pathlib import Path
 from django.contrib import messages
@@ -18,20 +19,18 @@ def home(request):
     from .catalog_views import index
     return index(request)
 
-@login_required
 def read_named(request,kind_slug,number_slug):
     from django.http import Http404
     rows=s.query('SELECT document_id FROM document_links WHERE kind_slug=%s AND number_slug=%s',[kind_slug,number_slug])
     if not rows:raise Http404
     return read_current(request,rows[0]['document_id'])
 
-@login_required
 def read_current(request,document_id):
-    vid = portal.current_version(request.user,document_id)
-    if getattr(request,'reader_only',False):
+    vid = portal.current_version(request.user,document_id,public=True)
+    if not request.user.is_authenticated or getattr(request,'reader_only',False):
         from .simple_workflow import open_reading_copy
         return open_reading_copy(request,vid)
-    uid,v = s.get_version(request.user,vid)
+    uid,v = get_read_version(request.user,vid)
     s.audit(uid,'READ_CURRENT',vid,'Aktuelle freigegebene Fassung im Mitarbeiterportal geöffnet')
     files = s.query('''SELECT f.id,f.original_name,vf.purpose FROM file_objects f JOIN version_files vf ON vf.file_id=f.id
         WHERE vf.version_id=%s ORDER BY CASE vf.purpose WHEN 'RELEASE' THEN 0 ELSE 1 END,f.id''',[vid])
@@ -45,9 +44,8 @@ def read_current(request,document_id):
     return render(request,'dms/reading.html',{'v':v,'files':files,'assignment':assignment,'bookmarked':bookmarked,
         'distribution':distribution[0] if distribution else None,'stable_url':request.build_absolute_uri(document_url(document_id))})
 
-@login_required
 def document_qr(request,document_id):
-    portal.current_version(request.user,document_id)
+    portal.current_version(request.user,document_id,public=True)
     import qrcode
     from qrcode.image.svg import SvgPathImage
     from .document_links import document_url
@@ -56,11 +54,10 @@ def document_qr(request,document_id):
     qrcode.make(url,image_factory=SvgPathImage).save(stream)
     return HttpResponse(stream.getvalue(),content_type='image/svg+xml')
 
-@login_required
 @xframe_options_sameorigin
 def preview_pdf(request,version_id,file_id):
     from .previews import reading_pdf
-    _,v = s.get_version(request.user,version_id)
+    _,v = get_read_version(request.user,version_id)
     from .document_links import document_url
     url = request.build_absolute_uri(document_url(v['document_id']))
     try:
@@ -251,10 +248,9 @@ def audit_report(request):
     return render(request,'dms/audit_report.html',{'form':form,'events':rows[:500],'total':len(rows),'acknowledgements':acknowledgements,'records':evidence.records(request.user)})
 
 
-@login_required
 @xframe_options_sameorigin
 def pdf_viewer(request,version_id,file_id):
-    _,version = s.get_version(request.user,version_id)
+    _,version = get_read_version(request.user,version_id)
     files = s.query('SELECT f.original_name FROM file_objects f JOIN version_files vf ON vf.file_id=f.id WHERE vf.version_id=%s AND f.id=%s',[version_id,file_id])
     if not files or Path(files[0]['original_name']).suffix.lower() not in ('.pdf','.txt'):
         return HttpResponse('Bitte eine PDF-Lesefassung hinterlegen oder die Originaldatei herunterladen.',status=409,content_type='text/plain; charset=utf-8')

@@ -10,8 +10,9 @@ from . import storage,services as s
 
 
 def reading_pdf(user,version_id,file_id,url):
-    uid,v = s.get_version(user,version_id)
-    file,content = storage.download(user,version_id,file_id)
+    from .public_reading import get_read_version
+    uid,v = get_read_version(user,version_id)
+    file,content = storage.download(user,version_id,file_id,public=True)
     suffix = Path(file['original_name']).suffix.lower()
     if suffix not in ('.pdf','.txt'):
         raise ValidationError('Für dieses Format bitte eine PDF-Lesefassung im Entwurf hinterlegen. Die Originaldatei kann heruntergeladen werden.')

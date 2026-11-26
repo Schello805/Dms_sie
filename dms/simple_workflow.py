@@ -101,7 +101,8 @@ def returned_tasks(user):
 def open_reading_copy(request,version_id):
     from pathlib import Path
     from django.shortcuts import redirect
-    s.get_version(request.user,version_id)
+    from .public_reading import get_read_version
+    get_read_version(request.user,version_id)
     files = s.query("SELECT f.id,f.original_name FROM version_files vf JOIN file_objects f ON f.id=vf.file_id WHERE vf.version_id=%s ORDER BY CASE WHEN vf.purpose='RELEASE' THEN 0 WHEN lower(f.original_name) LIKE '%%.pdf' THEN 1 WHEN lower(f.original_name) LIKE '%%.txt' THEN 2 ELSE 3 END,f.id LIMIT 1",[version_id])
     if not files:
         raise PermissionDenied('Keine Lesefassung verfügbar.')

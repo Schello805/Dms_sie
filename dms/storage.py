@@ -51,8 +51,9 @@ def upload(user, version_id, uploaded, purpose='ORIGINAL'):
         raise
 
 
-def download(user, version_id, file_id):
-    uid,v = s.get_version(user,version_id)
+def download(user, version_id, file_id,public=False):
+    from .public_reading import get_read_version
+    uid,v = get_read_version(user,version_id) if public else s.get_version(user,version_id)
     files = s.query('''SELECT f.* FROM file_objects f JOIN version_files vf ON vf.file_id=f.id
         WHERE vf.version_id=%s AND f.id=%s''',[version_id,file_id])
     if not files:

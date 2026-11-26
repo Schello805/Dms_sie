@@ -18,7 +18,7 @@ class DocumentForm(MappingFieldsMixin, AppForm):
     department = forms.TypedChoiceField(label='Verantwortliche Abteilung', coerce=int)
     change_summary = OptionalReasonField(label='Änderungsbeschreibung', widget=forms.Textarea)
     effective_from = forms.DateTimeField(label='Erstmalig gültig ab', widget=forms.DateTimeInput(attrs={'type':'datetime-local'}, format='%Y-%m-%dT%H:%M'))
-    classification = forms.ChoiceField(label='Klassifizierung',choices=[('PUBLIC','Öffentlich (Metadaten auch ohne Anmeldung)'),('INTERNAL','Intern'),('CONFIDENTIAL','Vertraulich'),('RESTRICTED','Streng vertraulich')],initial='INTERNAL',help_text='Öffentliche Metadaten können ohne Anmeldung sichtbar sein. Dateien erfordern eine Anmeldung. Vertrauliche Fassungen benötigen zusätzlich eine ausdrückliche Zugriffsfreigabe.')
+    classification = forms.ChoiceField(label='Klassifizierung',choices=[('PUBLIC','Öffentlich'),('INTERNAL','Intern'),('CONFIDENTIAL','Vertraulich'),('RESTRICTED','Streng vertraulich')],initial='INTERNAL',help_text='Die Klassifizierung kennzeichnet den Inhalt. Die aktuelle freigegebene Fassung ist unabhängig davon ohne Anmeldung lesbar. Nicht freigegebene Arbeitsstände bleiben geschützt.')
     applicable_departments = forms.TypedMultipleChoiceField(label='Geltungsbereich: Abteilungen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple)
     standard_references = forms.TypedMultipleChoiceField(label='Normzuordnungen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple)
 
@@ -42,7 +42,7 @@ class EditForm(MappingFieldsMixin, AppForm):
     title = forms.CharField(label='Titel', max_length=300)
     change_summary = OptionalReasonField(label='Änderungsbeschreibung', widget=forms.Textarea)
     effective_from = forms.DateTimeField(label='Erstmalig gültig ab', widget=forms.DateTimeInput(attrs={'type':'datetime-local'}, format='%Y-%m-%dT%H:%M'))
-    classification = forms.ChoiceField(label='Klassifizierung',choices=[('PUBLIC','Öffentlich (Metadaten auch ohne Anmeldung)'),('INTERNAL','Intern'),('CONFIDENTIAL','Vertraulich'),('RESTRICTED','Streng vertraulich')],initial='INTERNAL',help_text='Öffentliche Metadaten können ohne Anmeldung sichtbar sein. Dateien erfordern eine Anmeldung. Vertrauliche Fassungen benötigen zusätzlich eine ausdrückliche Zugriffsfreigabe.')
+    classification = forms.ChoiceField(label='Klassifizierung',choices=[('PUBLIC','Öffentlich'),('INTERNAL','Intern'),('CONFIDENTIAL','Vertraulich'),('RESTRICTED','Streng vertraulich')],initial='INTERNAL',help_text='Die Klassifizierung kennzeichnet den Inhalt. Die aktuelle freigegebene Fassung ist unabhängig davon ohne Anmeldung lesbar. Nicht freigegebene Arbeitsstände bleiben geschützt.')
     applicable_departments = forms.TypedMultipleChoiceField(label='Geltungsbereich: Abteilungen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple)
     standard_references = forms.TypedMultipleChoiceField(label='Normzuordnungen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple)
 

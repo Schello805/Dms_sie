@@ -34,12 +34,11 @@ def create(request):
             return redirect('detail',version_id=vid)
     return render(request,'dms/create.html',{'form':form})
 
-@login_required
 def detail(request, version_id, action_form=None):
-    uid, v = services.get_version(request.user,version_id)
-    if getattr(request,'reader_only',False):
+    if not request.user.is_authenticated or getattr(request,'reader_only',False):
         from .simple_workflow import open_reading_copy
         return open_reading_copy(request,version_id)
+    uid, v = services.get_version(request.user,version_id)
     services.audit(uid,'VIEW',version_id,'Dokumentansicht')
     editor = any(services.allowed(uid,v['responsible_department_id'],r,v['document_id']) for r in ('AUTHOR','REVIEWER'))
     events = services.query("SELECT e.action,e.reason,e.occurred_at,u.display_name AS actor_name FROM audit_events e LEFT JOIN users u ON u.id=e.actor_id WHERE e.object_type='version' AND e.object_id=%s ORDER BY e.id DESC LIMIT 50",[str(version_id)]) if editor else []
@@ -148,13 +147,12 @@ def upload(request,version_id):
         messages.error(request,'Bitte eine Datei auswählen.')
     return redirect('detail',version_id=version_id)
 
-@login_required
 def download(request,version_id,file_id):
     import io
     from django.http import FileResponse, HttpResponse
     from . import storage
     try:
-        f,content = storage.download(request.user,version_id,file_id)
+        f,content = storage.download(request.user,version_id,file_id,public=True)
     except ValidationError as exc:
         return HttpResponse(' '.join(exc.messages),status=409,content_type='text/plain')
     return FileResponse(io.BytesIO(content),as_attachment=True,filename=f['original_name'],content_type='application/octet-stream')

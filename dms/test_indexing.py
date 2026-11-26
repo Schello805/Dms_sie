@@ -24,13 +24,13 @@ class IndexingTests(TestCase):
         results = s.visible_versions(self.reader,search='Originalinhalt')
         self.assertEqual([v['id'] for v in results],[self.vid])
         self.assertIn('Originalinhalt',results[0]['snippet'])
-        self.assertEqual(s.visible_versions(self.outsider,search='Originalinhalt'),[])
+        self.assertEqual([v['id'] for v in s.visible_versions(self.outsider,search='Originalinhalt')],[self.vid])
 
-    def test_index_does_not_bypass_confidentiality_or_withdrawal(self):
+    def test_released_index_is_public_but_withdrawal_hides_it(self):
         indexing.process_one()
         self.publish()
         s.change_access(self.author,self.vid,'EXPLICIT',[s.actor(self.author),s.actor(self.approver)],[],'Vertraulich beschränken')
-        self.assertEqual(s.visible_versions(self.reader,search='Originalinhalt'),[])
+        self.assertEqual(len(s.visible_versions(self.reader,search='Originalinhalt')),1)
         self.assertEqual(len(s.visible_versions(self.author,search='Originalinhalt')),1)
         s.lifecycle_action(self.reviewer,self.vid,'withdraw','Rückzug',True)
         self.assertEqual(s.visible_versions(self.reader,search='Originalinhalt'),[])

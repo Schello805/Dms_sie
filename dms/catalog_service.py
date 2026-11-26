@@ -45,11 +45,11 @@ def visible_versions(user, search='', status='', department='', standard='', due
                     'StartSel=[, StopSel=], MaxWords=35, MinWords=10, MaxFragments=1'),600) AS snippet
             FROM version_files vf JOIN file_text_indexes i ON i.file_id=vf.file_id
             JOIN file_objects f ON f.id=vf.file_id
-            WHERE vf.version_id=v.id AND (can_read_version(%s,v.id) OR (%s::bigint IS NULL AND d.access_mode='DEPARTMENT' AND v.classification='PUBLIC' AND v.status='APPROVED' AND v.id=current_release(v.document_id)))
+            WHERE vf.version_id=v.id AND (can_read_version(%s,v.id) OR (v.status='APPROVED' AND v.id=current_release(v.document_id)))
                 AND i.status='READY' AND i.search_vector @@ input.terms
             ORDER BY score DESC,i.file_id LIMIT 1
         ) matched ON true
-        WHERE d.active AND (can_read_version(%s,v.id) OR (%s::bigint IS NULL AND d.access_mode='DEPARTMENT' AND v.classification='PUBLIC' AND v.status='APPROVED' AND v.id=current_release(v.document_id)))
+        WHERE d.active AND (can_read_version(%s,v.id) OR (v.status='APPROVED' AND v.id=current_release(v.document_id)))
         AND (%s='' OR v.title ILIKE %s OR d.number ILIKE %s OR matched.file_id IS NOT NULL OR EXISTS(SELECT 1 FROM version_distribution dist WHERE dist.version_id=v.id AND dist.keywords ILIKE %s))
         AND (%s='' OR v.status=%s OR (%s AND %s='DRAFT' AND v.status IN ('IN_REVIEW','PENDING_APPROVAL')))
         AND (NOT %s OR (
@@ -66,7 +66,7 @@ def visible_versions(user, search='', status='', department='', standard='', due
                 OR review.review_result IN ('REVISION_REQUIRED','WITHDRAWAL_REQUIRED'))))
         AND (NOT %s OR (v.id=current_release(v.document_id) AND v.status='APPROVED'))
         ORDER BY """ + ordering + """ LIMIT %s OFFSET %s""",
-        [search,search,uid,uid,uid,uid,search,pattern,pattern,pattern,status,status,catalog_only,status,catalog_only,uid,uid,department,department,
+        [search,search,uid,uid,search,pattern,pattern,pattern,status,status,catalog_only,status,catalog_only,uid,uid,department,department,
          standard,standard,due_only,timezone.localdate(),current_only,min(max(int(limit),1),5000),max(int(offset),0)])
     for row in rows:
         from pathlib import Path

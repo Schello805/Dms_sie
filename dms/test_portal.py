@@ -45,19 +45,19 @@ class EmployeePortalTests(TestCase):
         s.lifecycle_action(self.reviewer,second,'withdraw','Sperren',True)
         self.assertEqual(self.client.get(f'/documents/{doc}/current/').status_code,403)
 
-    def test_target_group_does_not_grant_access_to_confidential_document(self):
+    def test_public_reading_does_not_grant_confidential_acknowledgement_rights(self):
         group = s.query("INSERT INTO audience_groups(name) VALUES ('Maschinenführer') RETURNING id")[0]['id']
         uid = s.actor(self.reader)
         s.query('INSERT INTO audience_memberships VALUES (%s,%s)',[uid,group])
         self.distribution(audiences=[group])
         s.query("UPDATE document_versions SET classification='CONFIDENTIAL' WHERE id=%s",[self.vid])
         self.publish()
-        self.assertEqual(portal.current_versions(self.reader,personal=True),[])
+        self.assertEqual(len(portal.current_versions(self.reader,personal=True)),1)
         self.assertEqual(portal.pending_acknowledgements(self.reader),[])
         self.assertEqual(s.query('SELECT id FROM acknowledgement_assignments WHERE user_id=%s',[uid]),[])
         doc = s.query('SELECT document_id FROM document_versions WHERE id=%s',[self.vid])[0]['document_id']
         self.client.force_login(self.reader)
-        self.assertEqual(self.client.get(f'/documents/{doc}/qr/').status_code,403)
+        self.assertEqual(self.client.get(f'/documents/{doc}/qr/').status_code,200)
 
     def test_acknowledgements_are_assigned_without_login_version_bound_and_idempotent(self):
         self.distribution()
@@ -149,8 +149,7 @@ class EmployeePortalTests(TestCase):
         self.assertIn('IT-001',text)
         self.assertIn('Version 1.0',text)
         self.assertIn('Aktualität',text)
-        with self.assertRaises(PermissionDenied):
-            previews.reading_pdf(self.outsider,self.vid,fid,'http://localhost/')
+        self.assertTrue(previews.reading_pdf(self.outsider,self.vid,fid,'http://localhost/')[1].startswith(b'%PDF'))
         self.client.force_login(self.reader)
         response = self.client.get(f'/versions/{self.vid}/files/{fid}/preview/')
         self.assertEqual(response.status_code,200)
@@ -173,7 +172,7 @@ class EmployeePortalTests(TestCase):
         self.assertIn('no-store',response['Cache-Control'])
         self.assertNotIn('unsafe-eval',response['Content-Security-Policy'])
         self.client.force_login(self.outsider)
-        self.assertEqual(self.client.get(f'/versions/{self.vid}/files/{fid}/viewer/').status_code,403)
+        self.assertEqual(self.client.get(f'/versions/{self.vid}/files/{fid}/viewer/').status_code,200)
         self.client.logout()
         response = self.client.get('/assets/pdfjs/6.5.438/pdf.mjs')
         self.assertEqual(response.status_code,200)

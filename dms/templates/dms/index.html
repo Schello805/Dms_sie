@@ -1,7 +1,7 @@
 {% extends 'dms/base.html' %}
 {% block content %}
 <h1>Dokumentenübersicht</h1>
-{% if not user.is_authenticated %}<p class="muted">Öffentliche Dokumentenübersicht. Für interne Dokumente und das Öffnen oder Herunterladen bitte <a href="{% url 'login' %}">anmelden</a>.</p>{% endif %}
+{% if not user.is_authenticated %}<p class="muted">Freigegebene Dokumente kannst du ohne Anmeldung ansehen und herunterladen.</p>{% endif %}
 <p class="muted">Gelenkte Informationen · Qualität, Informationssicherheit und Energie</p>
 <form method="get" class="card filters catalog-filters {% if not can_create_documents %}reader-filters{% endif %}" id="document-filters">
 {% if sort %}<input type="hidden" name="sort" value="{{ sort }}"><input type="hidden" name="direction" value="{{ direction }}">{% endif %}
