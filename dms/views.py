@@ -41,8 +41,8 @@ def detail(request, version_id, action_form=None):
     uid, v = services.get_version(request.user,version_id)
     services.audit(uid,'VIEW',version_id,'Dokumentansicht')
     editor = any(services.allowed(uid,v['responsible_department_id'],r,v['document_id']) for r in ('AUTHOR','REVIEWER'))
-    events = services.query("SELECT e.action,e.reason,e.occurred_at,u.display_name AS actor_name FROM audit_events e LEFT JOIN users u ON u.id=e.actor_id WHERE e.object_type='version' AND e.object_id=%s ORDER BY e.id DESC LIMIT 50",[str(version_id)]) if editor else []
-    files = services.query('SELECT f.id,f.original_name,i.status AS index_status,i.truncated AS index_truncated,i.error_code FROM file_objects f JOIN version_files vf ON vf.file_id=f.id LEFT JOIN file_text_indexes i ON i.file_id=f.id WHERE vf.version_id=%s ORDER BY f.id',[version_id])
+    events = services.query("SELECT e.action,e.reason,e.details,e.occurred_at,u.display_name AS actor_name FROM audit_events e LEFT JOIN users u ON u.id=e.actor_id WHERE (e.object_type='version' AND e.object_id=%s) OR (e.object_type='document' AND e.object_id=%s) ORDER BY e.id DESC LIMIT 50",[str(version_id),str(v['document_id'])]) if editor else []
+    files = services.query('SELECT f.id,f.original_name,f.size_bytes,vf.purpose,i.status AS index_status,i.truncated AS index_truncated,i.error_code FROM file_objects f JOIN version_files vf ON vf.file_id=f.id LEFT JOIN file_text_indexes i ON i.file_id=f.id WHERE vf.version_id=%s ORDER BY f.id',[version_id])
     from pathlib import Path
     for file in files:
         file['previewable'] = Path(file['original_name']).suffix.lower() in ('.pdf','.txt')
@@ -53,7 +53,10 @@ def detail(request, version_id, action_form=None):
     can_author = v['document_active'] and services.allowed(uid,v['responsible_department_id'],'AUTHOR',v['document_id'])
     from .policies import is_qmb
     qmb = is_qmb(request.user)
-    can_review = v['status']=='APPROVED' and uid!=v['created_by'] and qmb and services.query('SELECT current_release(%s) AS id',[v['document_id']])[0]['id']==version_id
+    current_release=services.query('SELECT current_release(%s) AS id',[v['document_id']])[0]['id']
+    from .document_links import document_url
+    current_document_url=document_url(v['document_id']) if current_release else None
+    can_review = v['status']=='APPROVED' and uid!=v['created_by'] and qmb and current_release==version_id
     workflow_form = action_form if action_form is not None else ActionForm()
     choices = []
     if v['status']=='DRAFT' and can_author:
@@ -64,7 +67,7 @@ def detail(request, version_id, action_form=None):
         choices = [('approve','Freigeben'),('reject','Ablehnen / Überarbeitung anfordern')]
     approval_review = services.query("SELECT a.comment,a.decided_at,u.display_name FROM approval_decisions a JOIN workflow_instances w ON w.id=a.workflow_id JOIN users u ON u.id=a.actor_id WHERE w.version_id=%s AND w.closed_at IS NULL AND a.stage='REVIEW' AND a.decision='ACCEPT'",[version_id]) if v['status']=='PENDING_APPROVAL' else []
     workflow_form.fields['action'].choices = choices
-    return render(request,'dms/detail.html',{'returned_note':returned[0] if returned else None,'qmb_self_release':qmb and uid==v['created_by'],'workflow_is_submission':v['status']=='DRAFT','approval_review':approval_review,'v':v,'events':events,'files':files,'mappings':mappings,'departments':departments,'reviews':reviews,'review_form':ReviewForm(),'can_review':can_review,'can_workflow':bool(choices),'form':workflow_form,'can_author':can_author,'revision_form':RevisionForm(),'can_history':editor,'can_rename_document':v['document_active'] and (qmb or (uid==v['owner_id'] and can_author)),'document_withdrawn':bool(services.query('SELECT 1 FROM document_withdrawals WHERE document_id=%s LIMIT 1',[v['document_id']])) and services.query('SELECT current_release(%s) AS id',[v['document_id']])[0]['id'] is None,'lifecycle_form':LifecycleForm(),'can_lifecycle':v['document_active'] and qmb and v['status']=='APPROVED','can_takeover':False})
+    return render(request,'dms/detail.html',{'current_document_url':current_document_url,'preview_file':next((f for f in sorted(files,key=lambda f:f['purpose']!='RELEASE') if f['previewable']),None),'returned_note':returned[0] if returned else None,'qmb_self_release':qmb and uid==v['created_by'],'workflow_is_submission':v['status']=='DRAFT','approval_review':approval_review,'v':v,'events':events,'files':files,'mappings':mappings,'departments':departments,'reviews':reviews,'review_form':ReviewForm(),'can_review':can_review,'can_workflow':bool(choices),'form':workflow_form,'can_author':can_author,'revision_form':RevisionForm(),'can_history':editor,'can_rename_document':v['document_active'] and (qmb or (uid==v['owner_id'] and can_author)),'document_withdrawn':bool(services.query('SELECT 1 FROM document_withdrawals WHERE document_id=%s LIMIT 1',[v['document_id']])) and current_release is None,'lifecycle_form':LifecycleForm(),'can_lifecycle':v['document_active'] and qmb and v['status']=='APPROVED','can_takeover':False})
 
 @login_required
 @require_POST
@@ -125,7 +128,7 @@ def edit(request,version_id):
 def revision(request,version_id):
     form = RevisionForm(request.POST)
     if not form.is_valid():
-        messages.error(request,'Versionssprung und Änderungsgrund sind erforderlich.')
+        messages.error(request,'Bitte prüfe die Angaben für die neue Revision.')
         return redirect('detail',version_id=version_id)
     try:
         vid = services.new_revision(request.user,version_id,**form.cleaned_data)
@@ -225,7 +228,7 @@ def lifecycle(request,version_id):
         else:
             messages.success(request,'Lebenszyklusentscheidung gespeichert und protokolliert.')
     else:
-        messages.error(request,'Vorgang, Begründung und Bestätigung sind erforderlich.')
+        messages.error(request,'Bitte prüfe die Angaben und die Bestätigung für diesen Vorgang.')
     return redirect('detail',version_id=version_id)
 
 @login_required

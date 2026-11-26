@@ -1,0 +1,18 @@
+{% if can_workflow %}
+<section class="card"><h2 id="document-workflow">{% if workflow_is_submission %}{% if qmb_self_release %}Dokument freigeben{% else %}Freigabe anfordern{% endif %}{% else %}QMB-Entscheidung{% endif %}</h2>
+{% for review in approval_review %}<details class="detail-disclosure"><summary>QMB-Prüfung bestanden</summary><p>{{ review.display_name }} · {{ review.decided_at|date:'d.m.Y H:i' }}</p><p>{{ review.comment }}</p></details>{% endfor %}<form method="post" action="{% url 'action' v.id %}" class="workflow-decision">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {% if workflow_is_submission %}
+    <p>{% if qmb_self_release %}Als verantwortlicher QMB gibst du diese Fassung direkt frei. Der freigegebene Stand wird für Änderungen gesperrt.{% else %}Der eingereichte Stand wird für Änderungen gesperrt. Ein unabhängiger QMB prüft und entscheidet über die Freigabe.{% endif %}</p>
+    {{ form.comment.as_field_group }}
+    <div class="form-actions"><button name="action" value="submit">{% if qmb_self_release %}Änderungen direkt freigeben{% else %}An QMB senden{% endif %}</button></div>
+  {% else %}
+    {% if qmb_self_release %}<p>Als QMB gibst du deine eigene eingereichte Fassung direkt frei. Bisherige Prüfentscheidungen bleiben erhalten.</p>{% else %}<p>Bitte prüfe die Dateien und Metadaten. Eine Freigabe macht das Dokument ab dem Wirksamkeitsdatum für berechtigte Leser verfügbar. Die Gültigkeitsdauer beginnt mit der Freigabe.</p>{% endif %}
+    {{ form.comment.as_field_group }}
+    {% if not qmb_self_release %}<p class="muted">Bei Ablehnung ist eine Bemerkung für den Autor erforderlich.</p>{% endif %}
+    <div class="form-actions">{% if not qmb_self_release %}<button class="danger secondary" name="action" value="reject" data-require-comment>Ablehnen / Überarbeitung anfordern</button>{% endif %}<button name="action" value="approve">Dokument freigeben</button></div>
+  {% endif %}
+</form></section>{% endif %}
+{% if can_author and v.status == 'APPROVED' or can_author and v.status == 'ARCHIVED' %}<form method="post" action="{% url 'revision' v.id %}" class="card" id="document-revision">{% csrf_token %}<h2>Neue Revision</h2>{{ revision_form.as_p }}<button>Überarbeitung beginnen</button></form>{% endif %}
+{% if can_review %}<section class="card" id="document-review"><h2>Periodische Überprüfung</h2><p>Bei Bestätigung der Richtigkeit wird die Gültigkeit um {{ v.review_interval_months }} Monate ab heute verlängert. Die Frist stammt aus der Kategorie „{{ v.category_label }}“.</p><p>Unveränderter Inhalt bleibt in derselben Version. Eine erforderliche Überarbeitung oder ein Rückzug wird als Handlungsbedarf protokolliert.</p><form method="post" action="{% url 'review' v.id %}">{% csrf_token %}{{ review_form.as_p }}<button>Prüfung protokollieren</button></form></section>{% endif %}

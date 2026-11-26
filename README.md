@@ -4,6 +4,13 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.5.8: Überarbeitete Dokumentansicht „Bearbeiten / Details“
+
+Die Dokumentansicht bündelt Status, Hauptaktionen, Fristen, Dateien und Vorschau.
+Bearbeitung, Freigabe, Revision und Review sind direkt erreichbar. Normzuordnungen,
+Prüfhistorie, Änderungsprotokoll sowie Rückzug/Archivierung sind aufklappbar.
+Details: [Release 0.5.8](docs/releases/v0.5.8.md).
+
 ## Release 0.5.7: Hilfe und übersichtliche Dokumentbearbeitung
 
 Die über den Footer erreichbare Hilfe erklärt die Funktionen für Leser, Autoren,

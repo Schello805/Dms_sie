@@ -27,7 +27,7 @@ class ValidityDayTests(TestCase):
         self.assertEqual(timezone.localtime(v['effective_from']).time().isoformat(),'00:00:00')
         self.publish()
         self.client.force_login(self.author)
-        self.assertContains(self.client.get(f'/versions/{self.vid}/'),'Erstmalig gültig ab: '+timezone.localdate(v['effective_from']).strftime('%d.%m.%Y'))
+        self.assertContains(self.client.get(f'/versions/{self.vid}/'),'data-valid-from>'+timezone.localdate(v['effective_from']).strftime('%d.%m.%Y'))
         self.assertEqual(s.get_version(self.author,self.vid)[1]['created_at'],v['created_at'])
         revision=s.new_revision(self.author,self.vid)
         self.assertEqual(timezone.localtime(s.get_version(self.author,revision)[1]['effective_from']).hour,0)
