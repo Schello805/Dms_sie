@@ -1,3 +1,4 @@
+from .validity import ValidityDateField
 from .form_ui import AppForm
 from .audit_text import DEFAULT_REASON, OptionalReasonField
 from django import forms
@@ -17,7 +18,7 @@ class DocumentForm(MappingFieldsMixin, AppForm):
     document_type = forms.ChoiceField(label='Dokumentenart', choices=[(x,x) for x in ['Richtlinie','Prozess','Arbeitsanweisung','Betriebsanweisung','Vorlage','Externe Norm']])
     department = forms.TypedChoiceField(label='Verantwortliche Abteilung', coerce=int)
     change_summary = OptionalReasonField(label='Änderungsbeschreibung', widget=forms.Textarea)
-    effective_from = forms.DateTimeField(label='Erstmalig gültig ab', widget=forms.DateTimeInput(attrs={'type':'datetime-local'}, format='%Y-%m-%dT%H:%M'))
+    effective_from = ValidityDateField(label='Erstmalig gültig ab')
     classification = forms.ChoiceField(label='Klassifizierung',choices=[('PUBLIC','Öffentlich'),('INTERNAL','Intern'),('CONFIDENTIAL','Vertraulich'),('RESTRICTED','Streng vertraulich')],initial='INTERNAL',help_text='Die Klassifizierung kennzeichnet den Inhalt. Die aktuelle freigegebene Fassung ist unabhängig davon ohne Anmeldung lesbar. Nicht freigegebene Arbeitsstände bleiben geschützt.')
     applicable_departments = forms.TypedMultipleChoiceField(label='Geltungsbereich: Abteilungen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple)
     standard_references = forms.TypedMultipleChoiceField(label='Normzuordnungen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple)
@@ -41,7 +42,7 @@ class ActionForm(AppForm):
 class EditForm(MappingFieldsMixin, AppForm):
     title = forms.CharField(label='Titel', max_length=300)
     change_summary = OptionalReasonField(label='Änderungsbeschreibung', widget=forms.Textarea)
-    effective_from = forms.DateTimeField(label='Erstmalig gültig ab', widget=forms.DateTimeInput(attrs={'type':'datetime-local'}, format='%Y-%m-%dT%H:%M'))
+    effective_from = ValidityDateField(label='Erstmalig gültig ab')
     classification = forms.ChoiceField(label='Klassifizierung',choices=[('PUBLIC','Öffentlich'),('INTERNAL','Intern'),('CONFIDENTIAL','Vertraulich'),('RESTRICTED','Streng vertraulich')],initial='INTERNAL',help_text='Die Klassifizierung kennzeichnet den Inhalt. Die aktuelle freigegebene Fassung ist unabhängig davon ohne Anmeldung lesbar. Nicht freigegebene Arbeitsstände bleiben geschützt.')
     applicable_departments = forms.TypedMultipleChoiceField(label='Geltungsbereich: Abteilungen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple)
     standard_references = forms.TypedMultipleChoiceField(label='Normzuordnungen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple)
@@ -166,7 +167,7 @@ class DocumentUploadForm(DocumentForm):
         self.fields['effective_from'].label = 'Erstmalig gültig ab'
         self.fields['effective_from'].required = False
         self.fields['effective_from'].initial = None
-        self.fields['effective_from'].help_text = 'Leer lassen: tatsächlicher Uploadzeitpunkt. Im Entwurf nachträglich änderbar.'
+        self.fields['effective_from'].help_text = 'Leer lassen: heutiges Uploaddatum. Im Entwurf nachträglich änderbar.'
         self.fields['change_summary'].required = False
         self.fields['change_summary'].initial = 'Erstupload'
         self.fields['file'].widget.attrs['accept'] = '.pdf,.docx,.xlsx,.odt,.txt'
@@ -177,7 +178,7 @@ class DocumentUploadForm(DocumentForm):
 
     def clean_effective_from(self):
         from django.utils import timezone
-        return self.cleaned_data.get('effective_from') or timezone.now()
+        return self.cleaned_data.get('effective_from') or timezone.localdate(timezone=timezone.get_default_timezone())
     def clean_change_summary(self):
         return 'Erstupload' if self.cleaned_data.get('change_summary') in (None,'',DEFAULT_REASON) else self.cleaned_data['change_summary']
 

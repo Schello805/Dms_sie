@@ -26,6 +26,7 @@ def upload(page,number,qmb=False):
  page.locator('[name=document_type]').select_option(label='Arbeitsanweisungen')
  expect(page.locator('[name=number]')).to_have_value('AA-…')
  expect(page.locator('[name=number]')).to_have_attribute('readonly','')
+ expect(page.locator('[name=effective_from]')).to_have_attribute('type','date')
  assert_aligned(page,['#id_document_type','#id_number'])
  assert_aligned(page,['#id_department','#id_classification'])
  # A wrapped label must not push just one of the paired controls down.

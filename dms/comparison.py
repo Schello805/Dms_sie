@@ -16,8 +16,13 @@ def compare(request,version_id):
     changes=[]
     if before:
         for key,label in [('title','Titel'),('change_summary','Änderungsbeschreibung'),('classification','Klassifizierung'),('effective_from','Wirksam ab')]:
-            if before[key]!=current[key]:
-                changes.append({'label':label,'before':before[key],'after':current[key]})
+            old,new=before[key],current[key]
+            if key=='effective_from':
+                from .validity import validity_start
+                old=validity_start(old).strftime('%d.%m.%Y') if old else None
+                new=validity_start(new).strftime('%d.%m.%Y') if new else None
+            if old!=new:
+                changes.append({'label':label,'before':old,'after':new})
         for query,label in [
             ("SELECT f.original_name,f.sha256,vf.purpose FROM version_files vf JOIN file_objects f ON f.id=vf.file_id WHERE vf.version_id=%s ORDER BY f.original_name,f.sha256,vf.purpose",'Dateien (Name, SHA-256 und Verwendung)'),
             ("SELECT sr.reference,s.name,s.edition FROM version_standard_links vl JOIN standard_references sr ON sr.id=vl.reference_id JOIN standards s ON s.id=sr.standard_id WHERE vl.version_id=%s ORDER BY s.name,s.edition,sr.reference",'Normzuordnungen'),

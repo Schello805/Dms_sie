@@ -4,6 +4,13 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.5.5: Gültigkeit ohne Uhrzeit
+
+Gültigkeitsangaben verwenden reine Kalendertage. Formulare, Detailansicht,
+Historie und Versionsvergleich zeigen das Datum ohne Uhrzeit. Bestehende
+Freigabe- und Audit-Zeitstempel bleiben erhalten.
+Details und Update: [Release 0.5.5](docs/releases/v0.5.5.md).
+
 ## Release 0.5.4: Freigegebene Dokumente ohne Anmeldung lesen
 
 Alle aktuellen freigegebenen Fassungen sind ohne Anmeldung in der Übersicht,

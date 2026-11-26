@@ -1,3 +1,4 @@
+from .validity import validity_start
 """Transaction boundary for every document mutation; all SQL uses bound parameters."""
 from .audit_text import optional_reason
 import hashlib
@@ -30,7 +31,7 @@ def get_version(user, version_id, lock=False):
 
 @transaction.atomic
 def create_document(user, data):
-    data = dict(data,change_summary=optional_reason(data.get('change_summary')))
+    data = dict(data,change_summary=optional_reason(data.get('change_summary')),effective_from=validity_start(data.get('effective_from')))
     s.query("SELECT pg_advisory_xact_lock(hashtext('ims-master-data'))")
     uid = s.actor(user)
     department = data['department']
@@ -57,7 +58,7 @@ def create_document(user, data):
 
 @transaction.atomic
 def edit_draft(user, version_id, data):
-    data = dict(data,change_summary=optional_reason(data.get('change_summary')))
+    data = dict(data,change_summary=optional_reason(data.get('change_summary')),effective_from=validity_start(data.get('effective_from')))
     uid, v = s.get_version(user, version_id, lock=True)
     s.require(uid,v['responsible_department_id'],'AUTHOR',v['document_id'])
     if v['status'] != 'DRAFT':
@@ -94,7 +95,7 @@ def new_revision(user, version_id, kind='major', reason='Neue Überarbeitung'):
         major = v['major']
         minor = s.query('SELECT max(minor)+1 AS minor FROM document_versions WHERE document_id=%s AND major=%s',[v['document_id'],major])[0]['minor']
     vid = s.query('''INSERT INTO document_versions(document_id,major,minor,title,change_summary,created_by,classification,next_review_on,effective_from)
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id''',[v['document_id'],major,minor,v['title'],reason,uid,v['classification'],v['next_review_on'],timezone.now()])[0]['id']
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id''',[v['document_id'],major,minor,v['title'],reason,uid,v['classification'],v['next_review_on'],validity_start(timezone.now())])[0]['id']
     for table, column in [('version_departments','department_id'),('version_standard_links','reference_id')]:
         # Table/column names come exclusively from these constants.
         s.query(f'INSERT INTO {table}(version_id,{column}) SELECT %s,{column} FROM {table} WHERE version_id=%s',[vid,version_id])
