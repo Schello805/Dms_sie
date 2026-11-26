@@ -4,6 +4,14 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.5.10: Nummernübersicht und Sichtbarkeit direkt am Dokument
+
+QMBs erreichen „Alle Dokumentnummern“ direkt neben der Dokumententabelle oder über
+„Verwaltung“. Das Register zeigt aktuelle und frühere Nummern einschließlich deaktivierter
+Dokumente, mit Suche, Filtern und Zählern. Deaktivieren und Reaktivieren sind direkt in
+„Bearbeiten / Details“ möglich; die Entwurfsbearbeitung bietet ebenfalls Deaktivieren.
+Details: [Release 0.5.10](docs/releases/v0.5.10.md).
+
 ## Release 0.5.9: Dokumentenart als eigene Tabellenspalte
 
 Die Dokumentenübersicht zeigt die Dokumentenart in einer eigenen sortierbaren Spalte

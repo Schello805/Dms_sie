@@ -52,6 +52,7 @@ urlpatterns = [
     path('versions/<int:version_id>/files/<int:file_id>/reindex/',views.retry_index,name='retry_index'),
     path('tasks/',views.tasks,name='tasks'),
     path('tasks/summary/',views.task_summary,name='task_summary'),
+    path('documents/<int:document_id>/active/',number_views.set_active,name='document_toggle_active'),
     path('documents/<int:document_id>/number/',number_views.rename,name='rename_document'),
     path('management/numbers/',number_views.listing,name='document_numbers'),
     path('management/numbers/<int:document_id>/active/',number_views.set_active,name='document_active'),

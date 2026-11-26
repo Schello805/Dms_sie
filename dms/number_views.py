@@ -15,21 +15,27 @@ def listing(request):
     search = request.GET.get('q', '').strip()[:200]
     active = request.GET.get('active', '')
     active = active if active in ('', '0', '1') else ''
+    kind=request.GET.get('type','').strip()[:200]
+    usage=request.GET.get('usage','')
+    usage=usage if usage in ('','current','former') else ''
     base = '''FROM document_number_registry r JOIN documents d ON d.id=r.document_id
         JOIN document_categories c ON c.name=d.document_type JOIN users u ON u.id=d.owner_id
         JOIN LATERAL (SELECT id,title FROM document_versions WHERE document_id=d.id
           ORDER BY major DESC,minor DESC LIMIT 1) v ON true
-        WHERE (%s='' OR r.number ILIKE %s OR v.title ILIKE %s)
-          AND (%s='' OR d.active=(%s='1'))'''
-    args = [search, '%'+search+'%', '%'+search+'%', active, active]
-    total = s.query('SELECT count(*) AS n '+base, args)[0]['n']
+        WHERE (%s='' OR r.number ILIKE %s OR d.number ILIKE %s OR v.title ILIKE %s)
+          AND (%s='' OR d.active=(%s='1'))
+          AND (%s='' OR c.name=%s)
+          AND (%s='' OR (r.number=d.number)=(%s='current'))'''
+    args = [search, '%'+search+'%', '%'+search+'%', '%'+search+'%', active, active,kind,kind,usage,usage]
+    counts=s.query('SELECT count(*) AS n,count(*) FILTER (WHERE r.number=d.number) AS current_count,count(DISTINCT d.id) AS document_count '+base,args)[0]
+    total=counts['n']
     page = Paginator(range(total), 25).get_page(request.GET.get('page'))
-    rows = s.query('''SELECT r.number,r.document_id,r.created_at,d.active,(r.number=d.number) AS current_number,
+    rows = s.query('''SELECT r.number,d.number AS document_number,r.document_id,r.created_at,d.active,(r.number=d.number) AS current_number,
         coalesce(c.display_name,c.name) AS kind,v.id AS version_id,v.title,u.display_name AS author '''+
-        base+' ORDER BY r.created_at DESC,r.document_id DESC LIMIT 25 OFFSET %s', args+[max(page.start_index()-1,0)])
+        base+' ORDER BY lower(r.number),r.number,r.document_id LIMIT 25 OFFSET %s', args+[max(page.start_index()-1,0)])
     params = request.GET.copy(); params.pop('page', None)
     return render(request, 'dms/document_numbers.html', {'rows':rows,'page':page,
-        'page_query':params.urlencode(),'search':search,'active':active})
+        'page_query':params.urlencode(),'search':search,'active':active,'kind':kind,'usage':usage,'counts':counts,'former_count':total-counts['current_count'],'types':s.query('SELECT name,coalesce(display_name,name) AS label FROM document_categories ORDER BY label')})
 
 
 @login_required
@@ -43,6 +49,9 @@ def set_active(request, document_id):
     enabled = request.POST['active']=='1'
     s.query('SELECT set_document_active(%s,%s,%s)', [actor, document_id, enabled])
     messages.success(request, 'Dokument reaktiviert.' if enabled else 'Dokument deaktiviert. Die Nummer bleibt dauerhaft vergeben.')
+    if request.resolver_match.view_name=='document_toggle_active':
+        latest=s.query('SELECT id FROM document_versions WHERE document_id=%s ORDER BY major DESC,minor DESC LIMIT 1',[document_id])
+        if latest:return redirect('detail',version_id=latest[0]['id'])
     return redirect('document_numbers')
 
 

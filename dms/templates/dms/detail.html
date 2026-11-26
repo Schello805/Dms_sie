@@ -30,6 +30,7 @@
 {% include 'dms/detail_workflow.html' %}
 {% if not can_workflow and not can_author and not can_review %}<section class="card"><h2>Dokumentstatus</h2><p>{% if v.status == 'IN_REVIEW' or v.status == 'PENDING_APPROVAL' %}Die Fassung wartet auf eine QMB-Entscheidung. Änderungen sind während der Prüfung gesperrt.{% else %}Für diese Fassung ist aktuell keine Bearbeitung vorgesehen.{% endif %}</p></section>{% endif %}
 {% if can_author %}<section class="card"><h2>Weitere Einstellungen</h2>{% if v.status == 'DRAFT' %}<p><a href="{% url 'distribution' v.id %}">Zielgruppen, Änderung und Kenntnisnahme</a></p>{% endif %}<p><a href="{% url 'access' v.id %}">Dokumentzugriff verwalten</a></p><p class="muted">Die aktuelle freigegebene Fassung bleibt ohne Anmeldung lesbar. Zugriffslisten schützen Arbeitsstände und Bearbeitungszugriffe.</p></section>{% endif %}
+{% include 'dms/document_visibility.html' with document=v %}
 </aside></div>
 {% include 'dms/detail_lifecycle.html' %}
 {% endblock %}
