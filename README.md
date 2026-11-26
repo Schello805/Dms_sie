@@ -119,9 +119,9 @@ Die IT pflegt SMTP und Benutzerkontakte. Vorab- und Fälligkeitserinnerungen geh
 ### Zugriff ohne Anmeldung
 
 Die Startseite ist die Dokumentenübersicht, keine Weiterleitung zum Login.
-Ohne Anmeldung erscheinen nur aktuelle freigegebene **öffentliche Metadaten** ohne explizite Zugriffsbeschränkung.
-Interne/vertrauliche Dokumente und alle Dateizugriffe erfordern eine Anmeldung.
-Eine allgemein anonyme Lesefreigabe für Unternehmensdokumente ist nicht aktiviert.
+Alle aktuellen freigegebenen Dokumente sind ohne Anmeldung sichtbar und können angesehen
+und heruntergeladen werden, unabhängig von Klassifizierung und Abteilungszuordnung.
+Nicht freigegebene Arbeitsstände, Bearbeitung und Verwaltung bleiben rollenabhängig geschützt.
 
 ## Bereits implementiert
 
@@ -279,7 +279,7 @@ Ihr konkreter Stand auf dem Zielserver ist außerhalb der gemeldeten erfolgreich
 - [ ] Sicherungen auf ein getrenntes Ziel übertragen, Schutz vor Veränderung/Löschung und Aufbewahrung festlegen; Wiederherstellung auf dem Zielsystem abnehmen.
 - [ ] Realistische Last-/Parallelitätstests mit dem vorgesehenen Nutzungsprofil durchführen.
 - [ ] Den vollständigen Freigabeablauf mit repräsentativen Unternehmensdokumenten fachlich abnehmen.
-- [ ] Entscheiden, ob der anonyme Zugriff über die derzeit öffentlichen Metadaten hinaus erweitert werden soll.
+- [x] Anonyme Lesefreigabe für alle aktuellen freigegebenen Dokumente einschließlich Vorschau und Download umgesetzt.
 
 ## Lokale Entwicklung
 
