@@ -16,3 +16,5 @@
 .site-brand-name{font-size:.9rem}
 }
 
+
+.footer-links{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}

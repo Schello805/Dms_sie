@@ -231,7 +231,6 @@ select[multiple]{width:100%;min-height:14rem;padding:.5rem;border:1px solid #bcc
 .catalog-filters select:not([multiple]){padding-right:2.5rem}
 @media(pointer:coarse){.form-field>input:not([type=checkbox]):not([type=radio]),.form-field>select:not([multiple]){height:44px;min-height:44px;font-size:16px}}
 
-.footer-links{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
 .help-nav{display:flex;gap:.5rem 1rem;flex-wrap:wrap;padding:.85rem 0;margin-bottom:.5rem;border-bottom:1px solid var(--border)}
 .help-content{max-width:1100px;margin:0 auto}.help-content section{scroll-margin-top:1rem;padding:1.25rem}.help-content h2{margin-top:0}.help-content p,.help-content li,.help-content dd{line-height:1.65}.help-content li+li{margin-top:.5rem}
 .help-list{margin:0}.help-list dt{font-weight:650;margin-top:1rem}.help-list dd{margin:.25rem 0 0;color:#405966}.help-table{max-height:none}.help-content details{padding:.8rem 0;border-top:1px solid var(--border)}.help-content summary{cursor:pointer;font-weight:600;padding:.3rem 0}.help-content details p{margin:.6rem 0 .25rem}
