@@ -4,6 +4,14 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.9.1: Fertige Demo-Flussdiagramme
+
+Alle 72 Sielaff-Demoprozesse erhalten beim Anlegen veröffentlichte BPMN-Beispieldiagramme.
+Demo-Karten öffnen direkt die Flussansicht; ein Doppelklick auf untergeordnete Prozesse
+führt durch alle vier Ebenen. Bestehende Installationen ergänzen fehlende Diagramme als
+QMB über **Demo-Flussdiagramme ergänzen**. Gespeicherte Diagramme und Arbeitsstände werden
+nicht überschrieben. Details: [Release 0.9.1](docs/releases/v0.9.1.md).
+
 ## Release 0.9.0: BPMN-Editor mit Import und Export
 
 Jeder Prozess kann ein BPMN-2.0-Diagramm erhalten. QMBs bearbeiten Aufgaben, Ereignisse,

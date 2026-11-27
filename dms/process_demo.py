@@ -1,7 +1,7 @@
 """Optional illustrative Sielaff landscape, never imported by an installation/migration."""
 from datetime import date, timedelta
 from django.db import transaction
-from . import processes, process_controls, services as s
+from . import processes, process_controls, demo_diagrams, services as s
 from .policies import require_qmb
 
 # Editorial examples; these are not verified internal Sielaff procedures.
@@ -48,6 +48,7 @@ def install(user):
     actor=require_qmb(user)
     s.query("SELECT pg_advisory_xact_lock(hashtext('ims-process-demo'))")
     if state()['installed']:
+        demo_diagrams.ensure(user)
         toggle(user,True)
         return
     owner=actor
@@ -72,4 +73,5 @@ def install(user):
         process_controls.save(user,production,None,'risk',risk,True,0,'Demobeispiel; Bewertung fachlich bestätigen.')
         kpi=dict(title='DEMO: Erstprüfquote',owner_id=owner,description='Ohne Nacharbeit bestandene Endprüfungen / alle Endprüfungen × 100. Zielwert ist ausschließlich ein fiktiver Demowert.',source='Fiktive Endprüfprotokolle',unit='%',direction='gte',target='98',interval_months=1,first_due=today.isoformat())
         process_controls.save(user,production,None,'kpi',kpi,True,0,'Fiktive Demo-Kennzahl ohne echte Betriebsdaten.')
+    demo_diagrams.ensure(user)
     toggle(user,True)

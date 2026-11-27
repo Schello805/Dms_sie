@@ -96,7 +96,8 @@
   } else {
     editor.on('element.dblclick', event => {
       const id = linkFor(event.element);
-      if (config.processes.some(process => String(process.id) === id)) window.location.assign('/processes/' + id + '/');
+      const target = config.processes.find(process => String(process.id) === id);
+      if (target) window.location.assign(target.url);
       else if (id) status('Der verknüpfte Prozess ist derzeit nicht zugänglich.', true);
     });
   }

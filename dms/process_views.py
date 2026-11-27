@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from django.shortcuts import redirect, render
-from . import processes, process_demo, services as s
+from . import processes, process_demo, demo_diagrams, services as s
 from .form_ui import AppForm
 from .audit_text import OptionalReasonField
 from .policies import is_qmb, require_qmb
@@ -89,6 +89,10 @@ def demo(request):
         return HttpResponseNotAllowed(['POST'])
     try:
         if request.POST.get('action')=='install':process_demo.install(request.user)
+        elif request.POST.get('action')=='diagrams':
+            count=demo_diagrams.ensure(request.user)
+            messages.success(request,f'{count} fehlende Demo-Flussdiagramme ergänzt. Vorhandene Diagramme bleiben unverändert.')
+            return redirect('processes')
         else:process_demo.toggle(request.user,request.POST.get('action')=='show')
     except ValidationError as error:
         messages.error(request,'Demo konnte nicht angelegt werden: '+ '; '.join(error.messages))

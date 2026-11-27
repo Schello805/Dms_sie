@@ -14,6 +14,7 @@ def nodes(manage=False, target=None, search=''):
       UNION ALL SELECT p.*,t.ancestors_visible AND t.active AND t.live IS NOT NULL,t.path||p.id
       FROM ims_processes p JOIN tree t ON p.parent_id=t.id)
       SELECT id,parent_id,level,code,revision,active,updated_at,path,demo,
+        EXISTS(SELECT 1 FROM process_bpmn b WHERE b.process_id=tree.id AND b.live_xml IS NOT NULL) AS has_bpmn,
         (draft IS DISTINCT FROM live) AS has_draft,
         CASE WHEN id=%s THEN live WHEN live IS NOT NULL THEN jsonb_build_object('title',live->>'title') END AS live,
         CASE WHEN %s THEN CASE WHEN id=%s THEN draft ELSE jsonb_build_object('title',draft->>'title') END END AS draft,
