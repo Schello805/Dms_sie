@@ -27,7 +27,7 @@ BACKUPS = Path('/var/backups/ims-dms')
 SERVICES = ('ims-dms', 'ims-dms-index', 'ims-dms-notifications')
 ROLES = ('owner', 'app', 'index', 'notify', 'backup')
 MARKER = '# Managed by IMS-DMS install_linux.py'
-SYSTEM_PACKAGES = ['python3', 'python3-venv', 'python3-dev', 'build-essential', 'libffi-dev', 'libssl-dev', 'git', 'curl', 'ca-certificates', 'postgresql', 'postgresql-client', 'nginx', 'fonts-dejavu-core']
+SYSTEM_PACKAGES = ['python3', 'python3-venv', 'python3-dev', 'build-essential', 'libffi-dev', 'libssl-dev', 'git', 'curl', 'ca-certificates', 'postgresql', 'postgresql-client', 'nginx', 'fonts-dejavu-core', 'poppler-utils', 'tesseract-ocr', 'tesseract-ocr-deu', 'tesseract-ocr-eng']
 APT_OPTIONS = ['-o', 'Acquire::Retries=2', '-o', 'Acquire::http::Timeout=20',
                '-o', 'Acquire::https::Timeout=20', '-o', 'APT::Update::Error-Mode=any']
 
@@ -167,6 +167,7 @@ User=ims-dms
 Group=ims-dms
 WorkingDirectory={BASE}/current
 EnvironmentFile={CONFIG}/{env_name}.env
+EnvironmentFile=-{CONFIG}/{env_name}.local.env
 ExecStart={BASE}/current/.venv/bin/{command}
 Restart=on-failure
 RestartSec=5

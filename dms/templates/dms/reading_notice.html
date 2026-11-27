@@ -1,0 +1,4 @@
+{% if reading_overdue or reading_change or assignment %}<section class="reading-notice" aria-label="Hinweise zur Dokumentfassung">
+{% if reading_overdue %}<p><strong>Review überfällig seit {{ v.review_due_on|date:'d.m.Y' }}.</strong> Diese Fassung bleibt bis zur Ablösung oder zum Rückzug freigegeben.</p>{% endif %}
+{% if reading_change %}<details><summary>Was hat sich geändert? · Version {{ v.major }}.{{ v.minor }}</summary><p>{{ v.change_summary|linebreaksbr }}</p></details>{% endif %}
+{% if assignment %}<p><strong>Deine Kenntnisnahme · bis {{ assignment.due_on|date:'d.m.Y' }}</strong></p>{% include 'dms/acknowledgement_form.html' %}<p class="muted">Die Bestätigung gilt für diese Fassung und ersetzt keine erforderliche Unterweisung.</p>{% endif %}</section>{% endif %}

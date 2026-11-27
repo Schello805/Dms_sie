@@ -77,6 +77,8 @@ def create_record(user,data,uploaded):
                 digest.update(chunk)
         if not size:
             raise ValidationError('Leere Nachweise sind nicht zulässig.')
+        from .malware import scan
+        scan(path)
         fid = s.query('INSERT INTO file_objects(storage_key,original_name,media_type,size_bytes,sha256) VALUES (%s,%s,%s,%s,%s) RETURNING id',[key,name,storage.ALLOWED[suffix],size,digest.hexdigest()])[0]['id']
         rid = s.query('''INSERT INTO evidence_records(number,title,category_id,department_id,owner_id,source_version_id,
             occurred_on,retain_until,classification,file_id,reason) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id''',

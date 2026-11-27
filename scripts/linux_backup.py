@@ -15,6 +15,11 @@ def main():
     if not backup.is_relative_to(BACKUPS.resolve()) or not (backup / 'manifest.json').is_file():
         raise RuntimeError('Ungültiges Sicherungsziel.')
     write_private(backup / 'install.json', STATE.read_text())
+    import os
+    target = os.environ.get('DMS_BACKUP_COPY_TARGET','').strip()
+    if target:
+        from dms.backup_copy import copy_backup
+        copy_backup(backup,target)
     from dms.health import heartbeat
     heartbeat('backup')
     print(backup)

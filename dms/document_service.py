@@ -12,7 +12,7 @@ from .catalog_columns import CATALOG_SORTS
 from . import services as s
 
 def load_version(version_id,lock=False):
-    rows = s.query('''SELECT v.*,d.active AS document_active,d.number,d.document_type,d.owner_id,(SELECT display_name FROM users WHERE id=d.owner_id) AS owner_name,d.responsible_department_id,c.review_interval_months,coalesce(c.display_name,c.name) AS category_label,review.review_due_on,review.last_review_on,(SELECT uploaded_at FROM document_upload_origins WHERE document_id=v.document_id) AS uploaded_at,(SELECT max(a.decided_at) FROM approval_decisions a WHERE a.version_id=v.id AND a.stage='APPROVAL' AND a.decision='ACCEPT') AS approved_at FROM document_versions v
+    rows = s.query('''SELECT v.*,d.active AS document_active,d.login_required,d.number,d.document_type,d.owner_id,(SELECT display_name FROM users WHERE id=d.owner_id) AS owner_name,d.responsible_department_id,c.review_interval_months,coalesce(c.display_name,c.name) AS category_label,review.review_due_on,review.last_review_on,(SELECT uploaded_at FROM document_upload_origins WHERE document_id=v.document_id) AS uploaded_at,(SELECT max(a.decided_at) FROM approval_decisions a WHERE a.version_id=v.id AND a.stage='APPROVAL' AND a.decision='ACCEPT') AS approved_at FROM document_versions v
                     JOIN documents d ON d.id=v.document_id
                     JOIN document_categories c ON c.name=d.document_type
                     JOIN version_review_status review ON review.version_id=v.id WHERE v.id=%s''' + (' FOR UPDATE OF v' if lock else ''), [version_id])

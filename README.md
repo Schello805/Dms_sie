@@ -4,6 +4,18 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.6.0: Einfache Leseansicht und zuverlässige IMS-Abläufe
+
+Die Abteilung steht als eigene sortierbare Spalte in der Dokumentenübersicht und bleibt
+separat filterbar – einschließlich Direktsuche und Lazy Loading. Zugewiesene Kenntnisnahmen
+sind direkt in der Übersicht und im PDF-Betrachter erreichbar; Änderungsinformationen
+lassen sich dort aufklappen. Der QMB kann Dokumentverantwortung gesammelt übertragen und
+ein Dokumentenregister für Audits exportieren. OCR verarbeitet gescannte PDF-Seiten im
+Hintergrund; temporäre, eindeutig abgewiesene SMTP-Sendungen erhalten begrenzte Wiederholungen.
+Optionale angemeldete Lesefreigabe, ClamAV-Anbindung und eine geprüfte zweite Sicherungskopie
+sind vorbereitet. Bestehende Dokumente bleiben standardmäßig ohne Anmeldung lesbar.
+Details, technische Grenzen und Betriebseinrichtung: [Release 0.6.0](docs/releases/v0.6.0.md).
+
 ## Release 0.5.10: Nummernübersicht und Sichtbarkeit direkt am Dokument
 
 QMBs erreichen „Alle Dokumentnummern“ direkt neben der Dokumententabelle oder über
@@ -163,8 +175,10 @@ Die IT pflegt SMTP und Benutzerkontakte. Vorab- und Fälligkeitserinnerungen geh
 ### Zugriff ohne Anmeldung
 
 Die Startseite ist die Dokumentenübersicht, keine Weiterleitung zum Login.
-Alle aktuellen freigegebenen Dokumente sind ohne Anmeldung sichtbar und können angesehen
-und heruntergeladen werden, unabhängig von Klassifizierung und Abteilungszuordnung.
+Standardmäßig sind aktuelle freigegebene Dokumente ohne Anmeldung sichtbar und können
+angesehen und heruntergeladen werden. Der QMB kann einzelne Dokumente unter „Dokumentzugriff“
+auf angemeldete Personen mit bestehender Leseberechtigung beschränken. Die Klassifizierung
+allein ändert die anonyme Lesefreigabe nicht.
 Nicht freigegebene Arbeitsstände, Bearbeitung und Verwaltung bleiben rollenabhängig geschützt.
 
 ## Bereits implementiert
@@ -180,10 +194,11 @@ Nicht freigegebene Arbeitsstände, Bearbeitung und Verwaltung bleiben rollenabh�
 - IT-Fehlerprotokoll, Systeminformationen und gespeicherte AD-/LDAP-Anschlussparameter.
 - Konsistente Datenbank-/Dateisicherungen mit Prüfsummen, passendem Quellstand und technischer Restore-Prüfung. Der Linux-Installer ergänzt geschützte Wiederherstellungsgeheimnisse.
 
-Zielgruppen, Kenntnisnahmen und ein Nachweisregister sind zusätzlich im Code vorhanden.
-Das Nachweisregister enthält unter anderem unveränderliche Nachweise, Aufbewahrungsverlängerungen,
-Löschsperren und Aussonderungsanträge. Diese Funktionen sind **nicht Teil der vereinfachten Leseroberfläche**;
-der frühere Portal-/Kenntnisnahme-Worker wird vom Installer nicht gestartet.
+Zielgruppen und versionsgebundene Kenntnisnahmen sind über Dokumentdetails konfigurierbar.
+Angemeldete betroffene Mitarbeiter sehen ihre Aufgaben direkt in der Dokumentenübersicht
+und im PDF-Betrachter. Zuweisungen entstehen bei Freigabe und beim Öffnen der Übersicht;
+ein zusätzlicher Portal-Worker ist dafür nicht erforderlich. Das Nachweisregister bleibt
+in der Fachansicht für berechtigte Konten verfügbar.
 
 ## Neu: Benutzerverwaltung, QMB-Arbeitsliste und Betriebsüberwachung
 
@@ -304,13 +319,14 @@ Details und Prüfstand: [Stammdatenverwaltung](docs/masterdata.md).
 Diese Punkte sind tatsächliche fehlende oder unvollständige Funktionen, keine Aussage darüber, ob die Installation läuft:
 
 - [ ] **AD-/LDAP-Anmeldung, SSO und Benutzer-/Gruppensynchronisation.** Die Einstellungsfelder sind vorhanden, aktivieren aber noch keine Verzeichnisverbindung oder Anmeldung.
-- [ ] **OCR und Malwareprüfung.** Scans ohne Textebene sind derzeit nicht per Volltext durchsuchbar; Dateiendungen und Integritätsprüfung ersetzen keinen Virenscanner.
+- [x] **OCR-Anbindung für PDF-Scans.** Linux-Installer installiert Poppler und Tesseract mit Deutsch/Englisch; je Datei maximal 10 Scan-Seiten und ein begrenztes Zeitbudget. Teilverarbeitung wird gekennzeichnet.
+- [x] **Optionale ClamAV-Streamprüfung.** Technisch implementiert; Client, Daemon und aktuelle Signaturen müssen betrieblich eingerichtet und die Prüfung aktiviert werden.
 - [ ] **Zusätzliche Betriebssystem-Isolation der Dokumentparser.** Ressourcenlimits bestehen bereits; eine weitergehende Parser-Sandbox ist nicht vollständig umgesetzt.
 - [ ] **Automatische Verarbeitung von Bounces und Zustellbestätigungen.** SMTP-Annahme/Fehler werden protokolliert; eine SMTP-Annahme beweist keine Zustellung im Postfach.
 - [ ] **Kontrollierter Löschvollzug und Bereinigung unreferenzierter Dokumentdateien.** Aufbewahrungsmetadaten und Teile der Nachweisverwaltung bestehen bereits; automatische Dokumentlöschung ist nicht implementiert.
 
-Ob Kenntnisnahmen, Favoriten und das Nachweisregister wieder in die Benutzeroberfläche aufgenommen werden sollen,
-ist eine fachliche Produktentscheidung, kein Fehler der aktuellen Leseransicht.
+Favoriten und das Nachweisregister bleiben Erweiterungen der Fachansicht. Die einfache Leseransicht
+zeigt zugewiesene Kenntnisnahmen nur bei tatsächlichem Bedarf.
 
 ## Noch zu prüfen oder einzurichten: Unternehmensbetrieb
 
@@ -323,7 +339,7 @@ Ihr konkreter Stand auf dem Zielserver ist außerhalb der gemeldeten erfolgreich
 - [ ] Sicherungen auf ein getrenntes Ziel übertragen, Schutz vor Veränderung/Löschung und Aufbewahrung festlegen; Wiederherstellung auf dem Zielsystem abnehmen.
 - [ ] Realistische Last-/Parallelitätstests mit dem vorgesehenen Nutzungsprofil durchführen.
 - [ ] Den vollständigen Freigabeablauf mit repräsentativen Unternehmensdokumenten fachlich abnehmen.
-- [x] Anonyme Lesefreigabe für alle aktuellen freigegebenen Dokumente einschließlich Vorschau und Download umgesetzt.
+- [x] Anonyme Lesefreigabe für aktuelle freigegebene Dokumente einschließlich Vorschau und Download umgesetzt; optionale QMB-Beschränkung je Dokument verfügbar.
 
 ## Lokale Entwicklung
 

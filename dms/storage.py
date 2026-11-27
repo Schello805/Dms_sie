@@ -41,6 +41,8 @@ def upload(user, version_id, uploaded, purpose='ORIGINAL'):
                 digest.update(chunk)
         if size == 0:
             raise ValidationError('Leere Dateien sind nicht zulässig.')
+        from .malware import scan
+        scan(path)
         file_id = s.query('''INSERT INTO file_objects(storage_key,original_name,media_type,size_bytes,sha256)
             VALUES (%s,%s,%s,%s,%s) RETURNING id''',[key,name,ALLOWED[suffix],size,digest.hexdigest()])[0]['id']
         s.query('INSERT INTO document_upload_origins(document_id) VALUES (%s) ON CONFLICT DO NOTHING',[v['document_id']])

@@ -208,6 +208,9 @@ def audit_report(request):
     rows = []
     if form.is_valid():
         data = form.cleaned_data
+        if request.GET.get('export')=='documents':
+            from .audit_export import document_register
+            return document_register(request.user,data['document_number'])
         rows = s.query('''SELECT e.id,e.occurred_at,e.action,e.object_type,e.object_id,e.reason,u.display_name
             FROM audit_events e LEFT JOIN users u ON u.id=e.actor_id
             LEFT JOIN document_versions av ON e.object_type='version' AND e.object_id=av.id::text
@@ -254,7 +257,12 @@ def pdf_viewer(request,version_id,file_id):
     files = s.query('SELECT f.original_name FROM file_objects f JOIN version_files vf ON vf.file_id=f.id WHERE vf.version_id=%s AND f.id=%s',[version_id,file_id])
     if not files or Path(files[0]['original_name']).suffix.lower() not in ('.pdf','.txt'):
         return HttpResponse('Bitte eine PDF-Lesefassung hinterlegen oder die Originaldatei herunterladen.',status=409,content_type='text/plain; charset=utf-8')
-    response = render(request,'dms/pdf_viewer.html',{'v':version,'file_id':file_id})
+    assignments = portal.pending_acknowledgements(request.user) if request.user.is_authenticated and s.query('SELECT 1 FROM users WHERE auth_user_id=%s AND active',[request.user.pk]) else []
+    from .audit_text import DEFAULT_REASON
+    response = render(request,'dms/pdf_viewer.html',{'v':version,'file_id':file_id,
+        'reading_overdue':bool(version['status']=='APPROVED' and s.query('SELECT current_release(%s) AS id',[version['document_id']])[0]['id']==version_id and version['review_due_on'] and version['review_due_on']<timezone.localdate()),
+        'reading_change':bool(version['change_summary'] and version['change_summary']!=DEFAULT_REASON),
+        'assignment':next((a for a in assignments if a['version_id']==version_id),None)})
     response['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: blob:; connect-src 'self'; object-src 'none'; frame-ancestors 'self'; base-uri 'none'"
     return response
 

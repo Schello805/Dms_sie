@@ -94,7 +94,7 @@ def returned_tasks(user):
         FROM document_versions v JOIN documents d ON d.id=v.document_id
         JOIN LATERAL (SELECT x.comment,x.decided_at FROM approval_decisions x WHERE x.version_id=v.id
           AND x.decision='RETURN' ORDER BY x.id DESC LIMIT 1) a ON true
-        WHERE d.active AND v.created_by=%s AND v.status='DRAFT' AND can_read_version(%s,v.id)
+        WHERE d.active AND d.owner_id=%s AND v.status='DRAFT' AND can_read_version(%s,v.id)
         AND has_role(%s,'AUTHOR',d.responsible_department_id,d.id) ORDER BY a.decided_at DESC''',[uid,uid,uid])
 
 

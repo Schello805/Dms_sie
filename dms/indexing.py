@@ -14,7 +14,7 @@ from . import services as s
 
 @transaction.atomic
 def claim_job():
-    s.query("UPDATE file_text_indexes SET status=CASE WHEN attempts>=3 THEN 'FAILED' ELSE 'PENDING' END,lease_token=NULL,error_code='LEASE_EXPIRED' WHERE status='RUNNING' AND claimed_at<clock_timestamp()-interval '2 minutes'")
+    s.query("UPDATE file_text_indexes SET status=CASE WHEN attempts>=3 THEN 'FAILED' ELSE 'PENDING' END,lease_token=NULL,error_code='LEASE_EXPIRED' WHERE status='RUNNING' AND claimed_at<clock_timestamp()-interval '5 minutes'")
     token = str(uuid.uuid4())
     rows = s.query('''WITH next AS (SELECT file_id FROM file_text_indexes WHERE status='PENDING' AND attempts<3 ORDER BY file_id FOR UPDATE SKIP LOCKED LIMIT 1)
         UPDATE file_text_indexes i SET status='RUNNING',attempts=attempts+1,lease_token=%s::uuid,claimed_at=clock_timestamp(),error_code=''
@@ -44,7 +44,7 @@ def extract_job(job):
     environment = {key:value for key,value in os.environ.items() if key in ('PATH','LANG','LC_ALL','SYSTEMROOT')}
     environment.update(PYTHONIOENCODING='utf-8',PYTHONDONTWRITEBYTECODE='1')
     try:
-        result = subprocess.run([sys.executable,'-I',str(settings.BASE_DIR/'dms/extract_text.py'),kind],input=content,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,env=environment,timeout=20,check=True)
+        result = subprocess.run([sys.executable,'-I',str(settings.BASE_DIR/'dms/extract_text.py'),kind],input=content,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,env=environment,timeout=140,check=True)
         output = json.loads(result.stdout)
         if 'error' not in output and (not isinstance(output.get('text'),str) or len(output['text'])>200000):
             return {'error':'LIMIT_EXCEEDED'}

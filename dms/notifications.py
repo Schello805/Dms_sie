@@ -123,7 +123,7 @@ def queue_due(today=None):
         kind = 'DUE' if candidate['due_on']<=today else 'BEFORE'
         with transaction.atomic():
             rows = s.query('''INSERT INTO review_notifications AS n(version_id,recipient_id,due_on,kind,message_id,recipient_kind)
-                VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT (version_id,recipient_id,due_on,kind) DO UPDATE SET status='PENDING',error_code='',next_attempt_at=clock_timestamp(),lease_token=NULL WHERE (n.status='CANCELLED' AND n.error_code='NO_ACCESS') OR (n.status='PENDING' AND n.next_attempt_at>clock_timestamp()) RETURNING id''',
+                VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT (version_id,recipient_id,due_on,kind) DO UPDATE SET status='PENDING',error_code='',next_attempt_at=clock_timestamp(),lease_token=NULL WHERE (n.status='CANCELLED' AND n.error_code='NO_ACCESS') OR (n.status='PENDING' AND n.error_code='' AND n.next_attempt_at>clock_timestamp()) RETURNING id''',
                 [candidate['version_id'],candidate['recipient_id'],candidate['due_on'],kind,f'<{uuid.uuid4().hex}@ims-dms.local>',candidate['recipient_kind']])
             if rows:
                 mail_event('MAIL_QUEUED',rows[0]['id'],'Review-Erinnerung vorgemerkt',{'kind':kind,'due_on':str(candidate['due_on'])})
@@ -167,6 +167,14 @@ def failure_status(exc):
     if isinstance(exc,(smtplib.SMTPAuthenticationError,smtplib.SMTPRecipientsRefused,smtplib.SMTPSenderRefused,smtplib.SMTPDataError,smtplib.SMTPConnectError,smtplib.SMTPNotSupportedError,ConnectionRefusedError,socket.gaierror,ssl.SSLError,ValidationError)):
         return 'FAILED','SMTP_REJECTED' if not isinstance(exc,ValidationError) else 'CONFIGURATION'
     return 'UNCERTAIN','SMTP_RESULT_UNKNOWN'
+
+
+def retryable_failure(exc):
+    if isinstance(exc, smtplib.SMTPResponseException):
+        return 400 <= exc.smtp_code < 500
+    if isinstance(exc, smtplib.SMTPRecipientsRefused):
+        return bool(exc.recipients) and all(400 <= reply[0] < 500 for reply in exc.recipients.values())
+    return isinstance(exc, (ConnectionRefusedError, socket.gaierror))
 
 
 def dispatch_one(today=None):
@@ -221,7 +229,11 @@ def dispatch_one(today=None):
             smtp_send(config,recipient,subject,body,job['message_id'])
         except Exception as exc:
             status,error = failure_status(exc)
-            finish(job,status,error,recipient)
+            if status=='FAILED' and retryable_failure(exc) and job['attempts']<4:
+                finish(job,'PENDING','TEMPORARY_SMTP',recipient)
+                s.query("UPDATE review_notifications SET next_attempt_at=clock_timestamp()+(%s * interval '1 minute') WHERE id=%s AND status='PENDING'",[5 * 3**(job['attempts']-1),job['id']])
+            else:
+                finish(job,status,error,recipient)
         else:
             finish(job,'SENT',email=recipient)
     return True

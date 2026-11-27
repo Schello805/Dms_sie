@@ -73,6 +73,22 @@ class NotificationTests(TestCase):
         self.publish()
         self.configure()
 
+    def test_temporary_rejection_retries_with_backoff_without_queue_reset(self):
+        n.queue_due(self.today)
+        with patch.object(n,'smtp_send',side_effect=smtplib.SMTPDataError(451,b'temporary')):
+            n.dispatch_one(self.today)
+        row=s.query("SELECT * FROM review_notifications WHERE error_code='TEMPORARY_SMTP'")[0]
+        self.assertEqual(row['status'],'PENDING')
+        self.assertEqual(row['attempts'],1)
+        self.assertGreater(row['next_attempt_at'],timezone.now()+timedelta(minutes=4))
+        n.queue_due(self.today)
+        self.assertEqual(s.query('SELECT next_attempt_at FROM review_notifications WHERE id=%s',[row['id']])[0]['next_attempt_at'],row['next_attempt_at'])
+        s.query("UPDATE review_notifications SET attempts=3,next_attempt_at=clock_timestamp() WHERE id=%s",[row['id']])
+        with patch.object(n,'smtp_send',side_effect=smtplib.SMTPDataError(451,b'temporary')):
+            n.dispatch_one(self.today)
+        row=s.query('SELECT * FROM review_notifications WHERE id=%s',[row['id']])[0]
+        self.assertEqual(row['status'],'FAILED');self.assertEqual(row['attempts'],4)
+
     def configure(self,**overrides):
         data = n.public_config(n.load_config()) | {'password':'','clear_password':False,'reason':'Lokaler SMTP-Funktionstest',
             'enabled':True,'smtp_host':'127.0.0.1','smtp_port':self.server.server_address[1],

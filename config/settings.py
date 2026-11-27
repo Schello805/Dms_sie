@@ -57,3 +57,6 @@ LOGGING = {
 }
 
 HEALTH_DIR = Path(os.environ.get('DMS_HEALTH_DIR', str(MEDIA_ROOT.parent / 'health')))
+
+# Optional stream scanning against the local ClamAV daemon.
+MALWARE_SCAN_ENABLED = os.environ.get('DMS_MALWARE_SCAN_ENABLED','0') == '1'

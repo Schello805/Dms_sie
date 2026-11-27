@@ -67,6 +67,7 @@ class RevisionForm(AppForm):
 
 
 class AccessForm(AppForm):
+    login_required = forms.BooleanField(label='Lesefassung nur mit Anmeldung und bestehender Leseberechtigung',required=False,help_text='QMB-Einstellung. Ohne Haken bleibt die freigegebene Fassung ohne Anmeldung lesbar.')
     access_mode = forms.ChoiceField(label='Zugriffsbereich',choices=[('DEPARTMENT','Abteilungs- und Dokumentrollen'),('EXPLICIT','Zusätzlich nur ausdrücklich freigegebene Personen/Gruppen')])
     users = forms.TypedMultipleChoiceField(label='Ausdrücklich berechtigte Personen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple)
     groups = forms.TypedMultipleChoiceField(label='Ausdrücklich berechtigte Gruppen',coerce=int,required=False,widget=forms.CheckboxSelectMultiple)

@@ -46,3 +46,5 @@ GRANT EXECUTE ON FUNCTION release_qmb_document(bigint,bigint,text) TO :"runtime_
 
 GRANT EXECUTE ON FUNCTION allocate_document_number(bigint,text),set_category_number_prefix(bigint,bigint,text,text),set_document_active(bigint,bigint,boolean) TO :"runtime_role";
 GRANT EXECUTE ON FUNCTION rename_document(bigint,bigint,text,text) TO :"runtime_role";
+
+GRANT EXECUTE ON FUNCTION transfer_document_owner(bigint,bigint,bigint,bigint,text),set_document_login_required(bigint,bigint,boolean,text) TO :"runtime_role";

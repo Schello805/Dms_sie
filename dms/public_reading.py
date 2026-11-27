@@ -2,7 +2,7 @@
 from django.core.exceptions import PermissionDenied
 from . import services as s
 
-PUBLIC_RELEASE = "v.status='APPROVED' AND v.id=current_release(v.document_id)"
+PUBLIC_RELEASE = "NOT (SELECT login_required FROM documents WHERE id=v.document_id) AND v.status='APPROVED' AND v.id=current_release(v.document_id)"
 
 
 def get_read_version(user,version_id):

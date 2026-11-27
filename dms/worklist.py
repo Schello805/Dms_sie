@@ -15,7 +15,7 @@ def tasks_for(user):
         uid = s.actor(user)
         today = timezone.localdate()
         reviews = s.query("""SELECT v.id,v.title,d.number,r.review_due_on,r.review_result,
-            (r.review_due_on<=%s) AS review_overdue,(r.review_due_on-%s) AS days_left
+            (r.review_due_on<%s) AS review_overdue,(r.review_due_on-%s) AS days_left
             FROM document_versions v JOIN documents d ON d.id=v.document_id
             JOIN version_review_status r ON r.version_id=v.id
             WHERE v.id=current_release(d.id) AND v.status='APPROVED' AND v.created_by<>%s
@@ -23,4 +23,5 @@ def tasks_for(user):
             ORDER BY r.review_due_on NULLS LAST,d.number,v.id LIMIT 5000""",
             [today,today,uid,uid,today+timedelta(days=lead_days)])
     return {'returned':returned,'tasks':pending,'due':reviews,'lead_days':lead_days,
+            'unassigned_count':len(s.query("SELECT d.id FROM documents d JOIN users u ON u.id=d.owner_id LEFT JOIN auth_user a ON a.id=u.auth_user_id WHERE d.active AND (NOT u.active OR NOT coalesce(a.is_active,false))")) if is_qmb(user) else 0,
             'overdue_count':sum(bool(v['review_overdue']) for v in reviews),'review_count':len(reviews),'pending_count':len(pending),'returned_count':len(returned),'work_count':len(returned)+len(pending)+len(reviews)}

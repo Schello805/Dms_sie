@@ -3,6 +3,7 @@ COLUMNS = (
     ('number', 'Dokumentnummer', 'd.number'),
     ('title', 'Dokument', 'v.title'),
     ('type', 'Dokumentenart', 'coalesce(c.display_name,c.name)'),
+    ('department', 'Abteilung', 'dep.name'),
     ('author', 'Autor', '(SELECT display_name FROM users WHERE id=d.owner_id)'),
     ('uploaded', 'Hochgeladen', 'uploaded_at'),
     ('review', 'Letztes Review', 'review.last_review_on'),

@@ -42,19 +42,19 @@ def visible_versions(user, search='', status='', department='', standard='', due
         LEFT JOIN LATERAL (
             SELECT i.file_id,f.original_name,ts_rank_cd(i.search_vector,input.terms) AS score,
                 left(ts_headline('german',i.text_content,input.terms,
-                    'StartSel=[, StopSel=], MaxWords=35, MinWords=10, MaxFragments=1'),600) AS snippet
+                    'StartSel=__IMS_HIT_START__, StopSel=__IMS_HIT_END__, MaxWords=35, MinWords=10, MaxFragments=1'),600) AS snippet
             FROM version_files vf JOIN file_text_indexes i ON i.file_id=vf.file_id
             JOIN file_objects f ON f.id=vf.file_id
-            WHERE vf.version_id=v.id AND (can_read_version(%s,v.id) OR (v.status='APPROVED' AND v.id=current_release(v.document_id)))
+            WHERE vf.version_id=v.id AND (can_read_version(%s,v.id) OR (v.status='APPROVED' AND NOT d.login_required AND v.id=current_release(v.document_id)))
                 AND i.status='READY' AND i.search_vector @@ input.terms
             ORDER BY score DESC,i.file_id LIMIT 1
         ) matched ON true
-        WHERE d.active AND (can_read_version(%s,v.id) OR (v.status='APPROVED' AND v.id=current_release(v.document_id)))
+        WHERE d.active AND (can_read_version(%s,v.id) OR (v.status='APPROVED' AND NOT d.login_required AND v.id=current_release(v.document_id)))
         AND (%s='' OR v.title ILIKE %s OR d.number ILIKE %s OR matched.file_id IS NOT NULL OR EXISTS(SELECT 1 FROM version_distribution dist WHERE dist.version_id=v.id AND dist.keywords ILIKE %s))
         AND (%s='' OR v.status=%s OR (%s AND %s='DRAFT' AND v.status IN ('IN_REVIEW','PENDING_APPROVAL')))
         AND (NOT %s OR (
             (v.status='APPROVED' AND v.id=current_release(v.document_id))
-            OR (v.status IN ('DRAFT','IN_REVIEW','PENDING_APPROVAL') AND v.created_by=%s
+            OR (v.status IN ('DRAFT','IN_REVIEW','PENDING_APPROVAL') AND (v.created_by=%s OR d.owner_id=%s)
                 AND has_role(%s,'AUTHOR',d.responsible_department_id,d.id))))
         AND (%s='' OR dep.id::text=%s)
         AND (%s='' OR EXISTS (SELECT 1 FROM version_standard_links vl
@@ -66,10 +66,10 @@ def visible_versions(user, search='', status='', department='', standard='', due
                 OR review.review_result IN ('REVISION_REQUIRED','WITHDRAWAL_REQUIRED'))))
         AND (NOT %s OR (v.id=current_release(v.document_id) AND v.status='APPROVED'))
         ORDER BY """ + ordering + """ LIMIT %s OFFSET %s""",
-        [search,search,uid,uid,search,pattern,pattern,pattern,status,status,catalog_only,status,catalog_only,uid,uid,department,department,
+        [search,search,uid,uid,search,pattern,pattern,pattern,status,status,catalog_only,status,catalog_only,uid,uid,uid,department,department,
          standard,standard,due_only,timezone.localdate(),current_only,min(max(int(limit),1),5000),max(int(offset),0)])
     for row in rows:
         from pathlib import Path
         row['previewable'] = bool(row['reading_file_name'] and Path(row['reading_file_name']).suffix.lower() in ('.pdf','.txt'))
-        row['review_overdue'] = bool(row['is_current'] and row['review_due_on'] and row['review_due_on']<=timezone.localdate())
+        row['review_overdue'] = bool(row['is_current'] and row['review_due_on'] and row['review_due_on']<timezone.localdate())
     return rows

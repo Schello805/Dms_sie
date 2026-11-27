@@ -47,6 +47,8 @@ class IndexingTests(TestCase):
     def test_stale_worker_cannot_overwrite_new_lease(self):
         job = indexing.claim_job()
         s.query("UPDATE file_text_indexes SET claimed_at=clock_timestamp()-interval '3 minutes'")
+        self.assertIsNone(indexing.claim_job())
+        s.query("UPDATE file_text_indexes SET claimed_at=clock_timestamp()-interval '6 minutes'")
         replacement = indexing.claim_job()
         self.assertNotEqual(job['lease_token'],replacement['lease_token'])
         self.assertEqual(indexing.finish_job(job,{'text':'Veraltet'}),[])
@@ -135,7 +137,7 @@ class IndexingTests(TestCase):
     def test_queue_retries_are_bounded(self):
         for attempt in range(3):
             self.assertIsNotNone(indexing.claim_job())
-            s.query("UPDATE file_text_indexes SET claimed_at=clock_timestamp()-interval '3 minutes'")
+            s.query("UPDATE file_text_indexes SET claimed_at=clock_timestamp()-interval '6 minutes'")
         self.assertIsNone(indexing.claim_job())
         self.assertEqual(s.query('SELECT status FROM file_text_indexes')[0]['status'],'FAILED')
 

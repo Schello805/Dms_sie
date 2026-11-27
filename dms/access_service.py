@@ -27,21 +27,29 @@ def version_history(user, version_id):
     return v,versions,decisions
 
 def access_policy(document_id):
-    mode = s.query('SELECT access_mode FROM documents WHERE id=%s',[document_id])[0]['access_mode']
+    policy = s.query('SELECT access_mode,login_required FROM documents WHERE id=%s',[document_id])[0]
+    mode = policy['access_mode']
     people = s.query('SELECT user_id FROM document_access_users WHERE document_id=%s ORDER BY user_id',[document_id])
     groups = s.query('SELECT group_id FROM document_access_groups WHERE document_id=%s ORDER BY group_id',[document_id])
-    return {'access_mode':mode,'users':people,'groups':groups}
+    return {'access_mode':mode,'login_required':policy['login_required'],'users':people,'groups':groups}
 
 @transaction.atomic
-def change_access(user,version_id,access_mode,users,groups,reason):
+def change_access(user,version_id,access_mode,users,groups,reason,login_required=None):
     reason = optional_reason(reason)
     uid,v = s.get_version(user,version_id,lock=True)
     document_id = v['document_id']
-    s.require(uid,v['responsible_department_id'],'AUTHOR',document_id)
+    from .policies import is_qmb
+    qmb = is_qmb(user)
+    if not qmb:
+        s.require(uid,v['responsible_department_id'],'AUTHOR',document_id)
     s.query('SELECT id FROM documents WHERE id=%s FOR UPDATE',[document_id])
     if access_mode not in ('DEPARTMENT','EXPLICIT'):
         raise ValidationError('Gültigen Zugriffsbereich auswählen.')
     before = s.access_policy(document_id)
+    if login_required is not None and login_required!=before['login_required']:
+        if not qmb:
+            raise PermissionDenied('Nur der QMB darf die anonyme Lesefreigabe ändern.')
+        s.query('SELECT set_document_login_required(%s,%s,%s,%s)',[uid,document_id,login_required,reason])
     s.query('UPDATE documents SET access_mode=%s WHERE id=%s',[access_mode,document_id])
     for table,column,values in [('document_access_users','user_id',users),('document_access_groups','group_id',groups)]:
         s.query(f'DELETE FROM {table} WHERE document_id=%s',[document_id])

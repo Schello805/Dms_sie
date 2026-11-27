@@ -43,7 +43,7 @@ def snapshot():
         AND v.id=current_release(v.document_id) AND (v.valid_until IS NULL OR v.valid_until>now())''')[0]['count']
     log_root = Path(settings.ERROR_LOG_DIR)
     parent = log_root if log_root.exists() else log_root.parent
-    return {'app_name':APP_NAME,'app_version':APP_VERSION,'python':platform.python_version(),
+    return {'ocr_available':bool(shutil.which('tesseract') and shutil.which('pdftoppm')),'malware_enabled':settings.MALWARE_SCAN_ENABLED,'malware_client_available':bool(shutil.which('clamdscan')),'app_name':APP_NAME,'app_version':APP_VERSION,'python':platform.python_version(),
         'django':django.get_version(),'postgres':db_version,'system':platform.system(),'release':platform.release(),
         'machine':platform.machine(),'hostname':platform.node(),'pid':os.getpid(),'cpus':os.cpu_count(),
         'started_at':STARTED_AT,'now':timezone.now(),'timezone':settings.TIME_ZONE,

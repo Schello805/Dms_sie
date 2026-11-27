@@ -202,9 +202,13 @@ def history(request,version_id):
 @login_required
 def access(request,version_id):
     uid,v = services.get_version(request.user,version_id)
-    services.require(uid,v['responsible_department_id'],'AUTHOR',v['document_id'])
+    from .policies import is_qmb
+    if not is_qmb(request.user):
+        services.require(uid,v['responsible_department_id'],'AUTHOR',v['document_id'])
     policy = services.access_policy(v['document_id'])
-    form = AccessForm(request.POST or None,initial={'access_mode':policy['access_mode'],'users':[r['user_id'] for r in policy['users']],'groups':[r['group_id'] for r in policy['groups']]})
+    form = AccessForm(request.POST or None,initial={'login_required':policy['login_required'],'access_mode':policy['access_mode'],'users':[r['user_id'] for r in policy['users']],'groups':[r['group_id'] for r in policy['groups']]})
+    if not is_qmb(request.user):
+        form.fields['login_required'].disabled = True
     if request.method=='POST' and form.is_valid():
         try:
             services.change_access(request.user,version_id,**form.cleaned_data)

@@ -1,0 +1,7 @@
+{% extends 'dms/base.html' %}{% block content %}
+<p><a href="{% url 'admin_settings' %}">← Verwaltung</a></p><h1>Verantwortung übertragen</h1>
+<p>Bei Abwesenheit oder Personalwechsel übernimmt ein berechtigter Autor die ausgewählten Dokumente. Bestehende Rollen werden dabei nicht erweitert. Historische Ersteller, Freigaben und Links bleiben erhalten.</p>
+<form method="get" class="card filters"><div>{{ form.previous.as_field_group }}</div><div><button>Dokumente anzeigen</button></div></form>
+{% if previous %}<form method="post" class="card document-form">{% csrf_token %}<input type="hidden" name="previous" value="{{ previous }}">{{ form.non_field_errors }}{{ form.previous.errors }}
+{{ form.successor.as_field_group }}<details open><summary>Dokumentauswahl · {{ form.documents.field.choices|length }}</summary>{{ form.documents }}{{ form.documents.errors }}</details>
+{{ form.reason.as_field_group }}{{ form.confirmed.as_field_group }}<button>Verantwortung übertragen</button></form>{% endif %}{% endblock %}
