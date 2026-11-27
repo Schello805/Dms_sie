@@ -1,7 +1,7 @@
 """A failed remote copy must never become a completed backup package."""
 from pathlib import Path
 import tempfile
-from types import SimpleNamespace
+import os
 from unittest import TestCase
 from unittest.mock import patch
 from dms.backup_copy import copy_backup
@@ -17,7 +17,9 @@ class BackupCopyTests(TestCase):
             original=Path.stat
             def different_mount(path,*args,**kwargs):
                 result=original(path,*args,**kwargs)
-                return SimpleNamespace(st_dev=-1) if path==target else result
+                values=list(result)
+                if path==target:values[2]=-1
+                return os.stat_result(values)
             with patch.object(Path,'stat',different_mount),patch('dms.backup_copy.verify_backup',side_effect=[{},RuntimeError('corrupt copy')]):
                 with self.assertRaises(RuntimeError):copy_backup(source,target)
             self.assertEqual(list(target.iterdir()),[])

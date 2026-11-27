@@ -97,6 +97,14 @@
     });
   });
 
+  document.querySelectorAll('[data-select-checkboxes]').forEach(button => {
+    button.addEventListener('click', () => {
+      const boxes = [...button.closest('[data-checkbox-list]').querySelectorAll('input[type=checkbox]')];
+      const checked = !boxes.every(box => box.checked);
+      boxes.forEach(box => { box.checked = checked; box.dispatchEvent(new Event('change', {bubbles: true})); });
+      button.textContent = checked ? 'Auswahl aufheben' : 'Alle auswählen';
+    });
+  });
   document.querySelectorAll('[data-toast]').forEach(initializeToast);
   const menu = document.querySelector('.account-menu');
   if (menu) initializeAccountMenu(menu);

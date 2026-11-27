@@ -62,6 +62,10 @@ class IMSImprovementsTests(TestCase):
         self.enable_runtime_role()
         responsibilities.transfer(self.reviewer,s.actor(self.author),s.actor(self.reviewer),[document])
         self.assertEqual(s.get_version(self.reviewer,self.vid)[1]['owner_id'],s.actor(self.reviewer))
+        self.client.force_login(self.reviewer)
+        response=self.client.get('/management/audit/',{'export':'csv','document_number':'IT-001','action':'TRANSFER_RESPONSIBILITY'})
+        self.assertContains(response,'TRANSFER_RESPONSIBILITY')
+        self.assertContains(response,'historical_authorship_preserved')
         self.assertTrue(s.allowed(s.actor(self.reviewer),self.dep,'AUTHOR',document))
 
     def test_transfer_refuses_unauthorized_ineligible_or_stale_requests(self):

@@ -211,11 +211,11 @@ def audit_report(request):
         if request.GET.get('export')=='documents':
             from .audit_export import document_register
             return document_register(request.user,data['document_number'])
-        rows = s.query('''SELECT e.id,e.occurred_at,e.action,e.object_type,e.object_id,e.reason,u.display_name
+        rows = s.query('''SELECT e.id,e.occurred_at,e.action,e.object_type,e.object_id,e.reason,e.details,u.display_name
             FROM audit_events e LEFT JOIN users u ON u.id=e.actor_id
             LEFT JOIN document_versions av ON e.object_type='version' AND e.object_id=av.id::text
-            LEFT JOIN documents ad ON ad.id=av.document_id
-            WHERE (%s='' OR ad.number=%s) AND (%s::date IS NULL OR (e.occurred_at AT TIME ZONE 'Europe/Berlin')::date >= %s::date)
+            LEFT JOIN documents ad ON ad.id=av.document_id OR (e.object_type='document' AND e.object_id=ad.id::text)
+            WHERE (%s='' OR EXISTS(SELECT 1 FROM document_number_registry n WHERE n.document_id=ad.id AND lower(n.number)=lower(%s))) AND (%s::date IS NULL OR (e.occurred_at AT TIME ZONE 'Europe/Berlin')::date >= %s::date)
             AND (%s::date IS NULL OR (e.occurred_at AT TIME ZONE 'Europe/Berlin')::date <= %s::date)
             AND (%s='' OR e.action=%s) ORDER BY e.id DESC LIMIT 5000''',
             [data['document_number'],data['document_number'],data['since'],data['since'],data['until'],data['until'],data['action'],data['action']])
@@ -225,12 +225,13 @@ def audit_report(request):
         response['Content-Disposition'] = 'attachment; filename="ims-audit.csv"'
         response.write('\ufeff')
         writer = csv.writer(response,delimiter=';')
-        writer.writerow(['ID','Zeitpunkt','Aktion','Objektart','Objekt-ID','Person','Begründung'])
+        writer.writerow(['ID','Zeitpunkt','Aktion','Objektart','Objekt-ID','Person','Begründung','Details'])
         def safe(value):
             value = str(value or '')
             return "'"+value if value.lstrip().startswith(('=','+','-','@')) else value
         for row in rows:
-            writer.writerow([safe(row[k]) for k in ['id','occurred_at','action','object_type','object_id','display_name','reason']])
+            import json
+            writer.writerow([safe(row[k]) for k in ['id','occurred_at','action','object_type','object_id','display_name','reason']]+[safe(json.dumps(row['details'],ensure_ascii=False,default=str))])
         return response
     acknowledgements = s.query('''SELECT a.id,a.due_on,d.number,v.title,v.major,v.minor,u.display_name,r.acknowledged_at,r.content_fingerprint,
         (v.id=current_release(v.document_id) AND (v.valid_until IS NULL OR v.valid_until>now())) AS is_current
