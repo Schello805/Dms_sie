@@ -4,6 +4,7 @@ import logging
 import os
 from pathlib import PurePosixPath
 import stat
+import tempfile
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.http import FileResponse, HttpResponse
@@ -17,6 +18,7 @@ def open_verified(file):
     if not isinstance(key, str) or len(key)!=32 or any(c not in '0123456789abcdef' for c in key):
         raise ValidationError('Ungültiger Speicherschlüssel.', code='FILE_KEY')
     source = None
+    snapshot = None
     try:
         descriptor = os.open(settings.MEDIA_ROOT/key, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
         try:
@@ -29,6 +31,7 @@ def open_verified(file):
             raise ValidationError('Datei im Speicher nicht verfügbar.', code='FILE_UNAVAILABLE')
         if info.st_size!=file['size_bytes'] or not 0<info.st_size<=MAX_BYTES:
             raise ValidationError('Integritätsprüfung fehlgeschlagen. Administration verständigen.', code='FILE_INTEGRITY')
+        snapshot = tempfile.TemporaryFile(mode='w+b',dir=settings.MEDIA_ROOT,prefix='.download-')
         digest = hashlib.sha256()
         size = 0
         while chunk := source.read(CHUNK_BYTES):
@@ -36,15 +39,19 @@ def open_verified(file):
             if size>MAX_BYTES:
                 raise ValidationError('Integritätsprüfung fehlgeschlagen. Administration verständigen.', code='FILE_INTEGRITY')
             digest.update(chunk)
+            snapshot.write(chunk)
         if size!=file['size_bytes'] or digest.hexdigest()!=file['sha256']:
             raise ValidationError('Integritätsprüfung fehlgeschlagen. Administration verständigen.', code='FILE_INTEGRITY')
-        source.seek(0)
-        return source
+        snapshot.seek(0)
+        source.close()
+        return snapshot
     except OSError as error:
         if source:source.close()
+        if snapshot:snapshot.close()
         raise ValidationError('Datei im Speicher nicht verfügbar. Bitte die Administration verständigen.', code='FILE_UNAVAILABLE') from error
     except BaseException:
         if source:source.close()
+        if snapshot:snapshot.close()
         raise
 
 

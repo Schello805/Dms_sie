@@ -6,8 +6,8 @@ Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
 ## Release 0.6.2: Speicherarme und robustere Downloads
 
-Originale und Nachweise werden nach vollständiger SHA-256-Prüfung direkt aus einer
-geöffneten Datei ausgeliefert. Der Webprozess puffert den Dokumentinhalt nicht mehr
+Originale und Nachweise werden nach vollständiger SHA-256-Prüfung aus einer privaten,
+dateibasierten Momentaufnahme ausgeliefert. Der Webprozess puffert den Dokumentinhalt nicht mehr
 vollständig. Abgeleitete PDFs werden ebenfalls dateibasiert ausgeliefert; ein gemeinsamer
 Renderer-Lock und begrenzter Rendererspeicher reduzieren Lastspitzen im LXC.
 Downloadfehler erscheinen mit Anfrage-ID im technischen Fehlerprotokoll. Im PDF-Betrachter

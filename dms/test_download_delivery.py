@@ -93,6 +93,16 @@ class DownloadDeliveryTests(TestCase):
         self.assertEqual(b''.join(response.streaming_content),b'Not a PDF')
         self.assertEqual(self.client.get('/').status_code,200)
 
+    def test_verified_snapshot_survives_a_change_to_the_original_path(self):
+        from pathlib import Path
+        from django.conf import settings
+        self.publish()
+        file=s.query('SELECT * FROM file_objects')[0]
+        _,source=storage.open_download(self.reader,self.vid,file['id'])
+        with source:
+            (Path(settings.MEDIA_ROOT)/file['storage_key']).write_bytes(b'Changed after verification')
+            self.assertEqual(source.read(),b'Originalinhalt')
+
     def test_audit_failure_closes_the_verified_source(self):
         from unittest.mock import patch
         from pathlib import Path
