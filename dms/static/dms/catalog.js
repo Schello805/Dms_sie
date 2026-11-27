@@ -138,13 +138,13 @@
   document.querySelectorAll('.table-sort').forEach(link => link.addEventListener('click', event => {
     if (event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     event.preventDefault(); invalidate(); paused = false;
-    const url = new URL(link.href);
+    const sorting = new URL(link.href);
     for (const name of ['sort', 'direction']) {
       let field = form.querySelector(`[name=${name}]`);
       if (!field) { field = document.createElement('input'); field.type = 'hidden'; field.name = name; form.append(field); }
-      field.value = url.searchParams.get(name);
+      field.value = sorting.searchParams.get(name);
     }
-    load(url);
+    load(filterUrl());
   }));
   button.addEventListener('click', () => { paused = false; load(nextUrl, true); });
   watch();

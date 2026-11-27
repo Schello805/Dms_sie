@@ -10,7 +10,7 @@ from .catalog_columns import CATALOG_SORTS
 
 from . import services as s
 
-def visible_versions(user, search='', status='', department='', standard='', due_only=False, current_only=False, limit=200, catalog_only=False, offset=0, sort='', direction='asc'):
+def visible_versions(user, search='', status='', department='', standard='', due_only=False, current_only=False, limit=200, catalog_only=False, offset=0, sort='', direction='asc', document_type=''):
     uid = s.actor(user) if user.is_authenticated else None
     search = search.strip()[:200]
     pattern = '%' + search + '%'
@@ -56,6 +56,7 @@ def visible_versions(user, search='', status='', department='', standard='', due
             (v.status='APPROVED' AND v.id=current_release(v.document_id))
             OR (v.status IN ('DRAFT','IN_REVIEW','PENDING_APPROVAL') AND (v.created_by=%s OR d.owner_id=%s)
                 AND has_role(%s,'AUTHOR',d.responsible_department_id,d.id))))
+        AND (%s='' OR d.document_type=%s)
         AND (%s='' OR dep.id::text=%s)
         AND (%s='' OR EXISTS (SELECT 1 FROM version_standard_links vl
             JOIN standard_references sr ON sr.id=vl.reference_id
@@ -66,7 +67,7 @@ def visible_versions(user, search='', status='', department='', standard='', due
                 OR review.review_result IN ('REVISION_REQUIRED','WITHDRAWAL_REQUIRED'))))
         AND (NOT %s OR (v.id=current_release(v.document_id) AND v.status='APPROVED'))
         ORDER BY """ + ordering + """ LIMIT %s OFFSET %s""",
-        [search,search,uid,uid,search,pattern,pattern,pattern,status,status,catalog_only,status,catalog_only,uid,uid,uid,department,department,
+        [search,search,uid,uid,search,pattern,pattern,pattern,status,status,catalog_only,status,catalog_only,uid,uid,uid,document_type,document_type,department,department,
          standard,standard,due_only,timezone.localdate(),current_only,min(max(int(limit),1),5000),max(int(offset),0)])
     for row in rows:
         from pathlib import Path

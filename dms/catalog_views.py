@@ -15,7 +15,8 @@ def index(request):
     sort = request.GET.get('sort','')
     sort = sort if sort in services.CATALOG_SORTS else ''
     direction = 'desc' if request.GET.get('direction')=='desc' else 'asc'
-    filters = dict(sort=sort,direction=direction,search=request.GET.get('q',''),status=request.GET.get('status',''),
+    filters = dict(sort=sort,direction=direction,search=request.GET.get('q',''),
+        document_type=request.GET.get('document_type','').strip()[:200],
         department=request.GET.get('department',''),standard=request.GET.get('standard',''),
         due_only=request.GET.get('due')=='1',catalog_only=True)
     try:
@@ -33,6 +34,7 @@ def index(request):
     page_query = request.GET.copy()
     page_query.pop('page',None)
     page_query.pop('fragment',None)
+    page_query.pop('status',None)  # Old bookmarks must not retain a hidden status filter.
     if request.GET.get('fragment')=='1':
         next_query = page_query.copy()
         next_query['page'] = page.next_page_number() if page.has_next() else ''
@@ -41,6 +43,7 @@ def index(request):
             'next_url':request.path+'?'+next_query.urlencode() if page.has_next() else None})
     uid = services.actor(request.user) if request.user.is_authenticated else None
     departments = services.query('SELECT d.id,d.name FROM departments d WHERE EXISTS(SELECT 1 FROM documents public_doc WHERE public_doc.responsible_department_id=d.id AND NOT public_doc.login_required AND current_release(public_doc.id) IS NOT NULL) OR EXISTS (SELECT 1 FROM effective_role_assignments r WHERE r.user_id=%s AND ((r.document_id IS NULL AND (r.department_id IS NULL OR r.department_id=d.id)) OR EXISTS (SELECT 1 FROM documents doc WHERE doc.id=r.document_id AND doc.responsible_department_id=d.id))) ORDER BY d.name',[uid])
+    document_types = services.query('SELECT c.name,coalesce(c.display_name,c.name) AS label FROM document_categories c WHERE c.active OR EXISTS(SELECT 1 FROM documents d WHERE d.document_type=c.name AND d.active) ORDER BY lower(coalesce(c.display_name,c.name)),c.id')
     standards = services.query('SELECT * FROM standards ORDER BY name,edition')
     sort_headers = []
     for key,label,expression in COLUMNS:
@@ -54,5 +57,5 @@ def index(request):
     if uid is not None:
         from .portal import pending_acknowledgements
         assignments = pending_acknowledgements(request.user)
-    return render(request,'dms/index.html',{'reading_assignments':assignments,**{'sort_headers':sort_headers,'sort':sort,'direction':direction,'versions':versions,'page':page,'page_query':page_query.urlencode(),'departments':departments,'standards':standards}})
+    return render(request,'dms/index.html',{'reading_assignments':assignments,**{'sort_headers':sort_headers,'sort':sort,'direction':direction,'versions':versions,'page':page,'page_query':page_query.urlencode(),'departments':departments,'standards':standards,'document_types':document_types,'document_type':filters['document_type']}})
 

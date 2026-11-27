@@ -56,9 +56,9 @@ with sync_playwright() as p:
    number='CI-AUTHOR-'+device
    qmb.goto(base+'/documents/')
    if device=='desktop':
-    assert_aligned(qmb,['#q','#status','#department','#standard'])
+    assert_aligned(qmb,['#q','#document_type','#department','#standard'])
    else:
-    assert_aligned(qmb,['#q','#status'])
+    assert_aligned(qmb,['#q','#document_type'])
     assert_aligned(qmb,['#department','#standard'])
    qmb.screenshot(path=str(artifacts/(device+'-filters.png')),full_page=True)
    detail=upload(author,number)
@@ -100,10 +100,17 @@ with sync_playwright() as p:
    expect(reader.get_by_role('columnheader',name='Status',exact=True)).to_have_count(0)
    expect(row.get_by_role('link',name='Dokumentlink')).to_have_attribute('href',re.compile('/d/arbeitsanweisungen/'))
    if device=='desktop':
-    assert_aligned(reader,['#q','#department','#standard','.filter-actions button','.filter-actions .button'])
+    assert_aligned(reader,['#q','#document_type','#department','#standard','.filter-actions button','.filter-actions .button'])
    else:
-    assert_aligned(reader,['#q','#department'])
-    assert_aligned(reader,['#standard','.filter-actions button','.filter-actions .button'])
+    assert_aligned(reader,['#q','#document_type'])
+    assert_aligned(reader,['#department','#standard'])
+    assert_aligned(reader,['.filter-actions button','.filter-actions .button'])
+   expect(reader.locator('#status')).to_have_count(0)
+   reader.locator('#document_type').select_option(label='Arbeitsanweisungen')
+   expect(reader.locator('#document-count')).to_have_text('1')
+   reader.get_by_role('link',name=re.compile('^Abteilung')).click()
+   expect(reader.locator('th[aria-sort=ascending]')).to_contain_text('Abteilung')
+   expect(reader).to_have_url(re.compile('document_type='))
    reader.screenshot(path=str(artifacts/(device+'-catalog.png')),full_page=True)
    help_page=reader.context.new_page()
    help_page.goto(base+'/help/')
@@ -151,6 +158,8 @@ with sync_playwright() as p:
    reader.goto(base+'/documents/');reader.locator('#q').fill('CI-LAZY')
    expect(reader.locator('#document-count')).to_have_text('32')
    expect(reader.locator('#document-rows tr').first).to_contain_text('CI-LAZY-000')
+   reader.locator('#document_type').select_option(label='Arbeitsanweisungen')
+   expect(reader.locator('#document-count')).to_have_text('32')
    expect(reader.locator('#document-rows tr')).to_have_count(30)
    reader.locator('.table-wrap').evaluate('(node)=>node.scrollTop=node.scrollHeight')
    expect(reader.locator('#document-rows tr')).to_have_count(32)

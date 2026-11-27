@@ -4,6 +4,13 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.6.1: Dokumentenart filtern
+
+Die Dokumentenübersicht bietet für alle Rollen einen Filter nach Dokumentenart.
+Der Statusfilter entfällt. Dokumentenart, Abteilung, Normausgabe und Direktsuche sind
+mit Sortierung und Lazy Loading kombinierbar. Alte Statusparameter beeinflussen die
+Übersicht nicht mehr. Details: [Release 0.6.1](docs/releases/v0.6.1.md).
+
 ## Release 0.6.0: Einfache Leseansicht und zuverlässige IMS-Abläufe
 
 Die Abteilung steht als eigene sortierbare Spalte in der Dokumentenübersicht und bleibt

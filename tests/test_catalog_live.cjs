@@ -18,10 +18,14 @@ async function main(){
   form.querySelector=selector=>form.fields[selector.match(/name=([^\]]+)/)[1]];
   nav.querySelector=()=>null;rows.closest=()=>area;rows.children=[{text:'initial'}];
   const elements={'document-filters':form,'document-rows':rows,'document-pagination':nav,'table-load-status':status,'document-count':count};
+  const heading=new Element(),arrow={},sortLink=new Element();
+  sortLink.href='http://example.test/documents/?sort=department&direction=asc';
+  sortLink.closest=()=>heading;sortLink.querySelector=()=>arrow;
+  form.append=field=>{form.fields[field.name]=field;};
   const location={href:'http://example.test/documents/'};
   const fetch=(url,options)=>new Promise(resolve=>requests.push({url:new URL(url),options,resolve}));
   const window={fetch,AbortController,scrollTo(){}};
-  const sandbox={window,document:{getElementById:id=>elements[id],querySelectorAll:()=>[],createElement:()=>{const b=new Element();buttons.push(b);return b;}},location,history:{replaceState(_a,_b,url){location.href=String(url);}},URL,URLSearchParams,AbortController,
+  const sandbox={window,document:{getElementById:id=>elements[id],querySelectorAll:selector=>selector==='.table-sort'?[sortLink]:[],createElement:()=>{const b=new Element();buttons.push(b);return b;}},location,history:{replaceState(_a,_b,url){location.href=String(url);}},URL,URLSearchParams,AbortController,
     FormData:class{constructor(form){this.entries=Object.entries(form.fields).map(([key,field])=>[key,field.value]);}[Symbol.iterator](){return this.entries[Symbol.iterator]();}},
     DOMParser:class{parseFromString(text){return {querySelector:()=>({children:[{text}]})};}},fetch,
     setTimeout(fn,delay){assert.equal(delay,300);timers.set(++clock,fn);return clock;},clearTimeout(id){timers.delete(id);}};
@@ -40,6 +44,16 @@ async function main(){
   buttons[0].listeners.click();await flush();assert.equal(requests[2].url.searchParams.get('q'),'new');assert.equal(requests[2].url.searchParams.get('page'),'2');
   await answer(requests[2],'SECOND',null,31);assert.equal(rows.children.length,2);assert.equal(buttons[0].hidden,true);
   await type('');assert.equal(requests[3].url.searchParams.get('q'),'');await answer(requests[3],'ALL');assert.equal(rows.children.length,1);assert.equal(count.textContent,1);
-  console.log('Passed: 3-character threshold, debounce, stale-response cancellation, lazy append and empty-search reset.');
+  const kind={value:'Arbeitsanweisung'};form.fields.document_type=kind;
+  form.listeners.change({target:kind});await flush();
+  sortLink.listeners.click({button:0,preventDefault(){}});await flush();
+  assert.equal(requests[4].options.signal.aborted,true);
+  assert.equal(requests[5].url.searchParams.get('document_type'),'Arbeitsanweisung');
+  assert.equal(requests[5].url.searchParams.get('sort'),'department');
+  await answer(requests[5],'FILTERED','/documents/?document_type=Arbeitsanweisung&sort=department&page=2',31);
+  buttons[0].listeners.click();await flush();
+  assert.equal(requests[6].url.searchParams.get('document_type'),'Arbeitsanweisung');
+  await answer(requests[6],'FILTERED PAGE TWO',null,31);
+  console.log('Passed: 3-character threshold, debounce, stale-response cancellation, lazy append, empty-search reset and type-filter/sort cancellation race.');
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});
