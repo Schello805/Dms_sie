@@ -1,11 +1,13 @@
 from django.views.generic import TemplateView
 from dms import responsibility_views
-from dms import process_views, process_control_views
+from dms import process_views, process_control_views, bpmn_views
 from dms import number_views
 from dms import auth_views as auth
 from django.urls import path
 from dms import views,portal_views,branding,admin_views,catalog_views,ui_assets,account_views,comparison,master_views
 urlpatterns = [
+    path('assets/bpmn/18.31.0/<str:name>',bpmn_views.asset,name='bpmn_asset'),
+    path('processes/<int:target>/bpmn/',bpmn_views.diagram,name='process_bpmn'),
     path('processes/<int:target>/controls/',process_control_views.overview,name='process_controls'),
     path('processes/<int:target>/controls/<str:kind>/new/',process_control_views.edit,name='process_control_new'),
     path('processes/<int:target>/controls/<str:kind>/<int:control>/edit/',process_control_views.edit,name='process_control_edit'),

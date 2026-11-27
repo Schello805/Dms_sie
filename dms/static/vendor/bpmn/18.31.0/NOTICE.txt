@@ -1,0 +1,4 @@
+bpmn-js 18.31.0, https://github.com/bpmn-io/bpmn-js
+Source: https://registry.npmjs.org/bpmn-js/-/bpmn-js-18.31.0.tgz
+SHA256 archive: f7576e2442e2549e9a57fa79d4dd9955d481125bbd86ec5a3e913bdd2b73de8b
+See LICENSE. The bpmn.io watermark is retained.

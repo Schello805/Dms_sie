@@ -4,6 +4,14 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.9.0: BPMN-Editor mit Import und Export
+
+Jeder Prozess kann ein BPMN-2.0-Diagramm erhalten. QMBs bearbeiten Aufgaben, Ereignisse,
+Gateways, Pools und Verbindungen grafisch. Arbeitsstände und veröffentlichte Lesefassungen
+sind getrennt. BPMN-Dateien lassen sich importieren und exportieren; SVG-Export ist ebenfalls
+enthalten. Diagrammelemente können mit bestehenden IMS-Prozessen verknüpft werden.
+Die Bibliothek wird lokal ausgeliefert. Details: [Release 0.9.0](docs/releases/v0.9.0.md).
+
 ## Release 0.8.0: Prozessrisiken, Kennzahlen und optionale Sielaff-Demo
 
 QMBs pflegen Risiken, Maßnahmen, Restbewertungen und Prozesskennzahlen direkt am Prozess.

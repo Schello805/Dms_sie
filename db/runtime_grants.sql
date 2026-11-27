@@ -54,3 +54,5 @@ GRANT EXECUTE ON FUNCTION save_process_control(bigint,bigint,bigint,text,jsonb,b
 GRANT EXECUTE ON FUNCTION record_process_measurement(bigint,bigint,date,numeric,text,integer) TO :"runtime_role";
 GRANT EXECUTE ON FUNCTION mark_demo_process(bigint,bigint) TO :"runtime_role";
 GRANT EXECUTE ON FUNCTION set_process_demo_visibility(bigint,boolean) TO :"runtime_role";
+
+GRANT EXECUTE ON FUNCTION save_process_bpmn(bigint,bigint,text,integer,boolean,text) TO :"runtime_role";

@@ -45,6 +45,7 @@ jobs:
         run: |
           python -m compileall -q config dms scripts tests
           ruff check --select E9,F63,F7,F82 config dms scripts tests
+          node --check dms/static/dms/bpmn.js
           node --check dms/static/dms/app.js
           node --check dms/static/dms/catalog.js
           node tests/test_catalog_live.cjs

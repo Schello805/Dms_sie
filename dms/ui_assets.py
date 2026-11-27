@@ -8,6 +8,8 @@ from django.views.decorators.http import require_safe
 
 ASSET_ROOT = Path(__file__).resolve().parent / 'static' / 'dms'
 ASSET_TYPES = {
+    'bpmn.js': 'text/javascript',
+    'bpmn.css': 'text/css',
     'app.css': 'text/css',
     'branding.css': 'text/css',
     'workflow-ui.js': 'text/javascript',
