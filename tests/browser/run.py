@@ -152,6 +152,7 @@ with sync_playwright() as p:
    qmb.get_by_role('button',name='Demo-Prozesse anlegen' if device=='desktop' else 'Demo-Prozesse einblenden',exact=True).click()
    demo_link=qmb.get_by_role('link',name=re.compile('Automaten fertigen und prüfen'))
    expect(demo_link).to_be_visible()
+   qmb.get_by_role('button',name='Gesamtansicht',exact=True).click()
    demo_link.click()
    expect(qmb.locator('#bpmn-status')).to_have_text('Schritte anklicken · Zum Verschieben ziehen · + / − zum Zoomen')
    demo_url=qmb.url
