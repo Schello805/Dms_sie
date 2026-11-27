@@ -215,6 +215,7 @@ select[multiple]{width:100%;min-height:14rem;padding:.5rem;border:1px solid #bcc
 /* Compact catalogue controls, without reducing touch targets on tablets. */
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .catalog-filters{display:grid;grid-template-columns:minmax(12rem,2fr) repeat(3,minmax(8rem,1fr)) auto;gap:.4rem .65rem;padding:.65rem .8rem;align-items:end}
+.catalog-filters>div:not(.filter-actions){grid-row:auto;grid-template-rows:auto auto;row-gap:.2rem}
 .catalog-filters label{font-size:.8rem;margin:0 0 .2rem}
 .catalog-filters input:not([type=checkbox]),.catalog-filters select{min-height:32px;height:32px;padding:.3rem .55rem;margin:0;font-size:.875rem}
 .catalog-filters .check{min-height:32px;grid-column:1/-1;grid-row:2;align-self:center;display:flex;gap:.4rem;align-items:center;margin:0}
