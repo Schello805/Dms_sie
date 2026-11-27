@@ -37,7 +37,7 @@
       canvas.resized();
     }
     const height = byId('bpmn-canvas').clientHeight;
-    canvas.viewbox({x:inner.x - 28,y:inner.y - Math.max(28,(height / scale - inner.height) / 2),width:width / scale,height:height / scale});
+    canvas.viewbox({x:inner.x - (config.edit ? 160 : 28),y:inner.y - Math.max(28,(height / scale - inner.height) / 2),width:width / scale,height:height / scale});
   };
   const fit = () => canvas.zoom('fit-viewport');
   byId('bpmn-fit').addEventListener('click', fit);
