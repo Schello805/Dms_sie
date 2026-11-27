@@ -32,15 +32,15 @@ class ProcessForm(AppForm):
 
 def landscape(request,target=None):
     manager=is_qmb(request.user)
-    all_nodes=processes.nodes(manager)
+    search=request.GET.get('q','').strip()[:200]
+    all_nodes=processes.nodes(manager,target,search)
     by_id={row['id']:row for row in all_nodes}
     current=by_id.get(target) if target else None
     if target and not current:raise Http404
     crumbs=[by_id[i] for i in current['path'] if i in by_id] if current else []
-    search=request.GET.get('q','').strip()[:200]
     children=[n for n in all_nodes if n['parent_id']==target]
     if search:
-        children=[n for n in all_nodes if search.casefold() in (n['code']+' '+n['data']['title']+' '+n['data'].get('description','')).casefold()]
+        children=[n for n in all_nodes if n['search_match']]
     for n in children:
         n['child_count']=sum(child['parent_id']==n['id'] for child in all_nodes)
     documents=[];references=[];owner=None
@@ -60,7 +60,7 @@ def landscape(request,target=None):
 @login_required
 def edit(request,target=None):
     require_qmb(request.user)
-    all_nodes={n['id']:n for n in processes.nodes(True)}
+    all_nodes={n['id']:n for n in processes.nodes(True,target)}
     current=all_nodes.get(target) if target else None
     if target and not current:raise Http404
     try:parent_id=current['parent_id'] if current else int(request.GET['parent']) if request.GET.get('parent') else None

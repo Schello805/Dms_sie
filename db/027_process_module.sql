@@ -61,6 +61,7 @@ BEGIN
   SELECT 1 FROM ancestors WHERE live IS NULL OR NOT active) THEN RAISE EXCEPTION 'Publish ancestors first'; END IF;
  UPDATE public.ims_processes SET draft=payload,active=enabled,updated_at=clock_timestamp(),
   live=CASE WHEN publish THEN payload ELSE live END,revision=revision+CASE WHEN publish THEN 1 ELSE 0 END WHERE id=node.id RETURNING * INTO node;
+ IF publish THEN INSERT INTO public.standard_reference_usage(reference_id) SELECT value::bigint FROM jsonb_array_elements_text(coalesce(payload->'references','[]'::jsonb)) ON CONFLICT DO NOTHING; END IF;
  IF publish THEN INSERT INTO public.ims_process_revisions(process_id,revision,payload,actor_id) VALUES(node.id,node.revision,payload,actor); END IF;
  INSERT INTO public.audit_events(actor_id,action,object_type,object_id,reason,details)
  VALUES(actor,CASE WHEN publish THEN 'PUBLISH_PROCESS' ELSE 'SAVE_PROCESS' END,'process',node.id::text,coalesce(nullif(btrim(why),''),'Keine zusätzliche Begründung angegeben.'),jsonb_build_object('before',previous,'after',payload,'revision',node.revision,'active',enabled));

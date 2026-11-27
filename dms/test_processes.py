@@ -67,3 +67,13 @@ class ProcessTests(TestCase):
         self.client.force_login(self.reader)
         self.assertContains(self.client.get(f'/processes/{root}/'),'Testdokument')
         self.assertContains(self.client.get('/processes/',{'q':'Dokumentverknüpfung'}),'LINKS')
+
+    def test_published_norm_reference_definition_is_frozen(self):
+        from django.db import DatabaseError, transaction
+        standard=s.query("INSERT INTO standards(name,edition) VALUES ('Process test','2026') RETURNING id")[0]['id']
+        reference=s.query("INSERT INTO standard_references(standard_id,reference,label) VALUES (%s,'4.4','Prozesse') RETURNING id",[standard])[0]['id']
+        data=self.data('Normprozess');data['references']=[reference]
+        target=processes.save(self.reviewer,None,None,'NORM',data,True,True,'')
+        self.assertContains(self.client.get(f'/processes/{target}/'),'Prozesse')
+        self.assertTrue(s.query('SELECT 1 FROM standard_reference_usage WHERE reference_id=%s',[reference]))
+        with self.assertRaises(DatabaseError),transaction.atomic():s.query("UPDATE standard_references SET label='Changed' WHERE id=%s",[reference])
