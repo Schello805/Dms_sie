@@ -81,13 +81,20 @@ with sync_playwright() as p:
    qmb.locator('.djs-palette [data-action="create.task"]').click()
    qmb.locator('#bpmn-canvas').click(position={'x':450,'y':200})
    expect(qmb.locator('.djs-shape[data-element-id^="Activity_"]')).to_have_count(1)
+   qmb.locator('.djs-shape[data-element-id^="Activity_"] .djs-hit-all').click()
+   qmb.locator('#bpmn-name').fill('CI Aufgabe '+device)
+   qmb.locator('#bpmn-name').press('Tab')
+   qmb.locator('[data-element-id="StartEvent_IMS"] .djs-hit-all').click()
+   qmb.locator('.djs-context-pad [data-action="connect"]').click()
+   qmb.locator('.djs-shape[data-element-id^="Activity_"] .djs-hit-all').click()
+   expect(qmb.locator('.djs-connection')).to_have_count(1)
    qmb.get_by_role('button',name='Arbeitsstand speichern',exact=True).click()
    expect(qmb.locator('#bpmn-status')).to_have_text('Arbeitsstand gespeichert.')
    with qmb.expect_download() as exported:
     qmb.get_by_role('button',name='BPMN exportieren',exact=True).click()
    download=exported.value
    xml=Path(download.path()).read_text()
-   assert 'CI BPMN Start '+device in xml and 'IMS-PROCESS-ID:' in xml
+   assert 'CI BPMN Start '+device in xml and 'IMS-PROCESS-ID:' in xml and '<bpmn:sequenceFlow' in xml
    qmb.locator('#bpmn-import').set_input_files({'name':'roundtrip.bpmn','mimeType':'application/xml','buffer':xml.encode()})
    expect(qmb.locator('#bpmn-status')).to_have_text('BPMN importiert. Noch nicht gespeichert.')
    qmb.get_by_role('button',name='Veröffentlichen',exact=True).click()
