@@ -81,6 +81,7 @@ with sync_playwright() as p:
    qmb.locator('.djs-palette [data-action="create.task"]').click()
    qmb.locator('#bpmn-canvas').click(position={'x':450,'y':200})
    expect(qmb.locator('.djs-shape[data-element-id^="Activity_"]')).to_have_count(1)
+   qmb.keyboard.press('Escape')  # Finish the automatic label editor after creating a task.
    qmb.locator('.djs-shape[data-element-id^="Activity_"] .djs-hit-all').click()
    qmb.locator('#bpmn-name').fill('CI Aufgabe '+device)
    qmb.locator('#bpmn-name').press('Tab')
