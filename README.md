@@ -4,6 +4,15 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.8.0: Prozessrisiken, Kennzahlen und optionale Sielaff-Demo
+
+QMBs pflegen Risiken, Maßnahmen, Restbewertungen und Prozesskennzahlen direkt am Prozess.
+Messwerte behalten die zum Erfassungszeitpunkt gültige Zieldefinition; Korrekturen bleiben
+nachvollziehbar. Diese Informationen sind ausschließlich intern für QMBs sichtbar.
+Eine optionale Sielaff-Demo mit 72 Prozessen kann per Klick angelegt und global ausgeblendet
+werden. Die Beispiele sind keine bestätigten Unternehmensprozesse oder Zertifizierungsnachweise.
+Details und Update: [Release 0.8.0](docs/releases/v0.8.0.md).
+
 ## Release 0.7.0: Prozesslandkarte mit vierstufigem Drilldown
 
 Neuer Kernbereich „Prozesse“: Kernprozess → Hauptprozess → Einzelprozess → Arbeitsprozess.

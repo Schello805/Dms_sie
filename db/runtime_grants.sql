@@ -49,3 +49,8 @@ GRANT EXECUTE ON FUNCTION rename_document(bigint,bigint,text,text) TO :"runtime_
 
 GRANT EXECUTE ON FUNCTION transfer_document_owner(bigint,bigint,bigint,bigint,text),set_document_login_required(bigint,bigint,boolean,text) TO :"runtime_role";
 GRANT EXECUTE ON FUNCTION save_ims_process(bigint,bigint,bigint,text,jsonb,boolean,boolean,text) TO :"runtime_role";
+
+GRANT EXECUTE ON FUNCTION save_process_control(bigint,bigint,bigint,text,jsonb,boolean,integer,text) TO :"runtime_role";
+GRANT EXECUTE ON FUNCTION record_process_measurement(bigint,bigint,date,numeric,text,integer) TO :"runtime_role";
+GRANT EXECUTE ON FUNCTION mark_demo_process(bigint,bigint) TO :"runtime_role";
+GRANT EXECUTE ON FUNCTION set_process_demo_visibility(bigint,boolean) TO :"runtime_role";

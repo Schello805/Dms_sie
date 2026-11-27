@@ -13,12 +13,12 @@ def nodes(manage=False, target=None, search=''):
       SELECT p.*,true AS ancestors_visible,ARRAY[p.id] AS path FROM ims_processes p WHERE parent_id IS NULL
       UNION ALL SELECT p.*,t.ancestors_visible AND t.active AND t.live IS NOT NULL,t.path||p.id
       FROM ims_processes p JOIN tree t ON p.parent_id=t.id)
-      SELECT id,parent_id,level,code,revision,active,updated_at,path,
+      SELECT id,parent_id,level,code,revision,active,updated_at,path,demo,
         (draft IS DISTINCT FROM live) AS has_draft,
         CASE WHEN id=%s THEN live WHEN live IS NOT NULL THEN jsonb_build_object('title',live->>'title') END AS live,
         CASE WHEN %s THEN CASE WHEN id=%s THEN draft ELSE jsonb_build_object('title',draft->>'title') END END AS draft,
         (concat(code,' ',coalesce(live,draft)->>'title',' ',coalesce(live,draft)->>'description') ILIKE %s) AS search_match
-      FROM tree WHERE %s OR (active AND live IS NOT NULL AND ancestors_visible)
+      FROM tree WHERE (%s OR (active AND live IS NOT NULL AND ancestors_visible)) AND (NOT demo OR (SELECT visible FROM process_demo_settings WHERE id))
       ORDER BY lower(coalesce(live->>'title',draft->>'title')),id''',[target,manage,target,'%'+search+'%',manage])
     for row in rows:
         for key in ('draft','live'):

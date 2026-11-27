@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from django.shortcuts import redirect, render
-from . import processes, services as s
+from . import processes, process_demo, services as s
 from .form_ui import AppForm
 from .audit_text import OptionalReasonField
 from .policies import is_qmb, require_qmb
@@ -54,7 +54,7 @@ def landscape(request,target=None):
         references=s.query('SELECT s.name,s.edition,r.reference,r.label FROM standard_references r JOIN standards s ON s.id=r.standard_id WHERE r.id=ANY(%s::bigint[]) ORDER BY s.name,r.reference',[data.get('references',[])])
         owners=s.query('SELECT display_name FROM users WHERE id=%s',[data['owner_id']]);owner=owners[0]['display_name'] if owners else 'Nicht zugeordnet'
     history=s.query('SELECT r.revision,r.released_at,u.display_name FROM ims_process_revisions r JOIN users u ON u.id=r.actor_id WHERE r.process_id=%s ORDER BY r.revision DESC',[target]) if current and manager else []
-    return render(request,'dms/processes.html',{'history':history,**{'current':current,'crumbs':crumbs,'children':children,'search':search,'manager':manager,'documents':documents,'references':references,'owner':owner}})
+    return render(request,'dms/processes.html',{'demo_state':process_demo.state(),'history':history,**{'current':current,'crumbs':crumbs,'children':children,'search':search,'manager':manager,'documents':documents,'references':references,'owner':owner}})
 
 
 @login_required
@@ -79,3 +79,18 @@ def edit(request,target=None):
             messages.success(request,'Prozess veröffentlicht.' if request.POST.get('action')=='publish' else 'Arbeitsstand gespeichert. Die veröffentlichte Fassung bleibt erhalten.')
             return redirect('process_detail',target=saved)
     return render(request,'dms/process_edit.html',{'form':form,'current':current,'parent':parent,'level_label':processes.LEVELS[(parent['level']+1) if parent else 1]})
+
+
+@login_required
+def demo(request):
+    require_qmb(request.user)
+    if request.method!='POST':
+        from django.http import HttpResponseNotAllowed
+        return HttpResponseNotAllowed(['POST'])
+    try:
+        if request.POST.get('action')=='install':process_demo.install(request.user)
+        else:process_demo.toggle(request.user,request.POST.get('action')=='show')
+    except ValidationError as error:
+        messages.error(request,'Demo konnte nicht angelegt werden: '+ '; '.join(error.messages))
+    else:messages.success(request,'Demo-Prozesse sind eingeblendet.' if process_demo.state()['visible'] else 'Demo-Prozesse sind für alle ausgeblendet. Die Daten bleiben erhalten.')
+    return redirect('processes')
