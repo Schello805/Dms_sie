@@ -4,6 +4,12 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.6.3: Übersichtliche QMB-Verwaltung
+
+Die Verwaltung bündelt ihre Funktionen in drei Bereiche: Dokumente, Organisation sowie
+Prüfung und Aufbewahrung. Doppelte Links entfallen. Die Fristentabelle ist aufklappbar;
+bei Eingabefehlern bleibt sie geöffnet. Berechtigungen und Speicherlogik bleiben erhalten.
+
 ## Release 0.6.2: Speicherarme und robustere Downloads
 
 Originale und Nachweise werden nach vollständiger SHA-256-Prüfung aus einer privaten,

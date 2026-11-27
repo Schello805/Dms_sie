@@ -1,7 +1,24 @@
 {% extends 'dms/base.html' %}{% block content %}
-<h1>Verwaltung · Kategorien und Review-Fristen</h1>
-<div class="task-summary"><a class="button secondary" href="{% url 'document_numbers' %}">Alle Dokumentnummern</a><a class="button secondary" href="{% url 'master_list' 'departments' %}">Abteilungen verwalten</a><a class="button secondary" href="{% url 'master_list' 'categories' %}">Dokumentenarten / Kategorien verwalten</a></div>
-<p><a href="{% url 'responsibilities' %}">Verantwortung übertragen</a> · <a href="{% url 'master_list' 'categories' %}">Stammdaten verwalten</a> · <a href="{% url 'audiences' %}">Zielgruppen</a> · <a href="{% url 'audit_report' %}">Audit und Auswertungen</a> · <a href="{% url 'storage_locations' %}">Aufbewahrungsorte</a> · <a href="{% url 'reminder_management' %}">Review-Erinnerungen</a></p>
-<p>Standard: <strong>24 Monate (2 Jahre)</strong>. Benannte QMB-Konten verwalten fachliche Vorgaben. Bestehende freigegebene Prüftermine bleiben erhalten.</p>
-<form method="post" class="card">{% csrf_token %}{{ form.non_field_errors }}<div class="table-wrap"><table><thead><tr><th>Kategorie</th><th>Gültigkeit (Monate)</th><th>Aufbewahrung (Monate)</th><th>Aufbewahrungsort</th></tr></thead><tbody>{% for row in category_rows %}<tr><th>{{ row.name }}</th><td>{{ row.validity }}{{ row.validity.errors }}</td><td>{{ row.retention }}{{ row.retention.errors }}</td><td>{{ row.location }}{{ row.location.errors }}</td></tr>{% endfor %}</tbody></table></div><p>Leere Aufbewahrungsfrist = noch nicht festgelegt. Es erfolgt keine automatische Löschung. Aufbewahrungsorte sind logische Zuordnungen; technische Speicherpfade betreibt die IT.</p><p>{{ form.reason.label_tag }}{{ form.reason }}{{ form.reason.errors }}</p><button>Vorgaben speichern</button></form>
+<h1>Verwaltung</h1>
+<p class="muted">Dokumente organisieren, Verantwortlichkeiten pflegen und Prüfungen steuern.</p>
+<nav class="management-grid" aria-label="QMB-Verwaltung">
+<section class="card management-group"><h2>Dokumente</h2><p class="muted">Arten, Nummern und Nachweise.</p><ul>
+<li><a href="{% url 'master_list' 'categories' %}">Dokumentenarten und Kürzel</a></li>
+<li><a href="{% url 'document_numbers' %}">Alle Dokumentnummern</a></li>
+<li><a href="{% url 'audit_report' %}">Audit und Auswertungen</a></li>
+</ul></section>
+<section class="card management-group"><h2>Organisation</h2><p class="muted">Abteilungen und zuständige Personen.</p><ul>
+<li><a href="{% url 'master_list' 'departments' %}">Abteilungen</a></li>
+<li><a href="{% url 'responsibilities' %}">Verantwortung übertragen</a></li>
+<li><a href="{% url 'audiences' %}">Zielgruppen</a></li>
+</ul></section>
+<section class="card management-group"><h2>Prüfung und Aufbewahrung</h2><p class="muted">Erinnerungen und Ablagevorgaben.</p><ul>
+<li><a href="{% url 'reminder_management' %}">Review-Erinnerungen</a></li>
+<li><a href="{% url 'storage_locations' %}">Aufbewahrungsorte</a></li>
+</ul><p class="muted">Gültigkeit und Aufbewahrungsfristen kannst du unten bearbeiten.</p></section>
+</nav>
+<details class="card management-policy" {% if form.errors %}open{% endif %}><summary>Gültigkeits- und Aufbewahrungsfristen bearbeiten</summary>
+<p>Standard: <strong>24 Monate (2 Jahre)</strong>. Bestehende freigegebene Prüftermine bleiben erhalten.</p>
+<form method="post">{% csrf_token %}{{ form.non_field_errors }}<div class="table-wrap"><table><thead><tr><th>Kategorie</th><th>Gültigkeit (Monate)</th><th>Aufbewahrung (Monate)</th><th>Aufbewahrungsort</th></tr></thead><tbody>{% for row in category_rows %}<tr><th>{{ row.name }}</th><td>{{ row.validity }}{{ row.validity.errors }}</td><td>{{ row.retention }}{{ row.retention.errors }}</td><td>{{ row.location }}{{ row.location.errors }}</td></tr>{% endfor %}</tbody></table></div><p>Leere Aufbewahrungsfrist = noch nicht festgelegt. Es erfolgt keine automatische Löschung. Aufbewahrungsorte sind logische Zuordnungen; technische Speicherpfade betreibt die IT.</p><p>{{ form.reason.label_tag }}{{ form.reason }}{{ form.reason.errors }}</p><button>Vorgaben speichern</button></form>
+</details>
 {% endblock %}

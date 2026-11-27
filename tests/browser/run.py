@@ -54,6 +54,14 @@ with sync_playwright() as p:
     page=context.new_page();login(page,username);pages[username]=page
    author,qmb,reader=(pages[name] for name in ('autor','pruefer','leser'))
    number='CI-AUTHOR-'+device
+   qmb.goto(base+'/management/')
+   expect(qmb.get_by_role('heading',name='Verwaltung',exact=True)).to_be_visible()
+   expect(qmb.locator('.management-group')).to_have_count(3)
+   expect(qmb.locator('.management-policy')).not_to_have_attribute('open','')
+   qmb.screenshot(path=str(artifacts/(device+'-management.png')),full_page=True)
+   qmb.locator('.management-policy summary').click()
+   expect(qmb.get_by_role('button',name='Vorgaben speichern')).to_be_visible()
+   assert qmb.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),'Management overflows viewport'
    qmb.goto(base+'/documents/')
    if device=='desktop':
     assert_aligned(qmb,['#q','#document_type','#department','#standard'])
