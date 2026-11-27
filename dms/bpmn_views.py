@@ -57,9 +57,11 @@ def diagram(request,target=None):
         JOIN document_versions v ON v.id=current_release(d.id) JOIN document_links l ON l.document_id=d.id
         WHERE ((NOT d.login_required) OR can_read_version(%s,v.id)) AND (%s OR d.id=ANY(%s::bigint[])) ORDER BY d.number''',[uid,document_ids is None,document_ids or []])
     document_choices=[{'id':d['id'],'title':d['number']+' · '+d['title'],'url':'/d/'+d['kind_slug']+'/'+d['number_slug']+'/'} for d in documents]
-    linked_documents=[];references=[]
+    linked_documents=[];references=[];owner=None
     if current:
+        owners=s.query('SELECT display_name FROM users WHERE id=%s',[current['data']['owner_id']])
+        owner=owners[0]['display_name'] if owners else 'Nicht zugeordnet'
         linked_documents=s.query('''SELECT d.number,v.title,l.kind_slug,l.number_slug FROM documents d JOIN document_versions v ON v.id=current_release(d.id) JOIN document_links l ON l.document_id=d.id WHERE d.id=ANY(%s::bigint[]) AND ((NOT d.login_required) OR can_read_version(%s,v.id)) ORDER BY d.number''',[current['data'].get('documents',[]),uid])
         references=s.query('SELECT s.name,s.edition,r.reference,r.label FROM standard_references r JOIN standards s ON s.id=r.standard_id WHERE r.id=ANY(%s::bigint[]) ORDER BY s.name,r.reference',[current['data'].get('references',[])])
     config={'xml':xml or (bpmn.EMPTY if edit else ''),'edit':edit,'expected':model['edit_version'] if model else 0,'processes':choices,'documents':document_choices,'url':reverse('process_bpmn',args=[target]) if target else request.path,'code':current['code'] if current else 'Prozesslandkarte','navigation':navigation}
-    return render(request,'dms/bpmn.html',{'search':search,'demo_state':process_demo.state(),'documents':linked_documents,'references':references,'crumbs':crumbs,'current':current,'manager':manager,'edit':edit,'config':config,'history':history,'has_draft':bool(model and model['draft_xml']!=model['live_xml']),'revision':model['revision'] if model else 0})
+    return render(request,'dms/bpmn.html',{'owner':owner,'search':search,'demo_state':process_demo.state(),'documents':linked_documents,'references':references,'crumbs':crumbs,'current':current,'manager':manager,'edit':edit,'config':config,'history':history,'has_draft':bool(model and model['draft_xml']!=model['live_xml']),'revision':model['revision'] if model else 0})

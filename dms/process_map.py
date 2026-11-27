@@ -16,7 +16,7 @@ def build(nodes):
         elif demo and code=='DEMO-SIE-07':x=60;y=60
         elif demo and code=='DEMO-SIE-08':x=60;y=420
         else:x=60+(index%3)*280;y=620+(index//3)*160 if any(n.get('demo') for n in nodes) else 60+(index//3)*160
-        item=child(process,'bpmn:callActivity',{'id':identifier,'name':node['data']['title']+(' · Entwurf' if not node['live'] else '')})
+        item=child(process,'bpmn:callActivity',{'id':identifier,'name':node['data']['title']+(' · DEMO' if demo else '')+(' · Entwurf' if not node['live'] else '')})
         child(item,'bpmn:documentation',text='IMS-PROCESS-ID:'+str(node['id']))
         shape=child(plane,'bpmndi:BPMNShape',{'id':'Shape_'+identifier,'bpmnElement':identifier})
         child(shape,'dc:Bounds',dict(x=str(x),y=str(y),width='220',height='100'))
