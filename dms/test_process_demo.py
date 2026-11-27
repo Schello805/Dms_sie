@@ -18,7 +18,7 @@ class ProcessDemoTests(TestCase):
         self.assertEqual(len(s.query('SELECT * FROM process_bpmn WHERE live_xml IS NOT NULL')),72)
         self.assertEqual(len(s.query('SELECT * FROM process_bpmn_revisions')),72)
         self.assertEqual(len(s.query('SELECT * FROM process_controls')),2)
-        self.assertContains(self.client.get('/processes/'),'Automaten fertigen und prüfen')
+        self.assertIn('Automaten fertigen und prüfen',self.client.get('/processes/').context['config']['xml'])
         leaf=next(row for row in rows if row['level']==4)
         self.assertContains(self.client.get(f'/processes/{leaf["id"]}/'),'DEMO')
         process_demo.install(self.reviewer)
@@ -79,7 +79,7 @@ class ProcessDemoTests(TestCase):
         rows=s.query('SELECT * FROM ims_processes WHERE demo ORDER BY code')
         root=rows[0]
         page=self.client.get('/processes/')
-        self.assertContains(page,f'/processes/{root["id"]}/bpmn/')
+        self.assertContains(page,f'/processes/{root["id"]}/')
         for level in range(1,5):
             node=next(row for row in rows if row['level']==level)
             response=self.client.get(f'/processes/{node["id"]}/bpmn/')

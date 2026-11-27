@@ -56,3 +56,31 @@ class BpmnTests(TestCase):
         self.assertEqual(self.client.post(f'/processes/{process}/bpmn/',[],content_type='application/json').status_code,409)
         self.assertEqual(self.client.get('/assets/bpmn/18.31.0/modeler.js').status_code,200)
         self.assertEqual(self.client.get('/assets/bpmn/18.31.0/missing.js').status_code,404)
+
+    def test_document_links_use_current_release_and_enforce_access(self):
+        fixtures.WorkflowTests.publish(self)
+        document=s.get_version(self.author,self.vid)[1]['document_id']
+        s.query('SELECT set_document_login_required(%s,%s,true,%s)',[s.actor(self.reviewer),document,''])
+        root=self.root()
+        xml=bpmn.EMPTY.replace('<bpmn:startEvent id="StartEvent_IMS" name="Start"/>',f'<bpmn:startEvent id="StartEvent_IMS" name="Start"><bpmn:documentation>IMS-DOCUMENT-ID:{document}</bpmn:documentation></bpmn:startEvent>')
+        bpmn.save(self.reviewer,root,xml,0,True)
+        guest=self.client.get(f'/processes/{root}/')
+        self.assertEqual(guest.context['config']['documents'],[])
+        self.assertNotContains(guest,'Testdokument')
+        self.client.force_login(self.reader)
+        reader=self.client.get(f'/processes/{root}/')
+        self.assertEqual(reader.context['config']['documents'][0]['id'],document)
+        self.assertTrue(reader.context['config']['documents'][0]['url'].startswith('/d/'))
+        self.client.force_login(self.reviewer)
+        edit=self.client.get(f'/processes/{root}/bpmn/?edit=1')
+        self.assertContains(edit,'id="bpmn-document"')
+        self.assertEqual(edit.context['config']['documents'][0]['id'],document)
+
+    def test_process_start_is_a_diagram_without_cards(self):
+        root=self.root()
+        response=self.client.get('/processes/')
+        self.assertContains(response,'id="bpmn-canvas"')
+        self.assertNotContains(response,'process-tile')
+        self.assertNotContains(response,'process-grid')
+        self.assertIn('IMS-PROCESS-ID:'+str(root),response.context['config']['xml'])
+        self.assertIn('/processes/'+str(root)+'/',[p['url'] for p in response.context['config']['processes']])

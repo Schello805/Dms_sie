@@ -4,6 +4,14 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.10.0: Diagramme statt Prozesskarten
+
+Die Prozesslandkarte und alle Prozesse öffnen direkt als anklickbare Diagramme.
+Ein Klick oder Tippen führt zum Unterprozess oder zur aktuellen freigegebenen Dokumentfassung.
+Der BPMN-Editor kann beide Verknüpfungen je Element speichern. Kompakte Werkzeuge, lesbarer
+Startzoom, Vollbild und eine an den Inhalt angepasste Höhe verbessern die mobile Darstellung.
+Details: [Release 0.10.0](docs/releases/v0.10.0.md).
+
 ## Release 0.9.1: Fertige Demo-Flussdiagramme
 
 Alle 72 Sielaff-Demoprozesse erhalten beim Anlegen veröffentlichte BPMN-Beispieldiagramme.

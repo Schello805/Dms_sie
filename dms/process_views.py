@@ -31,30 +31,8 @@ class ProcessForm(AppForm):
 
 
 def landscape(request,target=None):
-    manager=is_qmb(request.user)
-    search=request.GET.get('q','').strip()[:200]
-    all_nodes=processes.nodes(manager,target,search)
-    by_id={row['id']:row for row in all_nodes}
-    current=by_id.get(target) if target else None
-    if target and not current:raise Http404
-    crumbs=[by_id[i] for i in current['path'] if i in by_id] if current else []
-    children=[n for n in all_nodes if n['parent_id']==target]
-    if search:
-        children=[n for n in all_nodes if n['search_match']]
-    for n in children:
-        n['child_count']=sum(child['parent_id']==n['id'] for child in all_nodes)
-    documents=[];references=[];owner=None
-    if current:
-        data=current['data']
-        uid=s.actor(request.user) if request.user.is_authenticated else None
-        documents=s.query('''SELECT d.number,v.title,l.kind_slug,l.number_slug FROM documents d
-            JOIN document_versions v ON v.id=current_release(d.id)
-            JOIN document_links l ON l.document_id=d.id
-            WHERE d.id=ANY(%s::bigint[]) AND ((NOT d.login_required) OR can_read_version(%s,v.id)) ORDER BY d.number''',[data.get('documents',[]),uid])
-        references=s.query('SELECT s.name,s.edition,r.reference,r.label FROM standard_references r JOIN standards s ON s.id=r.standard_id WHERE r.id=ANY(%s::bigint[]) ORDER BY s.name,r.reference',[data.get('references',[])])
-        owners=s.query('SELECT display_name FROM users WHERE id=%s',[data['owner_id']]);owner=owners[0]['display_name'] if owners else 'Nicht zugeordnet'
-    history=s.query('SELECT r.revision,r.released_at,u.display_name FROM ims_process_revisions r JOIN users u ON u.id=r.actor_id WHERE r.process_id=%s ORDER BY r.revision DESC',[target]) if current and manager else []
-    return render(request,'dms/processes.html',{'demo_state':process_demo.state(),'history':history,**{'current':current,'crumbs':crumbs,'children':children,'search':search,'manager':manager,'documents':documents,'references':references,'owner':owner}})
+    from . import bpmn_views
+    return bpmn_views.diagram(request,target)
 
 
 @login_required
