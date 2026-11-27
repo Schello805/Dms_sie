@@ -61,7 +61,7 @@ with (artifacts/'gunicorn-download.log').open('w') as log:
         with ThreadPoolExecutor(max_workers=3) as pool:
             list(pool.map(lambda _:fetch(fixture['large']['path'],fixture['large']),range(3)))
         with urllib.request.urlopen(base+fixture['preview'],timeout=30) as response:
-            assert response.read(5)==b'%PDF', 'PDF download is not a PDF'
+            assert response.read(5)==b'%PDF-', 'PDF download is not a PDF'
         fetch('/')
         after = children(process)
         assert before==after, 'Gunicorn worker restarted during downloads'
