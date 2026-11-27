@@ -18,3 +18,5 @@
 
 
 .footer-links{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+header .site-brand-name{font-size:.9rem;max-width:19rem}
+@media(max-width:650px){header .site-brand-name{font-size:.75rem;max-width:190px}}

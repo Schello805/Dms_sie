@@ -89,6 +89,7 @@ with sync_playwright() as p:
    reader.goto(base+'/documents/');reader.locator('#q').fill(number)
    row=reader.locator('#document-rows tr').filter(has_text=number)
    expect(reader.locator('#document-count')).to_have_text('1')
+   expect(reader.locator('#document-pagination button')).to_be_hidden()
    expect(row).to_have_count(1)
    expect(reader.get_by_role('link',name=re.compile('^Dokumentenart'))).to_be_visible()
    expect(row.locator('td').nth(2)).to_have_text('Arbeitsanweisungen')
