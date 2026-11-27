@@ -89,6 +89,21 @@ class NotificationTests(TestCase):
         row=s.query('SELECT * FROM review_notifications WHERE id=%s',[row['id']])[0]
         self.assertEqual(row['status'],'FAILED');self.assertEqual(row['attempts'],4)
 
+    def test_owner_transfer_reclassifies_queued_qmb_recipients_without_duplicate_mail(self):
+        from . import responsibilities
+        previous=s.actor(self.author);successor=s.actor(self.reviewer)
+        s.query("UPDATE users SET qmb_role='DEPUTY' WHERE id=%s",[previous])
+        n.queue_due(self.today)
+        document=s.get_version(self.reviewer,self.vid)[1]['document_id']
+        responsibilities.transfer(self.reviewer,previous,successor,[document])
+        n.queue_due(self.today)
+        rows=s.query('SELECT recipient_id,recipient_kind FROM review_notifications ORDER BY recipient_id')
+        self.assertEqual(len(rows),2)
+        self.assertEqual({r['recipient_id']:r['recipient_kind'] for r in rows},{previous:'QMB',successor:'OWNER'})
+        s.query("UPDATE review_notifications SET status='UNCERTAIN',recipient_kind='OWNER' WHERE recipient_id=%s",[previous])
+        n.queue_due(self.today)
+        self.assertEqual(s.query('SELECT status FROM review_notifications WHERE recipient_id=%s',[previous])[0]['status'],'UNCERTAIN')
+
     def configure(self,**overrides):
         data = n.public_config(n.load_config()) | {'password':'','clear_password':False,'reason':'Lokaler SMTP-Funktionstest',
             'enabled':True,'smtp_host':'127.0.0.1','smtp_port':self.server.server_address[1],

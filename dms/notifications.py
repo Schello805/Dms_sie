@@ -123,7 +123,7 @@ def queue_due(today=None):
         kind = 'DUE' if candidate['due_on']<=today else 'BEFORE'
         with transaction.atomic():
             rows = s.query('''INSERT INTO review_notifications AS n(version_id,recipient_id,due_on,kind,message_id,recipient_kind)
-                VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT (version_id,recipient_id,due_on,kind) DO UPDATE SET status='PENDING',error_code='',next_attempt_at=clock_timestamp(),lease_token=NULL WHERE (n.status='CANCELLED' AND n.error_code='NO_ACCESS') OR (n.status='PENDING' AND n.error_code='' AND n.next_attempt_at>clock_timestamp()) RETURNING id''',
+                VALUES (%s,%s,%s,%s,%s,%s) ON CONFLICT (version_id,recipient_id,due_on,kind) DO UPDATE SET status='PENDING',error_code='',next_attempt_at=clock_timestamp(),lease_token=NULL,recipient_kind=EXCLUDED.recipient_kind WHERE (n.status='CANCELLED' AND n.error_code='NO_ACCESS') OR (n.status='PENDING' AND n.error_code='' AND n.next_attempt_at>clock_timestamp()) OR (n.recipient_kind<>EXCLUDED.recipient_kind AND n.status IN ('PENDING','CANCELLED','FAILED')) RETURNING id''',
                 [candidate['version_id'],candidate['recipient_id'],candidate['due_on'],kind,f'<{uuid.uuid4().hex}@ims-dms.local>',candidate['recipient_kind']])
             if rows:
                 mail_event('MAIL_QUEUED',rows[0]['id'],'Review-Erinnerung vorgemerkt',{'kind':kind,'due_on':str(candidate['due_on'])})
