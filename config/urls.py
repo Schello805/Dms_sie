@@ -1,10 +1,15 @@
 from django.views.generic import TemplateView
 from dms import responsibility_views
+from dms import process_views
 from dms import number_views
 from dms import auth_views as auth
 from django.urls import path
 from dms import views,portal_views,branding,admin_views,catalog_views,ui_assets,account_views,comparison,master_views
 urlpatterns = [
+    path('processes/',process_views.landscape,name='processes'),
+    path('processes/new/',process_views.edit,name='process_new'),
+    path('processes/<int:target>/',process_views.landscape,name='process_detail'),
+    path('processes/<int:target>/edit/',process_views.edit,name='process_edit'),
     path('management/responsibilities/',responsibility_views.overview,name='responsibilities'),
     path('help/',TemplateView.as_view(template_name='dms/help.html',http_method_names=['get','head','options']),name='help'),
     path('management/master/<slug:kind>/',master_views.listing,name='master_list'),

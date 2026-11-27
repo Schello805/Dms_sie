@@ -53,6 +53,25 @@ with sync_playwright() as p:
     context=browser.new_context(**options);context.tracing.start(screenshots=True,snapshots=True,sources=True);contexts.append(context)
     page=context.new_page();login(page,username);pages[username]=page
    author,qmb,reader=(pages[name] for name in ('autor','pruefer','leser'))
+   parent=None
+   titles=[]
+   for level in range(1,5):
+    qmb.goto(base+'/processes/new/'+('?parent='+parent if parent else ''))
+    title=f'CI Prozess {device} Ebene {level}';titles.append(title)
+    qmb.locator('[name=code]').fill(f'CI-P-{device}-{level}')
+    qmb.locator('[name=title]').fill(title)
+    qmb.locator('[name=description]').fill('Prozessbeschreibung für den Drilldown')
+    qmb.get_by_role('button',name='Veröffentlichen',exact=True).click()
+    expect(qmb.get_by_role('heading',name=title,exact=True)).to_be_visible()
+    parent=qmb.url.rstrip('/').split('/')[-1]
+   reader.goto(base+'/processes/')
+   reader.screenshot(path=str(artifacts/(device+'-process-landscape.png')),full_page=True)
+   for title in titles:
+    reader.get_by_role('link',name=re.compile(re.escape(title))).click()
+    expect(reader.get_by_role('heading',name=title,exact=True)).to_be_visible()
+   expect(reader.locator('.process-breadcrumb [aria-current=page]')).to_have_text(titles[-1])
+   assert reader.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),'Process drilldown overflows viewport'
+   reader.screenshot(path=str(artifacts/(device+'-process-drilldown.png')),full_page=True)
    number='CI-AUTHOR-'+device
    qmb.goto(base+'/management/')
    expect(qmb.get_by_role('heading',name='Verwaltung',exact=True)).to_be_visible()

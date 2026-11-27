@@ -4,6 +4,15 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.7.0: Prozesslandkarte mit vierstufigem Drilldown
+
+Neuer Kernbereich „Prozesse“: Kernprozess → Hauptprozess → Einzelprozess → Arbeitsprozess.
+Klickbare Karten und Breadcrumbs führen durch alle Ebenen. Prozesse erhalten eine
+Beschreibung, Verantwortliche, Eingaben, Ergebnisse, Rollen sowie Dokument- und Normbezüge.
+QMBs pflegen Arbeitsstände und veröffentlichen unveränderliche Revisionen. Leser sehen
+aktive veröffentlichte Zweige; geschützte Dokumente behalten ihre eigenen Zugriffsregeln.
+Details: [Release 0.7.0](docs/releases/v0.7.0.md).
+
 ## Release 0.6.3: Übersichtliche QMB-Verwaltung
 
 Die Verwaltung bündelt ihre Funktionen in drei Bereiche: Dokumente, Organisation sowie

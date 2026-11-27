@@ -48,3 +48,4 @@ GRANT EXECUTE ON FUNCTION allocate_document_number(bigint,text),set_category_num
 GRANT EXECUTE ON FUNCTION rename_document(bigint,bigint,text,text) TO :"runtime_role";
 
 GRANT EXECUTE ON FUNCTION transfer_document_owner(bigint,bigint,bigint,bigint,text),set_document_login_required(bigint,bigint,boolean,text) TO :"runtime_role";
+GRANT EXECUTE ON FUNCTION save_ims_process(bigint,bigint,bigint,text,jsonb,boolean,boolean,text) TO :"runtime_role";
