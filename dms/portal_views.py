@@ -56,15 +56,17 @@ def document_qr(request,document_id):
 
 @xframe_options_sameorigin
 def preview_pdf(request,version_id,file_id):
-    from .previews import reading_pdf
+    from .previews import open_reading_pdf
     _,v = get_read_version(request.user,version_id)
     from .document_links import document_url
     url = request.build_absolute_uri(document_url(v['document_id']))
     try:
-        filename,content = reading_pdf(request.user,version_id,file_id,url)
+        filename,source = open_reading_pdf(request.user,version_id,file_id,url)
     except ValidationError as exc:
-        return HttpResponse(' '.join(exc.messages),status=409,content_type='text/plain; charset=utf-8')
-    response = FileResponse(io.BytesIO(content),as_attachment=request.GET.get('download')=='1',filename=filename,content_type='application/pdf')
+        from .file_delivery import failure_response
+        return failure_response(request,exc)
+    from .file_delivery import file_response
+    response = file_response(source,filename,attachment=request.GET.get('download')=='1',content_type='application/pdf')
     response['Content-Security-Policy'] = "frame-ancestors 'self'; object-src 'self'"
     return response
 
@@ -195,11 +197,12 @@ def record_detail(request,record_id):
 
 @login_required
 def record_download(request,record_id):
+    from .file_delivery import file_response, failure_response
     try:
-        file,content = evidence.download_record(request.user,record_id)
+        file,source = evidence.open_record_download(request.user,record_id)
+        return file_response(source,file['original_name'])
     except ValidationError as exc:
-        return HttpResponse(' '.join(exc.messages),status=409,content_type='text/plain; charset=utf-8')
-    return FileResponse(io.BytesIO(content),as_attachment=True,filename=file['original_name'],content_type='application/octet-stream')
+        return failure_response(request,exc)
 
 @login_required
 def audit_report(request):

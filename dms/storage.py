@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from . import services as s
 
-MAX_BYTES = 25 * 1024 * 1024
+from .file_delivery import MAX_BYTES
 ALLOWED = {'.pdf':'application/pdf','.docx':'application/vnd.openxmlformats-officedocument.wordprocessingml.document','.xlsx':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','.odt':'application/vnd.oasis.opendocument.text','.txt':'text/plain'}
 
 @transaction.atomic
@@ -53,25 +53,31 @@ def upload(user, version_id, uploaded, purpose='ORIGINAL'):
         raise
 
 
-def download(user, version_id, file_id,public=False):
+def open_download(user, version_id, file_id, public=False):
     from .public_reading import get_read_version
+    from .file_delivery import open_verified
     uid,v = get_read_version(user,version_id) if public else s.get_version(user,version_id)
     files = s.query('''SELECT f.* FROM file_objects f JOIN version_files vf ON vf.file_id=f.id
         WHERE vf.version_id=%s AND f.id=%s''',[version_id,file_id])
     if not files:
-        raise ValidationError('Datei nicht verfügbar.')
-    f = files[0]
-    # Only generated UUID keys are accepted; database values cannot escape MEDIA_ROOT.
-    if len(f['storage_key']) != 32 or any(c not in '0123456789abcdef' for c in f['storage_key']):
-        raise ValidationError('Ungültiger Speicherschlüssel.')
-    path = settings.MEDIA_ROOT / f['storage_key']
+        raise ValidationError('Datei nicht verfügbar.', code='FILE_UNAVAILABLE')
+    file = files[0]
     try:
-        with path.open('rb') as source:
-            content = source.read(MAX_BYTES + 1)
-    except OSError:
-        raise ValidationError('Datei im Speicher nicht verfügbar.')
-    if len(content) != f['size_bytes'] or hashlib.sha256(content).hexdigest() != f['sha256']:
-        s.audit(uid,'INTEGRITY_FAILURE',version_id,'Datei-Prüfsumme oder Dateigröße abweichend',{'file_id':file_id})
-        raise ValidationError('Integritätsprüfung fehlgeschlagen. Administration verständigen.')
-    s.audit(uid,'DOWNLOAD',version_id,'Dateidownload',{'file_id':file_id})
-    return f,content
+        source = open_verified(file)
+    except ValidationError as error:
+        if error.code=='FILE_INTEGRITY':
+            s.audit(uid,'INTEGRITY_FAILURE',version_id,'Datei-Prüfsumme oder Dateigröße abweichend',{'file_id':file_id})
+        raise
+    try:
+        s.audit(uid,'DOWNLOAD',version_id,'Dateidownload',{'file_id':file_id})
+    except BaseException:
+        source.close()
+        raise
+    return file,source
+
+
+def download(user, version_id, file_id, public=False):
+    """Compatibility API; HTTP endpoints stream via open_download instead."""
+    file,source = open_download(user,version_id,file_id,public=public)
+    with source:
+        return file,source.read()

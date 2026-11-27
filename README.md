@@ -4,6 +4,16 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.6.2: Speicherarme und robustere Downloads
+
+Originale und Nachweise werden nach vollständiger SHA-256-Prüfung direkt aus einer
+geöffneten Datei ausgeliefert. Der Webprozess puffert den Dokumentinhalt nicht mehr
+vollständig. Abgeleitete PDFs werden ebenfalls dateibasiert ausgeliefert; ein gemeinsamer
+Renderer-Lock und begrenzter Rendererspeicher reduzieren Lastspitzen im LXC.
+Downloadfehler erscheinen mit Anfrage-ID im technischen Fehlerprotokoll. Im PDF-Betrachter
+steht zusätzlich „Original herunterladen“ zur Verfügung.
+Details und Betriebsdiagnose: [Release 0.6.2](docs/releases/v0.6.2.md).
+
 ## Release 0.6.1: Dokumentenart filtern
 
 Die Dokumentenübersicht bietet für alle Rollen einen Filter nach Dokumentenart.

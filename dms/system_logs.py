@@ -29,6 +29,10 @@ def _event(record):
         event['event_code'] = 'SECURITY_REJECTION'
     if getattr(record,'event_code',None)=='LOG_SELF_TEST':
         event['event_code'] = 'LOG_SELF_TEST'
+    if getattr(record,'event_code',None)=='DOWNLOAD_FAILURE':
+        event['event_code'] = 'DOWNLOAD_FAILURE'
+        code = getattr(record,'error_code','')
+        event['error_code'] = code if code in {'FILE_KEY','FILE_UNAVAILABLE','FILE_INTEGRITY','PDF_BUSY','PDF_MEMORY','PDF_TIMEOUT','PDF_RENDER','PDF_FORMAT'} else 'FILE_UNAVAILABLE'
     if record.exc_info and record.exc_info[0]:
         event['exception_type'] = _name(record.exc_info[0].__name__)
         tb = record.exc_info[2]

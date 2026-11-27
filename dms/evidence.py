@@ -114,16 +114,20 @@ def request_disposal(user,record_id,reason):
         s.query("INSERT INTO audit_events(actor_id,action,object_type,object_id,reason) VALUES (%s,'REQUEST_EVIDENCE_DISPOSAL','evidence',%s,%s)",[uid,str(record_id),reason])
 
 
-def download_record(user,record_id):
+def open_record_download(user,record_id):
+    from .file_delivery import open_verified
     uid,record = get_record(user,record_id)
-    f = s.query('SELECT * FROM file_objects WHERE id=%s',[record['file_id']])[0]
-    if len(f['storage_key'])!=32 or any(c not in '0123456789abcdef' for c in f['storage_key']):
-        raise ValidationError('Ungültiger Speicherschlüssel.')
+    file = s.query('SELECT * FROM file_objects WHERE id=%s',[record['file_id']])[0]
+    source = open_verified(file)
     try:
-        content = (settings.MEDIA_ROOT/f['storage_key']).read_bytes()
-    except OSError:
-        raise ValidationError('Datei im Speicher nicht verfügbar.')
-    if len(content)!=f['size_bytes'] or hashlib.sha256(content).hexdigest()!=f['sha256']:
-        raise ValidationError('Integritätsprüfung des Nachweises fehlgeschlagen.')
-    s.query("INSERT INTO audit_events(actor_id,action,object_type,object_id,reason) VALUES (%s,'DOWNLOAD_EVIDENCE','evidence',%s,'Nachweisdatei abgerufen')",[uid,str(record_id)])
-    return f,content
+        s.query("INSERT INTO audit_events(actor_id,action,object_type,object_id,reason) VALUES (%s,'DOWNLOAD_EVIDENCE','evidence',%s,'Nachweisdatei abgerufen')",[uid,str(record_id)])
+    except BaseException:
+        source.close()
+        raise
+    return file,source
+
+
+def download_record(user,record_id):
+    file,source = open_record_download(user,record_id)
+    with source:
+        return file,source.read()

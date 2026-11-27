@@ -11,7 +11,8 @@ def main():
     resource.setrlimit(resource.RLIMIT_CPU,(25,25))
     resource.setrlimit(resource.RLIMIT_FSIZE,(60*1024*1024,60*1024*1024))
     if sys.platform!='darwin':
-        resource.setrlimit(resource.RLIMIT_AS,(768*1024*1024,768*1024*1024))
+        memory = min(int(sys.argv[4]) if len(sys.argv)>4 else 256*1024*1024,256*1024*1024)
+        resource.setrlimit(resource.RLIMIT_AS,(memory,memory))
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import getSampleStyleSheet
@@ -22,7 +23,7 @@ def main():
     from reportlab.graphics.shapes import Drawing
     from reportlab.graphics import renderPDF
     from pypdf import PdfReader,PdfWriter
-    source,output,metadata = map(Path,sys.argv[1:])
+    source,output,metadata = map(Path,sys.argv[1:4])
     meta = json.loads(metadata.read_text())
     font = 'Helvetica'
     for fontpath in ['/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf','/System/Library/Fonts/Supplemental/Arial.ttf']:

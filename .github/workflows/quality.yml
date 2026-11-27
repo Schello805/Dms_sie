@@ -127,6 +127,11 @@ jobs:
           for attempt in $(seq 1 60); do curl -fsS http://127.0.0.1:8000/login/ > /dev/null && break; sleep 1; done
           python tests/browser/run.py
           python scripts/load_catalog.py --base-url http://127.0.0.1:8000 --requests 80 --workers 8 --output test-results/catalog-load.json
+      - name: Gunicorn downloads under constrained memory
+        env:
+          PGUSER: ims_ci_app
+          PGPASSWORD: CI-Only-App-Password-2026!
+        run: python tests/download_smoke.py
       - name: Runtime diagnostics on failure
         if: failure()
         run: test ! -f /tmp/ims-ci-web.log || tail -100 /tmp/ims-ci-web.log

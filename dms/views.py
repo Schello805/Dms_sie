@@ -155,14 +155,13 @@ def upload(request,version_id):
     return redirect('detail',version_id=version_id)
 
 def download(request,version_id,file_id):
-    import io
-    from django.http import FileResponse, HttpResponse
     from . import storage
+    from .file_delivery import file_response, failure_response
     try:
-        f,content = storage.download(request.user,version_id,file_id,public=True)
+        file,source = storage.open_download(request.user,version_id,file_id,public=True)
+        return file_response(source,file['original_name'])
     except ValidationError as exc:
-        return HttpResponse(' '.join(exc.messages),status=409,content_type='text/plain')
-    return FileResponse(io.BytesIO(content),as_attachment=True,filename=f['original_name'],content_type='application/octet-stream')
+        return failure_response(request,exc)
 
 @login_required
 @require_POST
