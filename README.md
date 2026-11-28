@@ -4,6 +4,13 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.12.0: Einfach zeichnen und Verknüpfungen suchen
+
+Beschriftete Grundformen für Prozessschritt, Entscheidung, Start und Ende vereinfachen das
+Zeichnen. Ein Suchdialog verbindet jeden Schritt mit einem IMS-Prozess und/oder einem
+freigegebenen Dokument. Rückgängig und Wiederholen bleiben ebenso verfügbar wie die
+erweiterte BPMN-Palette und der BPMN-Import und der BPMN-/SVG-Export.
+
 ## Release 0.11.2: Einheitliche Darstellung der Module
 
 Dokumentenübersicht und Prozesse verwenden dieselbe kompakte Navigation, Logo- und

@@ -5,6 +5,7 @@ class UIAssetTests(TestCase):
     def test_bundled_assets_are_available_without_login(self):
         for filename, content_type in (
             ('app.css', 'text/css'), ('branding.css', 'text/css'),
+            ('bpmn-editor.js', 'text/javascript'),
             ('app.js', 'text/javascript'), ('catalog.js', 'text/javascript'),
         ):
             response = self.client.get('/assets/ui/' + filename)

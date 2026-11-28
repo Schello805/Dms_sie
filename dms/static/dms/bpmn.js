@@ -12,7 +12,7 @@
   const editor = new BpmnJS({container:'#bpmn-canvas',textRenderer:{defaultStyle:{fontFamily:'Arial, sans-serif',fontSize:15},externalStyle:{fontSize:13}},bpmnRenderer:{defaultFillColor:'#f7fbfc',defaultStrokeColor:'#386c79',defaultLabelColor:'#173b49'},additionalModules:[{translate:['value',translate]}]});
   let ready = false, dirty = false, busy = false, generation = 0, selected = null, viewSnapshot = null;
   const buttons = ['bpmn-save','bpmn-publish','bpmn-export','bpmn-svg','bpmn-fit','bpmn-zoom-in','bpmn-zoom-out','bpmn-check','bpmn-align','bpmn-size','bpmn-space','bpmn-select-all'];
-  const refresh = () => buttons.forEach(id => {if (byId(id)) byId(id).disabled = !ready || busy;});
+  const refresh = () => {buttons.forEach(id => {if (byId(id)) byId(id).disabled = !ready || busy;});byId('bpmn-canvas').dispatchEvent(new CustomEvent('bpmn-state',{detail:{ready,busy}}));};
   const markDirty = () => {dirty = true; generation++; status('Ungespeicherte Änderungen.');};
   const download = (data, extension, type) => {
     const url = URL.createObjectURL(new Blob([data], {type}));
@@ -68,7 +68,7 @@
     requestAnimationFrame(resizeWorkspace);
   };
   byId('bpmn-fullscreen').addEventListener('click',fullscreen);
-  window.addEventListener('keydown',event => {if (event.key === 'Escape' && !byId('flow-preview').open && !byId('flow-info')?.open && byId('bpmn-shell').classList.contains('is-fullscreen')) fullscreen();});
+  window.addEventListener('keydown',event => {if (event.key === 'Escape' && !byId('flow-preview').open && !byId('flow-info')?.open && !byId('flow-link-picker')?.open && byId('bpmn-shell').classList.contains('is-fullscreen')) fullscreen();});
   byId('bpmn-export').addEventListener('click', () => run(async () => download((await editor.saveXML({format:true})).xml, 'bpmn', 'application/xml')));
   byId('bpmn-svg').addEventListener('click', () => run(async () => download((await editor.saveSVG()).svg, 'svg', 'image/svg+xml')));
   const linkIds = BpmnTools.linkIds;
@@ -230,8 +230,6 @@
     const setProperties = enabled => {properties.classList.toggle('is-open',enabled);byId('flow-properties-toggle').setAttribute('aria-expanded',String(enabled));};
     byId('flow-properties-toggle').addEventListener('click',()=>{setProperties(!properties.classList.contains('is-open'));document.querySelector('.flow-edit-menu').open=false;});
     byId('flow-properties-close').addEventListener('click',()=>setProperties(false));
-    for (const process of config.processes) byId('bpmn-link').add(new Option(process.title, String(process.id)));
-    for (const doc of config.documents || []) byId('bpmn-document').add(new Option(doc.title,String(doc.id)));
     editor.on('commandStack.changed', markDirty);
     const check = () => {
       const found=BpmnTools.issues(registry.getAll(),config.processes,config.documents||[]);
@@ -262,24 +260,21 @@
       selected = event.newSelection.length === 1 ? (event.newSelection[0].labelTarget || event.newSelection[0]) : null;
       const usable = !!(selected && selected.businessObject && selected.type.startsWith('bpmn:'));
       if(usable&&window.matchMedia('(max-width:900px)').matches)setProperties(true);
-      byId('bpmn-name').disabled = !usable; byId('bpmn-link').disabled = !usable;byId('bpmn-document').disabled = !usable;
+      byId('bpmn-name').disabled = !usable;
       byId('bpmn-selection').textContent = usable ? selected.businessObject.name || 'BPMN-Element' : 'Element im Diagramm auswählen.';
       byId('bpmn-name').value = usable ? selected.businessObject.name || '' : '';
-      byId('bpmn-link').value = usable ? linkIds(selected).PROCESS || '' : '';
-      byId('bpmn-document').value = usable ? linkIds(selected).DOCUMENT || '' : '';
     });
     byId('bpmn-name').addEventListener('change', event => {
       if (selected) editor.get('modeling').updateProperties(selected, {name:event.target.value});
     });
-    const updateLink = (kind,value) => {
-      if (!selected) return;
+    const updateLink = (kind,value,element = selected) => {
+      if (!element) return;
       const marker = new RegExp('^IMS-' + kind + '-ID:\\d+$');
-      const docs = (selected.businessObject.documentation || []).filter(doc => !marker.test(doc.text || ''));
+      const docs = (element.businessObject.documentation || []).filter(doc => !marker.test(doc.text || ''));
       if (value) docs.push(editor.get('moddle').create('bpmn:Documentation',{text:'IMS-' + kind + '-ID:' + value}));
-      editor.get('modeling').updateProperties(selected,{documentation:docs});annotate();
+      editor.get('modeling').updateProperties(element,{documentation:docs});annotate();
     };
-    byId('bpmn-link').addEventListener('change', event => updateLink('PROCESS',event.target.value));
-    byId('bpmn-document').addEventListener('change', event => updateLink('DOCUMENT',event.target.value));
+    BpmnEditor({editor,config,getSelection:() => selected,updateLink,status});
     for (const [id, publish] of [['bpmn-save',false],['bpmn-publish',true]]) byId(id).addEventListener('click', () => run(async () => {
       if(publish && check().length && !confirm('Es gibt Modellierungshinweise. Trotzdem veröffentlichen?'))return;
       const token = generation;

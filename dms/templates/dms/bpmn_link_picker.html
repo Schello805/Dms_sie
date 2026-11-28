@@ -1,0 +1,11 @@
+<dialog id="flow-link-picker" class="flow-link-picker" aria-labelledby="flow-link-picker-title">
+  <div class="flow-info-heading"><h2 id="flow-link-picker-title">Verknüpfung auswählen</h2><button type="button" class="secondary" id="flow-link-picker-close" aria-label="Auswahl schließen">×</button></div>
+  <div class="flow-picker-body">
+    <p id="flow-link-picker-step" class="muted"></p>
+    <label for="flow-link-query">Nummer oder Bezeichnung suchen</label><input id="flow-link-query" type="search" maxlength="200" autocomplete="off" placeholder="Suchbegriff eingeben …">
+    <p id="flow-link-count" class="muted" role="status" aria-live="polite"></p>
+    <div id="flow-link-results" class="flow-link-results" aria-label="Verfügbare Verknüpfungen"></div>
+    <button type="button" class="secondary" id="flow-link-more" hidden>Weitere Treffer anzeigen</button>
+  </div>
+  <div class="flow-picker-actions"><button type="button" class="secondary danger" id="flow-link-remove">Verknüpfung entfernen</button><button type="button" class="secondary" id="flow-link-cancel">Abbrechen</button></div>
+</dialog>
