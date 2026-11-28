@@ -57,7 +57,7 @@
     }
     if(ready&&!config.edit&&readerSelected&&!restoring)revealSelection(registry.get(readerSelected));
   };
-  const fit = () => canvas.zoom('fit-viewport');
+  const fit = () => config.edit ? naturalView() : canvas.zoom('fit-viewport');
   byId('bpmn-fit').addEventListener('click', fit);
   byId('bpmn-zoom-in').addEventListener('click', () => canvas.zoom(Math.min(3,canvas.zoom() * 1.25)));
   byId('bpmn-zoom-out').addEventListener('click', () => canvas.zoom(Math.max(.05,canvas.zoom() / 1.25)));
