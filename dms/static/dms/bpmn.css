@@ -93,3 +93,5 @@ body.flow-page{height:100dvh;min-height:0;overflow:hidden;display:flex;flex-dire
 @media(max-width:600px){.flow-stencils{width:124px}.flow-link-picker{max-height:92dvh;width:96vw}.flow-picker-actions{padding:.5rem}.flow-link-picker .flow-info-heading{padding:.5rem .75rem}}
 
 @media(max-width:600px){.flow-stencils button{font-size:.72rem;gap:.25rem;padding:.3rem}}
+/* Native canvas menus stay below the workspace's toolbars and properties. */
+.flow-page .bpmn-workspace,.flow-page #bpmn-canvas{isolation:isolate}
