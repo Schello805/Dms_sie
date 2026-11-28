@@ -103,8 +103,9 @@ def open_reading_copy(request,version_id):
     from django.shortcuts import redirect
     from .public_reading import get_read_version
     get_read_version(request.user,version_id)
-    files = s.query("SELECT f.id,f.original_name FROM version_files vf JOIN file_objects f ON f.id=vf.file_id WHERE vf.version_id=%s ORDER BY CASE WHEN vf.purpose='RELEASE' THEN 0 WHEN lower(f.original_name) LIKE '%%.pdf' THEN 1 WHEN lower(f.original_name) LIKE '%%.txt' THEN 2 ELSE 3 END,f.id LIMIT 1",[version_id])
+    files = s.query("SELECT f.id,f.original_name,f.size_bytes FROM version_files vf JOIN file_objects f ON f.id=vf.file_id WHERE vf.version_id=%s ORDER BY CASE WHEN vf.purpose='RELEASE' THEN 0 WHEN lower(f.original_name) LIKE '%%.pdf' THEN 1 WHEN lower(f.original_name) LIKE '%%.txt' THEN 2 ELSE 3 END,f.id LIMIT 1",[version_id])
     if not files:
         raise PermissionDenied('Keine Lesefassung verfügbar.')
     file = files[0]
-    return redirect('pdf_viewer' if Path(file['original_name']).suffix.lower() in ('.pdf','.txt') else 'download',version_id=version_id,file_id=file['id'])
+    from .previews import is_previewable
+    return redirect('pdf_viewer' if is_previewable(file) else 'download',version_id=version_id,file_id=file['id'])

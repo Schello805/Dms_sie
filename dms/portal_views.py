@@ -32,10 +32,11 @@ def read_current(request,document_id):
         return open_reading_copy(request,vid)
     uid,v = get_read_version(request.user,vid)
     s.audit(uid,'READ_CURRENT',vid,'Aktuelle freigegebene Fassung im Mitarbeiterportal geöffnet')
-    files = s.query('''SELECT f.id,f.original_name,vf.purpose FROM file_objects f JOIN version_files vf ON vf.file_id=f.id
+    files = s.query('''SELECT f.id,f.original_name,f.size_bytes,vf.purpose FROM file_objects f JOIN version_files vf ON vf.file_id=f.id
         WHERE vf.version_id=%s ORDER BY CASE vf.purpose WHEN 'RELEASE' THEN 0 ELSE 1 END,f.id''',[vid])
+    from .previews import is_previewable
     for file in files:
-        file['previewable'] = Path(file['original_name']).suffix.lower() in ('.pdf','.txt')
+        file['previewable'] = is_previewable(file)
     distribution = s.query('SELECT * FROM version_distribution WHERE version_id=%s',[vid])
     assignments = portal.pending_acknowledgements(request.user)
     assignment = next((a for a in assignments if a['version_id']==vid),None)

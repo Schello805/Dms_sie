@@ -14,6 +14,14 @@ from .file_delivery import CHUNK_BYTES
 from .preview_resources import render_slot
 
 
+MAX_TEXT_PREVIEW_BYTES = 1024 * 1024
+
+
+def is_previewable(file):
+    suffix = Path(file['original_name']).suffix.lower()
+    return suffix == '.pdf' or (suffix == '.txt' and file['size_bytes'] <= MAX_TEXT_PREVIEW_BYTES)
+
+
 def open_reading_pdf(user, version_id, file_id, url):
     from .public_reading import get_read_version
     uid,v = get_read_version(user,version_id)
@@ -25,7 +33,7 @@ def open_reading_pdf(user, version_id, file_id, url):
             with source:
                 if suffix not in ('.pdf','.txt'):
                     raise ValidationError('Für dieses Format bitte eine PDF-Lesefassung hinterlegen oder das Original herunterladen.', code='PDF_FORMAT')
-                if suffix=='.txt' and file['size_bytes']>1024*1024:
+                if suffix=='.txt' and file['size_bytes']>MAX_TEXT_PREVIEW_BYTES:
                     raise ValidationError('Für große Textdateien bitte das Original herunterladen.', code='PDF_FORMAT')
                 directory = Path(folder)
                 original,target,meta = directory/'source',directory/'reading.pdf',directory/'meta.json'

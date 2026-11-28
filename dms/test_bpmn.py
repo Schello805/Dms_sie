@@ -113,3 +113,21 @@ class BpmnTests(TestCase):
         response=self.client.get(f'/processes/{process}/')
         self.assertEqual(response.status_code,200)
         self.assertEqual(response.context['config']['documents'],[])
+
+    def test_large_text_uses_download_instead_of_unsupported_preview(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from . import storage
+        from .previews import MAX_TEXT_PREVIEW_BYTES
+        storage.upload(self.author,self.vid,SimpleUploadedFile('large.txt',b'x'*(MAX_TEXT_PREVIEW_BYTES+1)),purpose='RELEASE')
+        fixtures.WorkflowTests.publish(self)
+        document=s.get_version(self.author,self.vid)[1]['document_id']
+        process=self.root()
+        self.client.force_login(self.reviewer)
+        page=self.client.get(f'/processes/{process}/bpmn/?edit=1')
+        choice=next(d for d in page.context['config']['documents'] if d['id']==document)
+        self.assertIsNone(choice['preview_url'])
+        self.client.logout()
+        self.assertEqual(self.client.get(f'/process-documents/{document}/preview/').status_code,409)
+        response=self.client.get(choice['url'])
+        self.assertEqual(response.status_code,302)
+        self.assertNotIn('/viewer/',response.url)

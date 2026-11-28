@@ -7,6 +7,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_safe
 from . import bpmn, processes, process_demo, process_map, services as s
+from .previews import MAX_TEXT_PREVIEW_BYTES, is_previewable
 from .policies import is_qmb, require_qmb
 
 VENDOR = Path(__file__).resolve().parent/'static/vendor/bpmn/18.31.0'
@@ -53,10 +54,10 @@ def diagram(request,target=None):
     document_ids=None if edit else set(re.findall(r'IMS-DOCUMENT-ID:(\d+)',xml or ''))
     document_ids=[int(identifier) for identifier in document_ids if len(identifier)<=19 and 0<int(identifier)<=9223372036854775807] if document_ids is not None else None
     uid=s.actor(request.user) if request.user.is_authenticated else None
-    documents=s.query('''SELECT d.id,d.number,v.id AS version_id,v.title,l.kind_slug,l.number_slug,(lower(reading.original_name) LIKE '%%.pdf' OR lower(reading.original_name) LIKE '%%.txt') AS previewable FROM documents d
+    documents=s.query('''SELECT d.id,d.number,v.id AS version_id,v.title,l.kind_slug,l.number_slug,(lower(reading.original_name) LIKE '%%.pdf' OR (lower(reading.original_name) LIKE '%%.txt' AND reading.size_bytes<=%s)) AS previewable FROM documents d
         JOIN document_versions v ON v.id=current_release(d.id) JOIN document_links l ON l.document_id=d.id
-        LEFT JOIN LATERAL (SELECT f.original_name FROM version_files vf JOIN file_objects f ON f.id=vf.file_id WHERE vf.version_id=v.id ORDER BY CASE WHEN vf.purpose='RELEASE' THEN 0 WHEN lower(f.original_name) LIKE '%%.pdf' THEN 1 WHEN lower(f.original_name) LIKE '%%.txt' THEN 2 ELSE 3 END,f.id LIMIT 1) reading ON true
-        WHERE ((NOT d.login_required) OR can_read_version(%s,v.id)) AND (%s OR d.id=ANY(%s::bigint[])) ORDER BY d.number''',[uid,document_ids is None,document_ids or []])
+        LEFT JOIN LATERAL (SELECT f.original_name,f.size_bytes FROM version_files vf JOIN file_objects f ON f.id=vf.file_id WHERE vf.version_id=v.id ORDER BY CASE WHEN vf.purpose='RELEASE' THEN 0 WHEN lower(f.original_name) LIKE '%%.pdf' THEN 1 WHEN lower(f.original_name) LIKE '%%.txt' THEN 2 ELSE 3 END,f.id LIMIT 1) reading ON true
+        WHERE ((NOT d.login_required) OR can_read_version(%s,v.id)) AND (%s OR d.id=ANY(%s::bigint[])) ORDER BY d.number''',[MAX_TEXT_PREVIEW_BYTES,uid,document_ids is None,document_ids or []])
     document_choices=[{'id':d['id'],'title':d['number']+' · '+d['title'],'url':'/d/'+d['kind_slug']+'/'+d['number_slug']+'/','preview_url':reverse('bpmn_document_preview',args=[d['id']]) if d['previewable'] else None} for d in documents]
     linked_documents=[];references=[];owner=None
     if current:
@@ -73,8 +74,11 @@ def document_preview(request,document):
     from django.shortcuts import redirect
     from . import portal
     version=portal.current_version(request.user,document,public=True)
-    files=s.query("SELECT f.id,f.original_name FROM version_files vf JOIN file_objects f ON f.id=vf.file_id WHERE vf.version_id=%s ORDER BY CASE WHEN vf.purpose='RELEASE' THEN 0 WHEN lower(f.original_name) LIKE '%%.pdf' THEN 1 WHEN lower(f.original_name) LIKE '%%.txt' THEN 2 ELSE 3 END,f.id LIMIT 1",[version])
-    if not files or Path(files[0]['original_name']).suffix.lower() not in ('.pdf','.txt'):raise Http404('Keine PDF- oder TXT-Lesefassung vorhanden.')
+    files=s.query("SELECT f.id,f.original_name,f.size_bytes FROM version_files vf JOIN file_objects f ON f.id=vf.file_id WHERE vf.version_id=%s ORDER BY CASE WHEN vf.purpose='RELEASE' THEN 0 WHEN lower(f.original_name) LIKE '%%.pdf' THEN 1 WHEN lower(f.original_name) LIKE '%%.txt' THEN 2 ELSE 3 END,f.id LIMIT 1",[version])
+    if not files:raise Http404('Keine Lesefassung vorhanden.')
+    if not is_previewable(files[0]):
+        from django.http import HttpResponse
+        return HttpResponse('Für diese Datei ist keine Vorschau verfügbar. Bitte das Dokument vollständig öffnen.',status=409,content_type='text/plain; charset=utf-8')
     return redirect(reverse('pdf_viewer',args=[version,files[0]['id']])+'?embedded=1')
 
 
