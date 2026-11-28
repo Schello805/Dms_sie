@@ -14,6 +14,12 @@ def login(page,username):
  page.get_by_role('button',name='Anmelden',exact=True).click()
  expect(page.locator('.account-name')).to_be_visible()
 
+def application_scale(page):
+ return page.evaluate("""() => Object.fromEntries(['body','header','.site-logo','.main-nav>a','h1','.site-footer'].map(selector=>{
+  const node=document.querySelector(selector),style=getComputedStyle(node),box=node.getBoundingClientRect();
+  return [selector,{font:style.fontSize,...(selector==='header'||selector==='.site-logo'?{height:box.height}:{})}];
+ }))""")
+
 def assert_workspace(page):
  expect(page.locator('body')).to_have_class(re.compile('flow-page'))
  dimensions=page.evaluate('({height:document.scrollingElement.scrollHeight,width:document.scrollingElement.scrollWidth,h:innerHeight,w:innerWidth})')
@@ -66,6 +72,8 @@ with sync_playwright() as p:
     context=browser.new_context(**options);context.tracing.start(screenshots=True,snapshots=True,sources=True);contexts.append(context)
     page=context.new_page();login(page,username);pages[username]=page
    author,qmb,reader=(pages[name] for name in ('autor','pruefer','leser'))
+   reader.goto(base+'/')
+   catalog_scale=application_scale(reader)
    parent=None
    titles=[]
    for level in range(1,5):
@@ -79,6 +87,7 @@ with sync_playwright() as p:
     parent=qmb.url.rstrip('/').split('/')[-1]
    reader.goto(base+'/processes/')
    assert_workspace(reader)
+   assert application_scale(reader)==catalog_scale,'Application chrome changes scale between documents and processes'
    reader.screenshot(path=str(artifacts/(device+'-process-landscape.png')),full_page=True)
    for title in titles:
     reader.get_by_role('button',name=re.compile(re.escape(title))).click()

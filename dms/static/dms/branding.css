@@ -20,3 +20,30 @@
 .footer-links{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
 header .site-brand-name{font-size:.9rem;max-width:19rem}
 @media(max-width:650px){header .site-brand-name{font-size:.75rem;max-width:190px}}
+
+
+/* Shared application chrome: navigation does not change scale between modules. */
+body>header{flex:none;min-height:44px;padding:.2rem 2.5%;gap:.65rem;flex-wrap:nowrap;box-sizing:border-box}
+body>header .site-logo{width:36px;height:36px;object-fit:contain}
+body>header .site-brand-name{font-size:.75rem;line-height:1.2;max-width:220px}
+body>header .main-nav{order:initial;flex:1;flex-basis:auto;min-width:0;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+body>header .main-nav>a{flex-shrink:0;white-space:nowrap;min-height:32px;padding:.25rem .55rem;font-size:.875rem}
+body>header .account-action{flex-shrink:0}body>header .avatar{width:30px;height:30px}
+body>.site-footer{flex:none;min-height:28px;padding:.15rem 2.5%;gap:.6rem;flex-wrap:nowrap;font-size:.7rem;box-sizing:border-box}
+body>.site-footer .site-logo{width:20px;height:20px;object-fit:contain}body>.site-footer .site-brand>span{display:none}
+body>.site-footer .footer-links{display:flex;gap:.65rem;white-space:nowrap}body>.site-footer .release{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:.7rem}
+body .account-panel{max-height:calc(100dvh - 52px);overflow:auto;box-sizing:border-box}
+@media(max-width:900px){
+ body>header .site-brand-name,body>header .guest-label{display:none}
+ body>header .site-brand{flex:0 0 auto}body>header .site-logo{width:30px;height:30px}
+ body>header .main-nav{order:initial;flex-basis:auto}body>header .main-nav>a{padding:.25rem .4rem}
+ body>header .account-action{margin-left:0}body>header .account-action .button{min-height:32px;padding:.3rem .45rem;font-size:.875rem}
+ body>.site-footer .footer-links{gap:.45rem}
+}
+@media(max-width:650px){body>header .account-label{display:none}}
+@media(max-width:600px){body>.site-footer{font-size:.65rem;min-height:26px}body>.site-footer .release{font-size:.63rem}}
+@media(max-height:540px){
+ body>header{min-height:32px;padding:.1rem 2.5%}body>header .site-logo{width:24px;height:24px}body>header .main-nav>a{min-height:28px}
+ body>header .account-menu summary{min-height:28px;padding:.1rem .25rem}body>header .avatar{width:24px;height:24px}
+ body main h1{font-size:1rem}
+}
