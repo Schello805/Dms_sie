@@ -248,6 +248,7 @@ with sync_playwright() as p:
      phone.locator('#flow-details-close').click()
      phone.set_viewport_size({'width':844,'height':390})
      assert_workspace(phone)
+     expect(phone.locator('[data-element-id="Prepare"] .djs-hit-all')).to_be_in_viewport()
      phone.screenshot(path=str(artifacts/'phone-landscape-flow.png'))
     finally:phone_context.close()
    qmb.goto(base+'/processes/')
