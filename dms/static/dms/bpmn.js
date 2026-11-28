@@ -112,6 +112,7 @@
   };
   const closePreview = () => {byId('flow-preview').close();byId('flow-preview-frame').removeAttribute('src');};
   byId('flow-preview-close').addEventListener('click',closePreview);
+  byId('flow-preview-open').addEventListener('click',()=>{persist();closePreview();});
   byId('flow-preview').addEventListener('cancel',() => byId('flow-preview-frame').removeAttribute('src'));
   const openElement = (element,move=false) => {
     if (!element || !element.businessObject || element===canvas.getRootElement()) {closeDetails();return;}
