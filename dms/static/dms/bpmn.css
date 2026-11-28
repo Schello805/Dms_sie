@@ -10,3 +10,5 @@
 .flow-details-heading{position:sticky;top:-1rem;background:white;z-index:2;padding:.35rem 0}#flow-step-description{margin-top:.7rem}
 
 .flow-manage{z-index:80}.bpmn-toolbar{position:relative;z-index:70}
+
+.flow-step-details,.flow-preview{box-sizing:border-box}.bpmn-shell:has(.flow-step-details:not([hidden])) .bjs-powered-by{right:348px}@media(max-width:700px){.bpmn-shell:has(.flow-step-details:not([hidden])) .bjs-powered-by{right:12px;top:12px;bottom:auto}}

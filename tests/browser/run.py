@@ -132,6 +132,7 @@ with sync_playwright() as p:
    reader.get_by_role('button',name='Dokument ansehen',exact=True).click()
    expect(reader.locator('#flow-preview')).to_be_visible()
    expect(reader.frame_locator('#flow-preview-frame').locator('#viewer')).to_be_visible()
+   reader.screenshot(path=str(artifacts/(device+'-document-preview.png')),full_page=True)
    reader.get_by_role('button',name='Zurück zum Prozess',exact=True).click()
    expect(reader.locator('#flow-preview')).not_to_be_visible()
    assert reader.url==diagram_url
@@ -216,6 +217,9 @@ with sync_playwright() as p:
      phone.locator('[data-element-id="Prepare"] .djs-hit-all').tap()
      expect(phone.locator('#flow-details')).to_be_visible()
      assert phone.locator('#flow-details').bounding_box()['height']<510
+     assert phone.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),'Step details overflow phone viewport'
+     close_box=phone.locator('#flow-details-close').bounding_box()
+     assert close_box['x']+close_box['width']<=390,'Phone close control is clipped'
      phone.screenshot(path=str(artifacts/'phone-demo-flow.png'),full_page=True)
     finally:phone_context.close()
    qmb.goto(base+'/processes/')

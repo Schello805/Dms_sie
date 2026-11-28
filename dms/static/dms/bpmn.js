@@ -152,6 +152,7 @@
       if(nodes.length) {const heading=document.createElement('h3');heading.textContent=label;neighbours.append(heading);}
       for(const node of nodes) {const button=document.createElement('button');button.className='secondary';button.textContent=node.businessObject.name||'Prozessschritt';button.addEventListener('click',()=>openElement(node,true));neighbours.append(button);}
     }
+    if(!restoring && window.matchMedia('(max-width:700px)').matches){const top=byId('bpmn-shell').getBoundingClientRect().top;if(top>16)window.scrollBy(0,top-16);}
     persist();
   };
   byId('flow-back').addEventListener('click',() => {
