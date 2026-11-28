@@ -51,7 +51,7 @@ def diagram(request,target=None):
     navigation=not xml and not edit
     if navigation:xml=process_map.build(children) if children else ''
     document_ids=None if edit else set(re.findall(r'IMS-DOCUMENT-ID:(\d+)',xml or ''))
-    document_ids=[int(identifier) for identifier in document_ids] if document_ids is not None else None
+    document_ids=[int(identifier) for identifier in document_ids if len(identifier)<=19 and 0<int(identifier)<=9223372036854775807] if document_ids is not None else None
     uid=s.actor(request.user) if request.user.is_authenticated else None
     documents=s.query('''SELECT d.id,d.number,v.id AS version_id,v.title,l.kind_slug,l.number_slug,EXISTS(SELECT 1 FROM version_files vf JOIN file_objects f ON f.id=vf.file_id WHERE vf.version_id=v.id AND (lower(f.original_name) LIKE '%%.pdf' OR lower(f.original_name) LIKE '%%.txt')) AS previewable FROM documents d
         JOIN document_versions v ON v.id=current_release(d.id) JOIN document_links l ON l.document_id=d.id

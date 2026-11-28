@@ -105,3 +105,11 @@ class BpmnTests(TestCase):
         self.assertEqual(self.client.get(f'/processes/{draft}/step-info/').status_code,404)
         self.client.force_login(self.reviewer)
         self.assertEqual(self.client.get(f'/processes/{draft}/step-info/').status_code,200)
+
+    def test_invalid_imported_document_identifiers_do_not_break_reader(self):
+        process=self.root()
+        xml=bpmn.EMPTY.replace('<bpmn:startEvent id="StartEvent_IMS" name="Start"/>','<bpmn:startEvent id="StartEvent_IMS" name="Start"><bpmn:documentation>IMS-DOCUMENT-ID:999999999999999999999999999</bpmn:documentation></bpmn:startEvent>')
+        bpmn.save(self.reviewer,process,xml,0,True)
+        response=self.client.get(f'/processes/{process}/')
+        self.assertEqual(response.status_code,200)
+        self.assertEqual(response.context['config']['documents'],[])
