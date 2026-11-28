@@ -161,6 +161,8 @@ with sync_playwright() as p:
    expect(reader.locator('#flow-step-title')).to_have_text('CI Aufgabe '+device)
    reader.locator('#flow-find').fill('')
    expect(reader.locator('#bpmn-status')).to_have_text('Schritte anklicken · Zum Verschieben ziehen · + / − zum Zoomen')
+   reader.get_by_role('button',name='Schrittdetails schließen',exact=True).click()
+   reader.get_by_role('button',name='Gesamtansicht',exact=True).click()
    reader.locator('[data-element-id="StartEvent_IMS"] .djs-hit-all').click()
    saved_box=reader.locator('[data-element-id="StartEvent_IMS"] .djs-hit-all').bounding_box()
    reader.get_by_role('link',name='Unterprozess öffnen',exact=True).click()
