@@ -43,7 +43,18 @@
     const width=byId('bpmn-canvas').clientWidth,height=byId('bpmn-canvas').clientHeight;
     if(width<1||height<1)return;
     const changed=!workspaceSize||workspaceSize.width!==width||workspaceSize.height!==height;
-    if(changed){const saved=viewSnapshot;workspaceSize={width,height};canvas.resized();if(ready&&saved)canvas.viewbox({x:saved.x-width/saved.zoom/2,y:saved.y-height/saved.zoom/2,width:width/saved.zoom,height:height/saved.zoom});}
+    if(changed){
+      const saved=viewSnapshot,wide=innerWidth>innerHeight,rotated=workspaceSize&&workspaceSize.wide!==wide;
+      workspaceSize={width,height,wide};canvas.resized();
+      if(ready&&saved){
+        const inner=canvas.viewbox().inner,w=width/saved.zoom,h=height/saved.zoom;
+        let x=saved.x,y=saved.y;
+        const outside=x+w/2<inner.x||x-w/2>inner.x+inner.width||y+h/2<inner.y||y-h/2>inner.y+inner.height;
+        const offCentre=x<inner.x||x>inner.x+inner.width||y<inner.y||y>inner.y+inner.height;
+        if(!config.edit&&(outside||(rotated&&offCentre))){x=inner.x+inner.width/2;y=inner.y+inner.height/2;}
+        canvas.viewbox({x:x-w/2,y:y-h/2,width:w,height:h});
+      }
+    }
     if(ready&&!config.edit&&readerSelected&&!restoring)revealSelection(registry.get(readerSelected));
   };
   const fit = () => canvas.zoom('fit-viewport');
