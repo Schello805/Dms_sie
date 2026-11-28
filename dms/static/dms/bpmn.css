@@ -6,3 +6,5 @@
 .djs-shape[role=button]{cursor:pointer}.djs-shape[role=button]:hover .djs-visual>rect{stroke:#14848f!important}.djs-connection.flow-selected .djs-visual>path{stroke:#007f8b!important;stroke-width:4px!important}
 
 .flow-step-details{overflow-wrap:anywhere}.flow-details-heading h2{min-width:0;overflow-wrap:anywhere}.flow-preview strong{min-width:0;flex:1;overflow-wrap:anywhere}.flow-preview>div button{flex-shrink:0}
+
+.flow-details-heading{position:sticky;top:-1rem;background:white;z-index:2;padding:.35rem 0}#flow-step-description{margin-top:.7rem}
