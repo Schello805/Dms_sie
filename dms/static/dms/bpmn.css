@@ -8,3 +8,5 @@
 .flow-step-details{overflow-wrap:anywhere}.flow-details-heading h2{min-width:0;overflow-wrap:anywhere}.flow-preview strong{min-width:0;flex:1;overflow-wrap:anywhere}.flow-preview>div button{flex-shrink:0}
 
 .flow-details-heading{position:sticky;top:-1rem;background:white;z-index:2;padding:.35rem 0}#flow-step-description{margin-top:.7rem}
+
+.flow-manage{z-index:80}.bpmn-toolbar{position:relative;z-index:70}

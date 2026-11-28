@@ -104,6 +104,7 @@
   };
   const closeDetails = () => {if (detailsRequest) detailsRequest.abort();byId('flow-details').hidden=true;readerSelected=null;highlight(null);persist();};
   if (byId('flow-details-close')) byId('flow-details-close').addEventListener('click',closeDetails);
+  if (!config.edit) for (const summary of document.querySelectorAll('.flow-manage > summary,.bpmn-export-menu > summary')) summary.addEventListener('click',()=>{if(!summary.parentElement.open)closeDetails();});
   const preview = item => {
     persist();byId('flow-preview-title').textContent=item.title;
     byId('flow-preview-open').href=item.url;
