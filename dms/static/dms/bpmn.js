@@ -230,7 +230,13 @@
     const setProperties = enabled => {properties.classList.toggle('is-open',enabled);byId('flow-properties-toggle').setAttribute('aria-expanded',String(enabled));};
     byId('flow-properties-toggle').addEventListener('click',()=>{setProperties(!properties.classList.contains('is-open'));document.querySelector('.flow-edit-menu').open=false;});
     byId('flow-properties-close').addEventListener('click',()=>setProperties(false));
-    editor.on('commandStack.changed', markDirty);
+    editor.on('commandStack.changed', () => {
+      markDirty();annotate();
+      if(selected && registry.get(selected.id)===selected){
+        byId('bpmn-selection').textContent=selected.businessObject.name || 'Element ohne Bezeichnung';
+        if(document.activeElement!==byId('bpmn-name'))byId('bpmn-name').value=selected.businessObject.name || '';
+      }
+    });
     const check = () => {
       const found=BpmnTools.issues(registry.getAll(),config.processes,config.documents||[]);
       byId('flow-checks').hidden=false;byId('flow-check-list').replaceChildren();
@@ -272,7 +278,7 @@
       const marker = new RegExp('^IMS-' + kind + '-ID:\\d+$');
       const docs = (element.businessObject.documentation || []).filter(doc => !marker.test(doc.text || ''));
       if (value) docs.push(editor.get('moddle').create('bpmn:Documentation',{text:'IMS-' + kind + '-ID:' + value}));
-      editor.get('modeling').updateProperties(element,{documentation:docs});annotate();
+      editor.get('modeling').updateProperties(element,{documentation:docs});
     };
     BpmnEditor({editor,config,getSelection:() => selected,updateLink,status});
     for (const [id, publish] of [['bpmn-save',false],['bpmn-publish',true]]) byId(id).addEventListener('click', () => run(async () => {
