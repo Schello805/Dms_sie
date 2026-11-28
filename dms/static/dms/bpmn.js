@@ -30,7 +30,7 @@
   const naturalView = () => {
     canvas.resized();canvas.zoom('fit-viewport');
     const inner=canvas.viewbox().inner, width=byId('bpmn-canvas').clientWidth, height=byId('bpmn-canvas').clientHeight;
-    const left=config.edit?160:24;
+    const left=config.edit?(document.querySelector('.flow-stencils')?.offsetWidth || 112)+48:24;
     const scale=Math.min(1.1,Math.max(.05,Math.min((width-left-24)/Math.max(1,inner.width),(height-48)/Math.max(1,inner.height))));
     canvas.viewbox({x:inner.x-left/scale,y:inner.y-(height/scale-inner.height)/2,width:width/scale,height:height/scale});
   };
