@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict');
+const {linkIds,issues,searchable}=require('../dms/static/dms/bpmn-tools.js');
+const a={id:'a',type:'bpmn:Task',businessObject:{name:'Prüfung',documentation:[{text:'IMS-DOCUMENT-ID:42'}]}};
+const b={id:'b',type:'bpmn:ExclusiveGateway',businessObject:{name:'Ergebnis'}};
+const c={id:'c',type:'bpmn:EndEvent',businessObject:{name:'Ende'}};
+const d={id:'d',type:'bpmn:Task',businessObject:{name:'Korrektur'}};
+const edge=(id,source,target,name)=>({id,type:'bpmn:SequenceFlow',source,target,businessObject:{name}});
+const links=[edge('ab',a,b),edge('bc',b,c,'Ja'),edge('bd',b,d)];
+assert.deepEqual(linkIds(a),{DOCUMENT:'42'});
+assert.equal(issues([a,b,c,d,...links],[],[{id:42}]).length,1);
+assert.equal(issues([a,b,c,d,...links],[],[]).length,2);
+assert(issues([a],[],[{id:42}]).some(i=>i.text.includes('Keine Ablaufverbindung')));
+assert(searchable(a,[],[{id:42,title:'AA-0042 Endprüfung'}]).includes('aa-0042'));
+assert(!searchable(a,[],[]).includes('endprüfung'));
+console.log('BPMN links, authorization-aware search and structural hints passed.');

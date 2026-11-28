@@ -42,8 +42,8 @@ def diagram(request,target=None):
     model=rows[0] if rows else None
     xml=(model['draft_xml'] if edit else model['live_xml']) if model else None
     history=s.query('SELECT r.revision,r.published_at,u.display_name FROM process_bpmn_revisions r JOIN users u ON u.id=r.actor_id WHERE process_id=%s ORDER BY revision DESC',[target]) if manager else []
-    choices=[{'id':node['id'],'title':node['code']+' · '+node['data']['title'],'url':reverse('process_detail',args=[node['id']])} for node in nodes if node['id']!=target]
     by_id={node['id']:node for node in nodes}
+    choices=[{'id':node['id'],'title':node['code']+' · '+node['data']['title'],'info_url':reverse('process_step_info',args=[node['id']]),'available':all(by_id[identifier]['active'] and by_id[identifier]['live'] is not None for identifier in node['path']),'level':node['label'],'description':node['data'].get('description','')[:1200],'url':reverse('process_detail',args=[node['id']])} for node in nodes if node['id']!=target]
     crumbs=[by_id[identifier] for identifier in current['path'] if identifier in by_id] if current else []
     search=request.GET.get('q','').strip()[:200] if not current else ''
     children=[node for node in nodes if node['parent_id']==target] if not search else [node for node in nodes if node['search_match']]
@@ -53,15 +53,33 @@ def diagram(request,target=None):
     document_ids=None if edit else set(re.findall(r'IMS-DOCUMENT-ID:(\d+)',xml or ''))
     document_ids=[int(identifier) for identifier in document_ids] if document_ids is not None else None
     uid=s.actor(request.user) if request.user.is_authenticated else None
-    documents=s.query('''SELECT d.id,d.number,v.title,l.kind_slug,l.number_slug FROM documents d
+    documents=s.query('''SELECT d.id,d.number,v.id AS version_id,v.title,l.kind_slug,l.number_slug,EXISTS(SELECT 1 FROM version_files vf JOIN file_objects f ON f.id=vf.file_id WHERE vf.version_id=v.id AND (lower(f.original_name) LIKE '%%.pdf' OR lower(f.original_name) LIKE '%%.txt')) AS previewable FROM documents d
         JOIN document_versions v ON v.id=current_release(d.id) JOIN document_links l ON l.document_id=d.id
         WHERE ((NOT d.login_required) OR can_read_version(%s,v.id)) AND (%s OR d.id=ANY(%s::bigint[])) ORDER BY d.number''',[uid,document_ids is None,document_ids or []])
-    document_choices=[{'id':d['id'],'title':d['number']+' · '+d['title'],'url':'/d/'+d['kind_slug']+'/'+d['number_slug']+'/'} for d in documents]
+    document_choices=[{'id':d['id'],'title':d['number']+' · '+d['title'],'url':'/d/'+d['kind_slug']+'/'+d['number_slug']+'/','preview_url':reverse('bpmn_document_preview',args=[d['id']]) if d['previewable'] else None} for d in documents]
     linked_documents=[];references=[];owner=None
     if current:
         owners=s.query('SELECT display_name FROM users WHERE id=%s',[current['data']['owner_id']])
         owner=owners[0]['display_name'] if owners else 'Nicht zugeordnet'
         linked_documents=s.query('''SELECT d.number,v.title,l.kind_slug,l.number_slug FROM documents d JOIN document_versions v ON v.id=current_release(d.id) JOIN document_links l ON l.document_id=d.id WHERE d.id=ANY(%s::bigint[]) AND ((NOT d.login_required) OR can_read_version(%s,v.id)) ORDER BY d.number''',[current['data'].get('documents',[]),uid])
         references=s.query('SELECT s.name,s.edition,r.reference,r.label FROM standard_references r JOIN standards s ON s.id=r.standard_id WHERE r.id=ANY(%s::bigint[]) ORDER BY s.name,r.reference',[current['data'].get('references',[])])
-    config={'xml':xml or (bpmn.EMPTY if edit else ''),'edit':edit,'expected':model['edit_version'] if model else 0,'processes':choices,'documents':document_choices,'url':reverse('process_bpmn',args=[target]) if target else request.path,'code':current['code'] if current else 'Prozesslandkarte','navigation':navigation}
+    config={'xml':xml or (bpmn.EMPTY if edit else ''),'edit':edit,'expected':model['edit_version'] if model else 0,'processes':choices,'documents':document_choices,'url':reverse('process_bpmn',args=[target]) if target else request.path,'code':current['code'] if current else 'Prozesslandkarte','parent_url':reverse('process_detail',args=[current['parent_id']]) if current and current['parent_id'] else reverse('processes'),'navigation':navigation,'stateKey':str(target or 'map')}
     return render(request,'dms/bpmn.html',{'owner':owner,'search':search,'demo_state':process_demo.state(),'documents':linked_documents,'references':references,'crumbs':crumbs,'current':current,'manager':manager,'edit':edit,'config':config,'history':history,'has_draft':bool(model and model['draft_xml']!=model['live_xml']),'revision':model['revision'] if model else 0})
+
+
+@require_safe
+def document_preview(request,document):
+    from django.shortcuts import redirect
+    from . import portal
+    version=portal.current_version(request.user,document,public=True)
+    files=s.query("SELECT f.id FROM version_files vf JOIN file_objects f ON f.id=vf.file_id WHERE vf.version_id=%s AND (lower(f.original_name) LIKE '%%.pdf' OR lower(f.original_name) LIKE '%%.txt') ORDER BY CASE WHEN vf.purpose='RELEASE' THEN 0 ELSE 1 END,f.id LIMIT 1",[version])
+    if not files:raise Http404('Keine PDF- oder TXT-Lesefassung vorhanden.')
+    return redirect(reverse('pdf_viewer',args=[version,files[0]['id']])+'?embedded=1')
+
+
+@require_safe
+def step_info(request,target):
+    nodes=processes.nodes(is_qmb(request.user),target)
+    current=next((node for node in nodes if node['id']==target),None)
+    if current is None:raise Http404
+    return JsonResponse({'title':current['data']['title'],'description':current['data'].get('description','')[:2000]})

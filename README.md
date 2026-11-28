@@ -4,6 +4,14 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.11.0: Ruhiger lesen und gezielt bearbeiten
+
+Ein Klick wählt einen Prozessschritt und öffnet kompakte Details. Unterprozesse und Dokumente
+werden anschließend gezielt geöffnet; die PDF-/TXT-Vorschau bleibt am Prozess. Zoom, Position
+und Schrittauswahl werden beim Zurückgehen wiederhergestellt. Suche, Legende und Hervorhebung
+helfen beim Lesen. QMBs erhalten Ausrichtungshilfen und anklickbare Modellierungshinweise.
+Details: [Release 0.11.0](docs/releases/v0.11.0.md).
+
 ## Release 0.10.0: Diagramme statt Prozesskarten
 
 Die Prozesslandkarte und alle Prozesse öffnen direkt als anklickbare Diagramme.

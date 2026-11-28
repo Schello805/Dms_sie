@@ -6,6 +6,8 @@ from dms import auth_views as auth
 from django.urls import path
 from dms import views,portal_views,branding,admin_views,catalog_views,ui_assets,account_views,comparison,master_views
 urlpatterns = [
+    path('processes/<int:target>/step-info/',bpmn_views.step_info,name='process_step_info'),
+    path('process-documents/<int:document>/preview/',bpmn_views.document_preview,name='bpmn_document_preview'),
     path('assets/bpmn/18.31.0/<str:name>',bpmn_views.asset,name='bpmn_asset'),
     path('processes/<int:target>/bpmn/',bpmn_views.diagram,name='process_bpmn'),
     path('processes/<int:target>/controls/',process_control_views.overview,name='process_controls'),

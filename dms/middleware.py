@@ -25,7 +25,7 @@ class ReaderSurfaceMiddleware(MiddlewareMixin):
         if not request.reader_only:
             return None
         match = request.resolver_match
-        if match and match.view_name in {'process_bpmn','processes','process_detail','acknowledge','help','home','index','detail','read_current','read_named','pdf_viewer','preview_pdf','download','document_qr','login','logout','account_password'}:
+        if match and match.view_name in {'process_step_info','bpmn_document_preview','process_bpmn','processes','process_detail','acknowledge','help','home','index','detail','read_current','read_named','pdf_viewer','preview_pdf','download','document_qr','login','logout','account_password'}:
             return None
         from django.core.exceptions import PermissionDenied
         from django.shortcuts import redirect

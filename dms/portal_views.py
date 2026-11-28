@@ -263,7 +263,7 @@ def pdf_viewer(request,version_id,file_id):
         return HttpResponse('Bitte eine PDF-Lesefassung hinterlegen oder die Originaldatei herunterladen.',status=409,content_type='text/plain; charset=utf-8')
     assignments = portal.pending_acknowledgements(request.user) if request.user.is_authenticated and s.query('SELECT 1 FROM users WHERE auth_user_id=%s AND active',[request.user.pk]) else []
     from .audit_text import DEFAULT_REASON
-    response = render(request,'dms/pdf_viewer.html',{'v':version,'file_id':file_id,
+    response = render(request,'dms/pdf_viewer.html',{'embedded':request.GET.get('embedded')=='1','v':version,'file_id':file_id,
         'reading_overdue':bool(version['status']=='APPROVED' and s.query('SELECT current_release(%s) AS id',[version['document_id']])[0]['id']==version_id and version['review_due_on'] and version['review_due_on']<timezone.localdate()),
         'reading_change':bool(version['change_summary'] and version['change_summary']!=DEFAULT_REASON),
         'assignment':next((a for a in assignments if a['version_id']==version_id),None)})
