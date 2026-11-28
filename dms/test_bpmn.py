@@ -73,7 +73,9 @@ class BpmnTests(TestCase):
         self.assertTrue(reader.context['config']['documents'][0]['url'].startswith('/d/'))
         self.client.force_login(self.reviewer)
         edit=self.client.get(f'/processes/{root}/bpmn/?edit=1')
-        self.assertContains(edit,'id="bpmn-document"')
+        self.assertContains(edit,'id="flow-document-pick"')
+        self.assertContains(edit,'id="flow-link-picker"')
+        self.assertNotContains(reader,'id="flow-link-picker"')
         self.assertEqual(edit.context['config']['documents'][0]['id'],document)
 
     def test_process_start_is_a_diagram_without_cards(self):
