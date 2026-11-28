@@ -10,7 +10,7 @@
   const names = {'Create StartEvent':'Startereignis erstellen','Create EndEvent':'Endereignis erstellen','Create Task':'Aufgabe erstellen','Create expanded SubProcess':'Unterprozess erstellen','Create ExclusiveGateway':'Gateway erstellen','Create Pool/Participant':'Pool erstellen','Activate the hand tool':'Verschieben','Activate the lasso tool':'Mehrfachauswahl','Activate the create/remove space tool':'Abstände ändern','Activate the global connect tool':'Verbindung erstellen','Remove':'Entfernen','Change type':'Typ ändern','Connect using Sequence/MessageFlow or Association':'Verbinden','Append Task':'Aufgabe anhängen','Append EndEvent':'Endereignis anhängen','Append Gateway':'Gateway anhängen','Append Intermediate/Boundary Event':'Zwischenereignis anhängen','Add TextAnnotation':'Notiz hinzufügen'};
   const translate = (text, values) => (names[text] || text).replace(/\{([^}]+)\}/g, (_, key) => values && key in values ? values[key] : '{' + key + '}');
   const editor = new BpmnJS({container:'#bpmn-canvas',textRenderer:{defaultStyle:{fontFamily:'Arial, sans-serif',fontSize:15},externalStyle:{fontSize:13}},bpmnRenderer:{defaultFillColor:'#f7fbfc',defaultStrokeColor:'#386c79',defaultLabelColor:'#173b49'},additionalModules:[{translate:['value',translate]}]});
-  let ready = false, dirty = false, busy = false, generation = 0, selected = null;
+  let ready = false, dirty = false, busy = false, generation = 0, selected = null, viewSnapshot = null;
   const buttons = ['bpmn-save','bpmn-publish','bpmn-export','bpmn-svg','bpmn-fit','bpmn-zoom-in','bpmn-zoom-out','bpmn-check','bpmn-align','bpmn-size','bpmn-space','bpmn-select-all'];
   const refresh = () => buttons.forEach(id => {if (byId(id)) byId(id).disabled = !ready || busy;});
   const markDirty = () => {dirty = true; generation++; status('Ungespeicherte Änderungen.');};
@@ -28,30 +28,36 @@
   };
   const canvas = editor.get('canvas');
   const naturalView = () => {
-    canvas.zoom('fit-viewport');
-    const inner = canvas.viewbox().inner;
-    const width = byId('bpmn-canvas').clientWidth;
-    const scale = Math.min(1.1, Math.max(.85, width / (inner.width + 64)));
-    if (!config.edit && !byId('bpmn-shell').classList.contains('is-fullscreen')) {
-      byId('bpmn-canvas').style.height = Math.round(Math.min(window.innerHeight * .62, Math.max(260, (inner.height + 96) * scale))) + 'px';
-      canvas.resized();
-    }
-    const height = byId('bpmn-canvas').clientHeight;
-    canvas.viewbox({x:inner.x - (config.edit ? 160 : 28),y:inner.y - Math.max(28,(height / scale - inner.height) / 2),width:width / scale,height:height / scale});
+    canvas.resized();canvas.zoom('fit-viewport');
+    const inner=canvas.viewbox().inner, width=byId('bpmn-canvas').clientWidth, height=byId('bpmn-canvas').clientHeight;
+    const left=config.edit?160:24;
+    const scale=Math.min(1.1,Math.max(.05,Math.min((width-left-24)/Math.max(1,inner.width),(height-48)/Math.max(1,inner.height))));
+    canvas.viewbox({x:inner.x-left/scale,y:inner.y-(height/scale-inner.height)/2,width:width/scale,height:height/scale});
+  };
+  let workspaceSize = null;
+  const resizeWorkspace = () => {
+    const shell=byId('bpmn-shell'),toolbar=shell.querySelector('.bpmn-toolbar'),utility=shell.querySelector('.flow-utility');
+    const shellBox=shell.getBoundingClientRect();
+    shell.style.setProperty('--flow-tools-height',Math.round(utility.getBoundingClientRect().bottom-shellBox.top)+'px');
+    shell.style.setProperty('--flow-menu-height',Math.max(80,shell.clientHeight-toolbar.offsetHeight-20)+'px');
+    const width=byId('bpmn-canvas').clientWidth,height=byId('bpmn-canvas').clientHeight;
+    if(width<1||height<1)return;
+    const changed=!workspaceSize||workspaceSize.width!==width||workspaceSize.height!==height;
+    if(changed){const saved=viewSnapshot;workspaceSize={width,height};canvas.resized();if(ready&&saved)canvas.viewbox({x:saved.x-width/saved.zoom/2,y:saved.y-height/saved.zoom/2,width:width/saved.zoom,height:height/saved.zoom});}
+    if(ready&&!config.edit&&readerSelected&&!restoring)revealSelection(registry.get(readerSelected));
   };
   const fit = () => canvas.zoom('fit-viewport');
   byId('bpmn-fit').addEventListener('click', fit);
   byId('bpmn-zoom-in').addEventListener('click', () => canvas.zoom(Math.min(3,canvas.zoom() * 1.25)));
-  byId('bpmn-zoom-out').addEventListener('click', () => canvas.zoom(Math.max(.2,canvas.zoom() / 1.25)));
+  byId('bpmn-zoom-out').addEventListener('click', () => canvas.zoom(Math.max(.05,canvas.zoom() / 1.25)));
   const fullscreen = () => {
     const enabled = byId('bpmn-shell').classList.toggle('is-fullscreen');
     document.body.classList.toggle('flow-fullscreen-open', enabled);
     byId('bpmn-fullscreen').textContent = enabled ? 'Schließen' : 'Vollbild';
-    canvas.resized();
-    if (ready) naturalView();
+    requestAnimationFrame(resizeWorkspace);
   };
   byId('bpmn-fullscreen').addEventListener('click',fullscreen);
-  window.addEventListener('keydown',event => {if (event.key === 'Escape' && !byId('flow-preview').open && byId('bpmn-shell').classList.contains('is-fullscreen')) fullscreen();});
+  window.addEventListener('keydown',event => {if (event.key === 'Escape' && !byId('flow-preview').open && !byId('flow-info')?.open && byId('bpmn-shell').classList.contains('is-fullscreen')) fullscreen();});
   byId('bpmn-export').addEventListener('click', () => run(async () => download((await editor.saveXML({format:true})).xml, 'bpmn', 'application/xml')));
   byId('bpmn-svg').addEventListener('click', () => run(async () => download((await editor.saveSVG()).svg, 'svg', 'image/svg+xml')));
   const linkIds = BpmnTools.linkIds;
@@ -74,14 +80,14 @@
     } catch (_) { /* Navigation remains usable with disabled browser storage. */ }
   };
   let stateTimer;
-  editor.on('canvas.viewbox.changed', () => {clearTimeout(stateTimer);stateTimer=setTimeout(persist,150);});
+  editor.on('canvas.viewbox.changed', event => {const box=event.viewbox||canvas.viewbox();viewSnapshot={x:box.x+box.width/2,y:box.y+box.height/2,zoom:box.scale};clearTimeout(stateTimer);stateTimer=setTimeout(persist,150);});
   window.addEventListener('pagehide',persist);
   window.addEventListener('pageshow',event => {if (event.persisted && ready) restore();});
   const restore = () => {
     if (config.edit) return;
     try {
       const state = JSON.parse(sessionStorage.getItem(stateKey) || 'null');
-      if (!state || ![state.x,state.y,state.zoom].every(Number.isFinite) || state.zoom < .2 || state.zoom > 3) return;
+      if (!state || ![state.x,state.y,state.zoom].every(Number.isFinite) || state.zoom < .01 || state.zoom > 3) return;
       const width = byId('bpmn-canvas').clientWidth / state.zoom, height = byId('bpmn-canvas').clientHeight / state.zoom;
       canvas.viewbox({x:state.x-width/2,y:state.y-height/2,width,height});
       if (state.selected && registry.get(state.selected)) openElement(registry.get(state.selected),false);
@@ -102,6 +108,21 @@
       if (other) canvas.addMarker(other,'flow-neighbour');
     }
   };
+  const revealSelection = element => {
+    const panel=byId('flow-details');
+    if(!element||!panel||panel.hidden)return;
+    const node=registry.getGraphics(element)?.getBoundingClientRect();if(!node)return;
+    const area=byId('bpmn-canvas').getBoundingClientRect(),details=panel.getBoundingClientRect(),box=canvas.viewbox();
+    const bottom=window.matchMedia('(max-width:600px)').matches?details.top:area.bottom;
+    const right=window.matchMedia('(max-width:600px)').matches?area.right:details.left;
+    let dx=0,dy=0;
+    if(node.right>right-12||node.left<area.left+12)dx=(node.left+node.right-area.left-right)/2/box.scale;
+    if(node.bottom>bottom-12||node.top<area.top+12)dy=(node.top+node.bottom-area.top-bottom)/2/box.scale;
+    if(dx||dy)canvas.viewbox({x:box.x+dx,y:box.y+dy,width:box.width,height:box.height});
+  };
+  if(byId('flow-info-open'))byId('flow-info-open').addEventListener('click',()=>byId('flow-info').showModal());
+  if(byId('flow-info-close'))byId('flow-info-close').addEventListener('click',()=>byId('flow-info').close());
+  if(byId('flow-checks-close'))byId('flow-checks-close').addEventListener('click',()=>{byId('flow-checks').hidden=true;});
   const closeDetails = () => {if (detailsRequest) detailsRequest.abort();byId('flow-details').hidden=true;readerSelected=null;highlight(null);persist();};
   if (byId('flow-details-close')) byId('flow-details-close').addEventListener('click',closeDetails);
   if (!config.edit) for (const summary of document.querySelectorAll('.flow-manage > summary,.bpmn-export-menu > summary')) summary.addEventListener('click',()=>{if(!summary.parentElement.open)closeDetails();});
@@ -152,7 +173,7 @@
       if(nodes.length) {const heading=document.createElement('h3');heading.textContent=label;neighbours.append(heading);}
       for(const node of nodes) {const button=document.createElement('button');button.className='secondary';button.textContent=node.businessObject.name||'Prozessschritt';button.addEventListener('click',()=>openElement(node,true));neighbours.append(button);}
     }
-    if(!restoring && window.matchMedia('(max-width:700px)').matches){const top=byId('bpmn-shell').getBoundingClientRect().top;if(top>16)window.scrollBy(0,top-16);}
+    if(!restoring)revealSelection(element);
     persist();
   };
   byId('flow-back').addEventListener('click',() => {
@@ -194,6 +215,10 @@
     }
   };
   if (config.edit) {
+    const properties=document.querySelector('.bpmn-properties');
+    const setProperties = enabled => {properties.classList.toggle('is-open',enabled);byId('flow-properties-toggle').setAttribute('aria-expanded',String(enabled));};
+    byId('flow-properties-toggle').addEventListener('click',()=>{setProperties(!properties.classList.contains('is-open'));document.querySelector('.flow-edit-menu').open=false;});
+    byId('flow-properties-close').addEventListener('click',()=>setProperties(false));
     for (const process of config.processes) byId('bpmn-link').add(new Option(process.title, String(process.id)));
     for (const doc of config.documents || []) byId('bpmn-document').add(new Option(doc.title,String(doc.id)));
     editor.on('commandStack.changed', markDirty);
@@ -210,6 +235,8 @@
       if(shapes.length<minimum || new Set(shapes.map(e=>e.parent)).size>1) {status('Mindestens '+minimum+' Elemente derselben Ebene auswählen.',true);return null;}
       return shapes;
     };
+    for(const id of ['bpmn-check','bpmn-align','bpmn-size','bpmn-space','bpmn-new'])byId(id).addEventListener('click',()=>{document.querySelector('.flow-edit-menu').open=false;});
+    byId('bpmn-canvas').addEventListener('pointerdown',()=>{document.querySelector('.flow-edit-menu').open=false;});
     byId('bpmn-select-all').addEventListener('click',()=>{const shapes=registry.getAll().filter(e=>e.parent===canvas.getRootElement()&&!e.waypoints&&!e.labelTarget&&!e.host);editor.get('selection').select(shapes);status(shapes.length+' Elemente ausgewählt.');});
     byId('bpmn-align').addEventListener('click',()=>{const shapes=layoutSelection(2);if(shapes)editor.get('alignElements').trigger(shapes,'middle');});
     byId('bpmn-space').addEventListener('click',()=>{const shapes=layoutSelection(3);if(shapes)editor.get('distributeElements').trigger(shapes,'horizontal');});
@@ -223,6 +250,7 @@
     editor.on('selection.changed', event => {
       selected = event.newSelection.length === 1 ? (event.newSelection[0].labelTarget || event.newSelection[0]) : null;
       const usable = !!(selected && selected.businessObject && selected.type.startsWith('bpmn:'));
+      if(usable&&window.matchMedia('(max-width:900px)').matches)setProperties(true);
       byId('bpmn-name').disabled = !usable; byId('bpmn-link').disabled = !usable;byId('bpmn-document').disabled = !usable;
       byId('bpmn-selection').textContent = usable ? selected.businessObject.name || 'BPMN-Element' : 'Element im Diagramm auswählen.';
       byId('bpmn-name').value = usable ? selected.businessObject.name || '' : '';
@@ -283,6 +311,9 @@
     byId('bpmn-canvas').addEventListener('pointermove',event => {if (origin && Math.hypot(event.clientX-origin.x,event.clientY-origin.y)>8) moved = true;},true);
     editor.on('element.click',event => {if (!moved) openElement(event.element.labelTarget || event.element);});
   }
+  const workspaceObserver=new ResizeObserver(()=>requestAnimationFrame(resizeWorkspace));
+  for(const element of [document.querySelector('.bpmn-workspace'),document.querySelector('.bpmn-toolbar'),document.querySelector('.flow-utility'),byId('flow-details')].filter(Boolean))workspaceObserver.observe(element);
+  resizeWorkspace();
   run(async () => {
     if (!config.xml) {status('Noch keine Prozesse oder veröffentlichten Diagramme vorhanden.'); return;}
     const result = await editor.importXML(config.xml);

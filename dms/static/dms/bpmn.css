@@ -12,3 +12,82 @@
 .flow-manage{z-index:80}.bpmn-toolbar{position:relative;z-index:70}
 
 .flow-step-details,.flow-preview{box-sizing:border-box}.bpmn-shell:has(.flow-step-details:not([hidden])) .bjs-powered-by{right:348px!important}@media(max-width:700px){.bpmn-shell:has(.flow-step-details:not([hidden])) .bjs-powered-by{right:12px!important;top:12px!important;bottom:auto!important}}
+
+/* Process workspace: the document stays within the viewport; panels scroll internally. */
+body.flow-page{height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.flow-page>header{flex:none;min-height:44px;padding:.2rem 2.5%;gap:.65rem;flex-wrap:nowrap;box-sizing:border-box}
+.flow-page>header .site-logo{width:36px;height:36px;object-fit:contain}
+.flow-page>header .site-brand-name{font-size:.75rem;line-height:1.2;max-width:220px}
+.flow-page>header .main-nav{order:initial;flex:1;flex-basis:auto;min-width:0;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+.flow-page>header .main-nav>a{flex-shrink:0;white-space:nowrap;min-height:32px;padding:.25rem .55rem;font-size:.83rem}
+.flow-page>header .account-action{flex-shrink:0}.flow-page>header .avatar{width:30px;height:30px}
+.flow-page .flow-main{flex:1;min-height:0;display:flex;flex-direction:column;gap:.25rem;width:95%;margin:.4rem auto;padding:0;overflow:visible}
+.flow-main>.process-breadcrumb{flex:none;margin:0;min-height:18px;font-size:.75rem;white-space:nowrap;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;align-items:center}
+.flow-main>.process-breadcrumb>*{flex-shrink:0}.flow-main>.process-breadcrumb [aria-current]{max-width:48vw;overflow:hidden;text-overflow:ellipsis}
+.flow-main>.flow-heading{flex:none;margin:.1rem 0;gap:.5rem;min-width:0;align-items:center}
+.flow-heading>div:first-child{min-width:0;flex:1}.flow-page .flow-heading h1{font-size:clamp(1.05rem,1.6vw,1.4rem);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flow-page .flow-heading p{font-size:.73rem;margin:.1rem 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flow-page .flow-notice{flex:none;font-size:.7rem;line-height:1.2;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flow-page .bpmn-shell{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.flow-page .bpmn-toolbar,.flow-page .flow-utility{flex:none;gap:.3rem;padding:.35rem .5rem}
+.flow-page .bpmn-toolbar button,.flow-page .bpmn-toolbar .button,.flow-page .bpmn-toolbar summary{min-height:32px;padding:.3rem .5rem;font-size:.8rem}
+.flow-page .flow-utility{position:relative;z-index:60;flex-wrap:nowrap}
+.flow-page .flow-utility input{width:0;min-width:70px;max-width:450px;flex:1;min-height:32px}
+.flow-page .flow-utility>span{white-space:nowrap}.flow-page .flow-legend{flex-shrink:0}
+.flow-page .flow-utility>button{flex-shrink:0;min-height:32px;font-size:.8rem}
+.flow-page .bpmn-workspace{position:relative;flex:1;min-height:0;overflow:hidden;grid-template-rows:minmax(0,1fr)}
+.flow-page #bpmn-canvas{height:100%!important;min-height:0}
+.flow-page .bpmn-properties{height:100%;min-height:0;overflow:auto;box-sizing:border-box;padding:.7rem}
+.flow-properties-heading{display:flex;justify-content:space-between;align-items:center;gap:.5rem}.flow-properties-heading h2{margin:0}.flow-properties-heading button{display:none}
+.flow-page .bpmn-properties label{margin-top:.55rem}.flow-page .bpmn-properties .muted{font-size:.73rem}
+.flow-page #bpmn-status{flex:none;min-height:24px;max-height:48px;overflow:auto;padding:.25rem .6rem;font-size:.72rem}
+.flow-page .flow-step-details{position:absolute;top:0;bottom:0;max-height:100%;width:330px}
+.flow-page .flow-checks{position:absolute;right:10px;bottom:30px;width:min(520px,calc(100% - 20px));max-height:48%;z-index:65;background:white;border:1px solid #c6dce2;border-radius:8px;box-shadow:0 5px 25px #173c4822;box-sizing:border-box;padding:.65rem;overflow:auto}
+.flow-checks .flow-details-heading{top:-.65rem}.flow-checks .flow-details-heading button{font-size:1rem}
+.flow-page .flow-find-results{top:var(--flow-tools-height,90px);max-height:50%;box-sizing:border-box}
+.flow-page .flow-edit-menu{position:relative}.flow-edit-menu>summary{cursor:pointer;list-style:none;background:white;border:1px solid #ccdade;border-radius:6px}
+.flow-edit-menu>div{position:absolute;left:0;top:100%;z-index:85;display:grid;gap:.4rem;width:250px;max-height:min(65dvh,460px);overflow:auto;box-sizing:border-box;padding:.7rem;background:white;border:1px solid #c6dce2;border-radius:8px;box-shadow:0 5px 25px #173c4822}
+.flow-edit-menu .flow-layout-menu>div{position:static;box-shadow:none;width:100%;border:0;padding:.4rem 0}.flow-edit-menu #flow-properties-toggle{display:none}
+.flow-info-dialog{box-sizing:border-box;width:min(820px,94vw);max-height:86dvh;padding:0;border:1px solid #bdd5dc;border-radius:10px;overflow:hidden}
+.flow-info-dialog[open]{display:flex;flex-direction:column}.flow-info-dialog::backdrop{background:#173c4833}
+.flow-info-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem 1rem;border-bottom:1px solid #dbe6e9;flex:none}
+.flow-info-heading h2{font-size:1rem;margin:0}.flow-info-content{overflow:auto;min-height:0;padding:.5rem 1rem 1rem;overflow-wrap:anywhere}
+.flow-info-content .flow-information{margin-top:0}.flow-page>.site-footer{flex:none;min-height:28px;margin:0;padding:.15rem 2.5%;gap:.6rem;flex-wrap:nowrap;font-size:.7rem;box-sizing:border-box}
+.flow-page>.site-footer .site-logo{width:20px;height:20px;object-fit:contain}.flow-page>.site-footer .site-brand>span{display:none}
+.flow-page>.site-footer .footer-links{display:flex;gap:.65rem;white-space:nowrap}.flow-page>.site-footer .release{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:.7rem}
+.flow-page .bpmn-shell.is-fullscreen{position:fixed;inset:4px;z-index:10000;display:flex;overflow:hidden}
+.flow-page .bpmn-shell.is-fullscreen .bpmn-workspace{min-height:0;flex:1}.flow-page .bpmn-shell.is-fullscreen #bpmn-canvas{height:100%!important}
+@media(max-width:900px){
+ .flow-page>header .site-brand-name,.flow-page>header .account-label,.flow-page>header .guest-label{display:none}
+ .flow-page>header .site-brand{flex:0 0 auto}.flow-page>header .site-logo{width:30px;height:30px}
+ .flow-page>header .main-nav{order:initial;flex-basis:auto}.flow-page>header .main-nav>a{font-size:.76rem;padding:.25rem .4rem}
+ .flow-page>header .account-action{margin-left:0}.flow-page>header .account-action .button{min-height:32px;padding:.3rem .45rem;font-size:.75rem}
+ .flow-page .bpmn-workspace{grid-template-columns:minmax(0,1fr)}
+ .flow-page .bpmn-properties{position:absolute;right:0;top:0;bottom:0;width:min(300px,88%);max-height:100%;z-index:50;border:0;border-left:1px solid #c6dce2;box-shadow:-5px 0 22px #173c4818;display:none}
+ .flow-page .bpmn-properties.is-open{display:block}.flow-page .flow-properties-heading button,.flow-page .flow-edit-menu #flow-properties-toggle{display:block}
+ .flow-page .flow-step-details{position:absolute;left:auto;right:0;top:0;bottom:0;width:min(330px,88%);max-width:88%;max-height:100%;z-index:50;border:0;border-left:1px solid #c6dce2;border-radius:0;padding:.7rem;box-shadow:-5px 0 22px #173c4818}
+ .flow-page .flow-utility{gap:.25rem}.flow-page .flow-utility button{padding:.3rem .4rem}.flow-page .flow-legend{font-size:.75rem}
+ .flow-page .flow-heading h1{font-size:1.08rem}.flow-page .flow-heading p{font-size:.68rem}
+ .flow-page .flow-details-heading h2{font-size:1rem}.flow-page .flow-details-heading{top:-.7rem}
+ .flow-page .bpmn-shell.is-fullscreen{inset:0}.flow-page .bpmn-shell.is-fullscreen:has(.bpmn-properties){display:flex;overflow:hidden}
+ .flow-page .flow-info-dialog{width:96vw;max-height:90dvh}.flow-page>.site-footer .footer-links{gap:.45rem}
+ .flow-page .bpmn-shell:has(.flow-step-details:not([hidden])) .bjs-powered-by{right:12px!important;top:auto!important;bottom:12px!important}
+}
+@media(max-width:600px){
+ .flow-page .flow-step-details{top:auto;left:0;right:0;bottom:0;width:100%;max-width:100%;max-height:62%;border:0;border-top:2px solid #308a97;border-radius:10px 10px 0 0}
+ .flow-page .flow-details-heading h2{font-size:.95rem}.flow-page .flow-step-details #flow-step-description{font-size:.82rem}
+ .flow-page .bpmn-shell:has(.flow-step-details:not([hidden])) .bjs-powered-by{right:12px!important;top:12px!important;bottom:auto!important}
+ .flow-page .flow-utility input{font-size:16px}.flow-page .flow-utility>span{font-size:.65rem}
+ .flow-page>.site-footer{font-size:.65rem;min-height:26px}.flow-page>.site-footer .release{font-size:.63rem}
+}
+@media(max-height:540px){
+ .flow-page>header{min-height:32px;padding:.1rem 2.5%}.flow-page>header .site-logo{width:24px;height:24px}.flow-page>header .main-nav>a{min-height:28px}
+ .flow-page .flow-main{margin:.2rem auto;gap:.1rem}.flow-page .flow-heading h1{font-size:1rem}.flow-page .flow-heading p{font-size:.65rem}
+ .flow-page .bpmn-toolbar,.flow-page .flow-utility{padding:.2rem .4rem}.flow-page #bpmn-status{min-height:20px;padding:.15rem .5rem}
+}
+
+.flow-page .flow-edit-menu>div{max-height:var(--flow-menu-height,65dvh)}.flow-page .flow-manage>div{max-height:calc(100dvh - 130px);overflow:auto}.flow-page .account-menu{z-index:200}@media(pointer:coarse){.flow-page .bpmn-toolbar button,.flow-page .bpmn-toolbar .button,.flow-page .bpmn-toolbar summary,.flow-page .flow-utility button,.flow-page .flow-utility input{min-height:40px}}
+
+.flow-page .account-panel{max-height:calc(100dvh - 52px);overflow:auto;box-sizing:border-box}.flow-main>.card.attention{flex:none;max-height:12dvh;overflow:auto;padding:.35rem .6rem;margin:0;font-size:.78rem}
+
+.flow-main>.process-breadcrumb{scrollbar-width:none}.flow-main>.process-breadcrumb::-webkit-scrollbar{display:none}@media(max-height:540px){.flow-page>header .account-menu summary{min-height:28px;padding:.1rem .25rem}.flow-page>header .avatar{width:24px;height:24px}}

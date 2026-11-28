@@ -14,6 +14,19 @@ def login(page,username):
  page.get_by_role('button',name='Anmelden',exact=True).click()
  expect(page.locator('.account-name')).to_be_visible()
 
+def assert_workspace(page):
+ expect(page.locator('body')).to_have_class(re.compile('flow-page'))
+ dimensions=page.evaluate('({height:document.scrollingElement.scrollHeight,width:document.scrollingElement.scrollWidth,h:innerHeight,w:innerWidth})')
+ assert dimensions['height']<=dimensions['h']+2,f'Process page scrolls vertically: {dimensions}'
+ assert dimensions['width']<=dimensions['w']+1,f'Process page overflows horizontally: {dimensions}'
+ canvas=page.locator('#bpmn-canvas').bounding_box()
+ assert canvas and canvas['height']>=130,f'Diagram workspace too small: {canvas}'
+ footer=page.locator('.site-footer').bounding_box()
+ assert footer['y']+footer['height']<=dimensions['h']+2,'Footer is outside viewport'
+
+def open_tools(page):
+ if page.locator('.flow-edit-menu').get_attribute('open') is None:page.locator('.flow-edit-menu>summary').click()
+
 def assert_aligned(page,selectors):
  boxes=[page.locator(selector).bounding_box() for selector in selectors]
  assert all(boxes),f'Missing visible controls: {selectors}'
@@ -65,6 +78,7 @@ with sync_playwright() as p:
     expect(qmb.get_by_role('heading',name=title,exact=True)).to_be_visible()
     parent=qmb.url.rstrip('/').split('/')[-1]
    reader.goto(base+'/processes/')
+   assert_workspace(reader)
    reader.screenshot(path=str(artifacts/(device+'-process-landscape.png')),full_page=True)
    for title in titles:
     reader.get_by_role('button',name=re.compile(re.escape(title))).click()
@@ -92,13 +106,14 @@ with sync_playwright() as p:
    qmb.locator('.djs-context-pad [data-action="connect"]').click()
    qmb.locator('.djs-shape[data-element-id^="Activity_"] .djs-hit-all').click()
    expect(qmb.locator('.djs-connection')).to_have_count(1)
+   open_tools(qmb)
    qmb.get_by_role('button',name='Prüfen',exact=True).click()
    expect(qmb.locator('#flow-check-list')).to_contain_text('Keine strukturellen Hinweise')
+   open_tools(qmb)
    qmb.locator('.flow-layout-menu summary').click()
    qmb.get_by_role('button',name='Alle Elemente dieser Ebene auswählen',exact=True).click()
    expect(qmb.locator('#bpmn-status')).to_have_text('2 Elemente ausgewählt.')
    qmb.get_by_role('button',name='Gleiche Höhe',exact=True).click()
-   qmb.locator('.flow-layout-menu summary').click()
    start_box=qmb.locator('[data-element-id="StartEvent_IMS"] .djs-hit-all').bounding_box()
    task_box=qmb.locator('.djs-shape[data-element-id^="Activity_"] .djs-hit-all').bounding_box()
    assert abs(start_box['y']+start_box['height']/2-task_box['y']-task_box['height']/2)<2,'Align selection failed'
@@ -115,6 +130,7 @@ with sync_playwright() as p:
    expect(qmb.locator('#bpmn-status')).to_have_text('BPMN importiert. Noch nicht gespeichert.')
    qmb.get_by_role('button',name='Veröffentlichen',exact=True).click()
    expect(qmb.locator('#bpmn-status')).to_have_text('Diagramm veröffentlicht.')
+   assert_workspace(qmb)
    qmb.screenshot(path=str(artifacts/(device+'-bpmn-editor.png')),full_page=True)
    reader.goto(base+f'/processes/{parent}/bpmn/')
    expect(reader.locator('#bpmn-status')).to_have_text('Schritte anklicken · Zum Verschieben ziehen · + / − zum Zoomen')
@@ -153,6 +169,11 @@ with sync_playwright() as p:
    expect(reader.locator('#flow-step-title')).to_have_text('CI BPMN Start '+device)
    restored_box=reader.locator('[data-element-id="StartEvent_IMS"] .djs-hit-all').bounding_box()
    assert all(abs(saved_box[key]-restored_box[key])<2 for key in ('x','y','width','height')),'Process position/zoom was not restored'
+   assert_workspace(reader)
+   reader.get_by_role('button',name='Info',exact=True).click()
+   expect(reader.locator('#flow-info')).to_be_visible()
+   assert_workspace(reader)
+   reader.locator('#flow-info-close').click()
    reader.screenshot(path=str(artifacts/(device+'-step-details.png')),full_page=True)
    qmb.goto(base+f'/processes/{parent}/controls/')
    qmb.get_by_role('link',name='Risiko erfassen',exact=True).click()
@@ -212,7 +233,7 @@ with sync_playwright() as p:
      phone=phone_context.new_page();phone.goto(reader.url)
      expect(phone.locator('#bpmn-status')).to_have_text('Schritte anklicken · Zum Verschieben ziehen · + / − zum Zoomen')
      assert phone.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),'Phone page overflow'
-     assert phone.locator('#bpmn-canvas').bounding_box()['height']<=525,'Phone canvas contains excessive empty height'
+     assert_workspace(phone)
      phone.get_by_role('button',name='Vollbild',exact=True).click()
      expect(phone.locator('#bpmn-shell')).to_have_class(re.compile('is-fullscreen'))
      phone.get_by_role('button',name='Schließen',exact=True).click()
@@ -222,7 +243,12 @@ with sync_playwright() as p:
      assert phone.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),'Step details overflow phone viewport'
      close_box=phone.locator('#flow-details-close').bounding_box()
      assert close_box['x']+close_box['width']<=390,'Phone close control is clipped'
-     phone.screenshot(path=str(artifacts/'phone-demo-flow.png'),full_page=True)
+     assert_workspace(phone)
+     phone.screenshot(path=str(artifacts/'phone-demo-flow.png'))
+     phone.locator('#flow-details-close').click()
+     phone.set_viewport_size({'width':844,'height':390})
+     assert_workspace(phone)
+     phone.screenshot(path=str(artifacts/'phone-landscape-flow.png'))
     finally:phone_context.close()
    qmb.goto(base+'/processes/')
    qmb.locator('.flow-manage > summary').click()

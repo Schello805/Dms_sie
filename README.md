@@ -4,6 +4,14 @@ Lokales Dokumentenmanagement für das integrierte Managementsystem im Unternehme
 Planungsumfang: etwa 800 Benutzer, 30 Abteilungen und 1.000 Dokumente.
 Die Anwendung verwendet Django 5.2 und PostgreSQL ab Version 16.
 
+## Release 0.11.1: Prozessarbeitsplatz auf einer Bildschirmhöhe
+
+Die Prozessansicht nutzt die verfügbare Bildschirmhöhe: kompakter Kopf und Fuß, feste
+Werkzeugbereiche und eine Diagrammfläche im verbleibenden Platz. Informationen und Historie
+öffnen in einem Fenster; Eigenschaften und Prüfhinweise scrollen bei Bedarf innerhalb ihrer
+Bereiche. Auch Smartphone-Hoch- und Querformat werden geprüft.
+Details: [Release 0.11.1](docs/releases/v0.11.1.md).
+
 ## Release 0.11.0: Ruhiger lesen und gezielt bearbeiten
 
 Ein Klick wählt einen Prozessschritt und öffnet kompakte Details. Unterprozesse und Dokumente
