@@ -132,6 +132,7 @@ with sync_playwright() as p:
    reader.get_by_role('button',name='Dokument ansehen',exact=True).click()
    expect(reader.locator('#flow-preview')).to_be_visible()
    expect(reader.frame_locator('#flow-preview-frame').locator('#viewer')).to_be_visible()
+   expect(reader.frame_locator('#flow-preview-frame').locator('#status')).to_have_text(re.compile(r'^Seite \d+ von \d+$'))
    reader.screenshot(path=str(artifacts/(device+'-document-preview.png')),full_page=True)
    reader.get_by_role('button',name='Zurück zum Prozess',exact=True).click()
    expect(reader.locator('#flow-preview')).not_to_be_visible()

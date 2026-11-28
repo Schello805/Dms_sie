@@ -11,4 +11,4 @@
 
 .flow-manage{z-index:80}.bpmn-toolbar{position:relative;z-index:70}
 
-.flow-step-details,.flow-preview{box-sizing:border-box}.bpmn-shell:has(.flow-step-details:not([hidden])) .bjs-powered-by{right:348px}@media(max-width:700px){.bpmn-shell:has(.flow-step-details:not([hidden])) .bjs-powered-by{right:12px;top:12px;bottom:auto}}
+.flow-step-details,.flow-preview{box-sizing:border-box}.bpmn-shell:has(.flow-step-details:not([hidden])) .bjs-powered-by{right:348px!important}@media(max-width:700px){.bpmn-shell:has(.flow-step-details:not([hidden])) .bjs-powered-by{right:12px!important;top:12px!important;bottom:auto!important}}
