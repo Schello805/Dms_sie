@@ -92,3 +92,4 @@ body.flow-page{height:100dvh;min-height:0;overflow:hidden;display:flex;flex-dire
 
 .flow-main>.process-breadcrumb{scrollbar-width:none}.flow-main>.process-breadcrumb::-webkit-scrollbar{display:none}@media(max-height:540px){.flow-page>header .account-menu summary{min-height:28px;padding:.1rem .25rem}.flow-page>header .avatar{width:24px;height:24px}}
 @media(max-height:540px){.flow-page .flow-heading p{display:none}.flow-page #bpmn-status{position:absolute;left:0;right:0;bottom:0;z-index:5;min-height:20px;max-height:28px;background:#ffffffed;border-top:1px solid #e5ecef}.flow-page .flow-notice{font-size:.65rem;line-height:1.1}}
+.flow-page .flow-checks .flow-details-heading button{width:auto;min-width:30px;flex:0 0 auto;margin:0}
