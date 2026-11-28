@@ -118,7 +118,9 @@ class BpmnTests(TestCase):
         from django.core.files.uploadedfile import SimpleUploadedFile
         from . import storage
         from .previews import MAX_TEXT_PREVIEW_BYTES
-        storage.upload(self.author,self.vid,SimpleUploadedFile('large.txt',b'x'*(MAX_TEXT_PREVIEW_BYTES+1)),purpose='RELEASE')
+        for file in s.query('SELECT file_id FROM version_files WHERE version_id=%s',[self.vid]):
+            s.remove_file(self.author,self.vid,file['file_id'],'')
+        storage.upload(self.author,self.vid,SimpleUploadedFile('large.txt',b'x'*(MAX_TEXT_PREVIEW_BYTES+1)))
         fixtures.WorkflowTests.publish(self)
         document=s.get_version(self.author,self.vid)[1]['document_id']
         process=self.root()
