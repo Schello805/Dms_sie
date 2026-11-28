@@ -11,7 +11,7 @@
   const translate = (text, values) => (names[text] || text).replace(/\{([^}]+)\}/g, (_, key) => values && key in values ? values[key] : '{' + key + '}');
   const editor = new BpmnJS({container:'#bpmn-canvas',textRenderer:{defaultStyle:{fontFamily:'Arial, sans-serif',fontSize:15},externalStyle:{fontSize:13}},bpmnRenderer:{defaultFillColor:'#f7fbfc',defaultStrokeColor:'#386c79',defaultLabelColor:'#173b49'},additionalModules:[{translate:['value',translate]}]});
   let ready = false, dirty = false, busy = false, generation = 0, selected = null;
-  const buttons = ['bpmn-save','bpmn-publish','bpmn-export','bpmn-svg','bpmn-fit','bpmn-zoom-in','bpmn-zoom-out','bpmn-check','bpmn-align','bpmn-size','bpmn-space'];
+  const buttons = ['bpmn-save','bpmn-publish','bpmn-export','bpmn-svg','bpmn-fit','bpmn-zoom-in','bpmn-zoom-out','bpmn-check','bpmn-align','bpmn-size','bpmn-space','bpmn-select-all'];
   const refresh = () => buttons.forEach(id => {if (byId(id)) byId(id).disabled = !ready || busy;});
   const markDirty = () => {dirty = true; generation++; status('Ungespeicherte Änderungen.');};
   const download = (data, extension, type) => {
@@ -207,6 +207,7 @@
       if(shapes.length<minimum || new Set(shapes.map(e=>e.parent)).size>1) {status('Mindestens '+minimum+' Elemente derselben Ebene auswählen.',true);return null;}
       return shapes;
     };
+    byId('bpmn-select-all').addEventListener('click',()=>{const shapes=registry.getAll().filter(e=>e.parent===canvas.getRootElement()&&!e.waypoints&&!e.labelTarget&&!e.host);editor.get('selection').select(shapes);status(shapes.length+' Elemente ausgewählt.');});
     byId('bpmn-align').addEventListener('click',()=>{const shapes=layoutSelection(2);if(shapes)editor.get('alignElements').trigger(shapes,'middle');});
     byId('bpmn-space').addEventListener('click',()=>{const shapes=layoutSelection(3);if(shapes)editor.get('distributeElements').trigger(shapes,'horizontal');});
     function ResizeGroup(modeling){this.preExecute=context=>{for(const shape of context.shapes)modeling.resizeShape(shape,{x:shape.x,y:shape.y,width:context.width,height:context.height});};this.execute=()=>{};this.revert=()=>{};}
